@@ -33,7 +33,16 @@
         .stat-card { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 15px; padding: 25px; text-align: center; }
         .stat-number { font-size: 32px; font-weight: bold; color: #3b82f6; }
         .stat-label { color: #94a3b8; font-size: 14px; margin-top: 5px; }
-        .admin-badge { background: linear-gradient(135deg, #fbbf24, #f59e0b); color: #000; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: bold; margin-left: 10px; }
+        .admin-badge { 
+            background: linear-gradient(135deg, #fbbf24, #f59e0b); 
+            color: #000; 
+            padding: 4px 12px; 
+            border-radius: 12px; 
+            font-size: 12px; 
+            font-weight: bold; 
+            margin-left: 10px;
+            display: inline-block;
+        }
     </style>
 </head>
 <body>
@@ -100,7 +109,7 @@
 
 <script>
 // ============================================
-// PENTING: GANTI 2 BARIS DI BAWAH INI!
+// KONFIGURASI SUPABASE
 // ============================================
 var SUPABASE_URL = 'https://ixgwxbehsmgmczzfvjse.supabase.co';
 var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml4Z3d4YmVoc21nbWN6emZ2anNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5Njk3OTksImV4cCI6MjA5MjU0NTc5OX0.rnZYdHiqLzRz5xAb9DR3YmeWY91LsfJJYYoeWa7s7WA';
@@ -127,18 +136,48 @@ function showLogin() {
 }
 
 function showDashboard(userData) {
+    console.log('=== SHOW DASHBOARD ===');
+    console.log('User ID:', userData.user.id);
+    console.log('User Email:', userData.user.email);
+    
     document.getElementById('loginView').classList.add('hidden');
     document.getElementById('dashboardView').classList.remove('hidden');
-    supabaseClient.from('profiles').select('name, role').eq('id', userData.user.id).single().then(function(profileData) {
-        if (profileData.data) {
-            document.getElementById('userName').textContent = profileData.data.name || userData.user.email;
-            if (profileData.data.role === 'admin') {
-                document.getElementById('adminBadge').style.display = 'inline-block';
+    
+    // Query ke tabel profiles
+    supabaseClient
+        .from('profiles')
+        .select('name, role')
+        .eq('id', userData.user.id)
+        .single()
+        .then(function(profileData) {
+            console.log('=== PROFILE DATA ===');
+            console.log('Data:', profileData.data);
+            console.log('Error:', profileData.error);
+            
+            if (profileData.error) {
+                console.error('Error fetching profile:', profileData.error);
             }
-        } else {
-            document.getElementById('userName').textContent = userData.user.email;
-        }
-    });
+            
+            if (profileData.data) {
+                document.getElementById('userName').textContent = profileData.data.name || userData.user.email;
+                
+                // CEK ROLE DI SINI
+                console.log('User Role:', profileData.data.role);
+                
+                if (profileData.data.role === 'admin') {
+                    console.log('USER ADALAH ADMIN - Menampilkan badge');
+                    document.getElementById('adminBadge').style.display = 'inline-block';
+                } else {
+                    console.log('User role:', profileData.data.role, '(bukan admin)');
+                }
+            } else {
+                console.log('Tidak ada data profile, gunakan email');
+                document.getElementById('userName').textContent = userData.user.email;
+            }
+        })
+        .catch(function(err) {
+            console.error('Error di catch:', err);
+        });
 }
 
 function handleLogin() {
@@ -146,21 +185,30 @@ function handleLogin() {
     var password = document.getElementById('loginPassword').value;
     var btn = document.getElementById('loginBtn');
 
-    if (!email || !password) { showMessage('⚠️ Email dan password wajib diisi'); return; }
+    if (!email || !password) { 
+        showMessage('⚠️ Email dan password wajib diisi'); 
+        return; 
+    }
 
-    btn.textContent = 'Memproses...'; btn.disabled = true;
+    btn.textContent = 'Memproses...'; 
+    btn.disabled = true;
 
-    supabaseClient.auth.signInWithPassword({ email: email, password: password }).then(function(result) {
+    supabaseClient.auth.signInWithPassword({ 
+        email: email, 
+        password: password 
+    }).then(function(result) {
         if (result.error) {
             showMessage('❌ ' + result.error.message);
-            btn.textContent = 'Masuk'; btn.disabled = false;
+            btn.textContent = 'Masuk'; 
+            btn.disabled = false;
         } else {
             showMessage('✅ Login berhasil!', 'success');
             setTimeout(function() { showDashboard(result.data); }, 500);
         }
     }).catch(function(err) {
         showMessage('❌ ' + err.message);
-        btn.textContent = 'Masuk'; btn.disabled = false;
+        btn.textContent = 'Masuk'; 
+        btn.disabled = false;
     });
 }
 
