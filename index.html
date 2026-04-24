@@ -9,7 +9,29 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         tailwind.config = {
-            theme: { extend: { colors: { primary: { 50:'#eff6ff',100:'#dbeafe',200:'#bfdbfe',300:'#93c5fd',400:'#60a5fa',500:'#3b82f6',600:'#2563eb',700:'#1d4ed8',800:'#1e3a5f',900:'#0f1f3d' }, dark: { 700:'#1a2332',800:'#111827',900:'#0a0f1a' } } } }
+            theme: { 
+                extend: { 
+                    colors: { 
+                        primary: { 
+                            50:'#eff6ff',
+                            100:'#dbeafe',
+                            200:'#bfdbfe',
+                            300:'#93c5fd',
+                            400:'#60a5fa',
+                            500:'#3b82f6',
+                            600:'#2563eb',
+                            700:'#1d4ed8',
+                            800:'#1e3a5f',
+                            900:'#0f1f3d' 
+                        }, 
+                        dark: { 
+                            700:'#1a2332',
+                            800:'#111827',
+                            900:'#0a0f1a' 
+                        } 
+                    } 
+                } 
+            }
         }
     </script>
     <style>
@@ -54,16 +76,16 @@
             <div id="login-form">
                 <input type="email" id="login-email" placeholder="Email" class="w-full rounded-lg px-4 py-3 mb-3 text-sm">
                 <input type="password" id="login-password" placeholder="Password" class="w-full rounded-lg px-4 py-3 mb-4 text-sm">
-                <button onclick="handleLogin()" class="w-full py-3 bg-blue-600 hover:bg-blue-700 rounded-lg font-semibold text-white mb-3">Masuk</button>
-                <p class="text-center text-sm text-gray-500">Belum punya akun? <button onclick="toggleAuthMode()" class="text-blue-400 hover:underline">Daftar</button></p>
+                <button type="button" onclick="handleLogin(event)" class="w-full py-3 bg-blue-600 hover:bg-blue-700 rounded-lg font-semibold text-white mb-3">Masuk</button>
+                <p class="text-center text-sm text-gray-500">Belum punya akun? <button type="button" onclick="toggleAuthMode()" class="text-blue-400 hover:underline">Daftar</button></p>
             </div>
 
             <div id="register-form" class="hidden">
                 <input type="text" id="reg-name" placeholder="Nama Lengkap" class="w-full rounded-lg px-4 py-3 mb-3 text-sm">
                 <input type="email" id="reg-email" placeholder="Email" class="w-full rounded-lg px-4 py-3 mb-3 text-sm">
                 <input type="password" id="reg-password" placeholder="Password (min 6 karakter)" class="w-full rounded-lg px-4 py-3 mb-4 text-sm">
-                <button onclick="handleRegister()" class="w-full py-3 bg-green-600 hover:bg-green-700 rounded-lg font-semibold text-white mb-3">Daftar Akun</button>
-                <p class="text-center text-sm text-gray-500">Sudah punya akun? <button onclick="toggleAuthMode()" class="text-blue-400 hover:underline">Masuk</button></p>
+                <button type="button" onclick="handleRegister(event)" class="w-full py-3 bg-green-600 hover:bg-green-700 rounded-lg font-semibold text-white mb-3">Daftar Akun</button>
+                <p class="text-center text-sm text-gray-500">Sudah punya akun? <button type="button" onclick="toggleAuthMode()" class="text-blue-400 hover:underline">Masuk</button></p>
             </div>
             <p id="auth-error" class="text-red-400 text-xs text-center mt-3 hidden"></p>
         </div>
@@ -86,7 +108,7 @@
                         <div class="w-8 h-8 rounded-full bg-primary-600 flex items-center justify-center text-xs font-bold" id="user-avatar">U</div>
                         <div><p class="text-sm font-medium text-white" id="user-name">User</p><p class="text-xs text-gray-500 capitalize" id="user-role">role</p></div>
                     </div>
-                    <button onclick="handleLogout()" class="text-xs text-red-400 hover:text-red-300">Keluar</button>
+                    <button type="button" onclick="handleLogout()" class="text-xs text-red-400 hover:text-red-300">Keluar</button>
                 </div>
             </div>
         </div>
@@ -95,7 +117,7 @@
         <header class="sticky top-0 z-40 glass-light border-b border-primary-800/50">
             <div class="flex items-center justify-between px-4 lg:px-8 py-4">
                 <div class="flex items-center gap-4">
-                    <button onclick="toggleSidebar()" class="lg:hidden p-2 rounded-lg hover:bg-primary-900/30">
+                    <button type="button" onclick="toggleSidebar()" class="lg:hidden p-2 rounded-lg hover:bg-primary-900/30">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
                     </button>
                     <div><h2 id="page-title" class="text-xl font-bold text-white">Dashboard</h2><p id="page-subtitle" class="text-sm text-gray-400">System</p></div>
@@ -122,7 +144,7 @@
     const SUPABASE_URL = 'https://ixgwxbehsmgmczzfvjse.supabase.co';
     const SUPABASE_ANON_KEY = 'sb_publishable_xIL19QNKrG2iBzQyiO6EYw_LV0sda5-';
     
-    // Initialize Supabase (hanya sekali)
+    // Initialize Supabase
     if (!window.supabaseClient) {
         window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     }
@@ -150,26 +172,43 @@
         document.getElementById('auth-error').classList.add('hidden');
     }
 
-    async function handleLogin() {
-        const email = document.getElementById('login-email').value;
+    async function handleLogin(e) {
+        if(e) e.preventDefault();
+        
+        const email = document.getElementById('login-email').value.trim();
         const password = document.getElementById('login-password').value;
         const errEl = document.getElementById('auth-error');
+        
+        if(!email || !password) {
+            errEl.textContent = 'Email dan password wajib diisi';
+            errEl.classList.remove('hidden');
+            return;
+        }
         
         try {
             const { data, error } = await supabase.auth.signInWithPassword({ email, password });
             if (error) throw error;
             await initSession(data.session);
         } catch (err) {
-            errEl.textContent = err.message;
+            console.error('Login error:', err);
+            errEl.textContent = err.message || 'Terjadi kesalahan saat login';
             errEl.classList.remove('hidden');
         }
     }
 
-    async function handleRegister() {
-        const name = document.getElementById('reg-name').value;
-        const email = document.getElementById('reg-email').value;
+    async function handleRegister(e) {
+        if(e) e.preventDefault();
+        
+        const name = document.getElementById('reg-name').value.trim();
+        const email = document.getElementById('reg-email').value.trim();
         const password = document.getElementById('reg-password').value;
         const errEl = document.getElementById('auth-error');
+
+        if(!name || !email || !password) {
+            errEl.textContent = 'Semua field wajib diisi';
+            errEl.classList.remove('hidden');
+            return;
+        }
 
         if(password.length < 6) { 
             errEl.textContent = 'Password minimal 6 karakter'; 
@@ -179,14 +218,26 @@
 
         try {
             const { data, error } = await supabase.auth.signUp({ 
-                email, password, options: {  { name } } 
+                email, 
+                password, 
+                options: { 
+                    data: { name } 
+                }
             });
             if (error) throw error;
             
-            showToast('✅ Registrasi berhasil! Cek email untuk verifikasi (jika diaktifkan), lalu login.');
+            // Save profile to database
+            if(data.user) {
+                await supabase.from('profiles').insert([
+                    { id: data.user.id, name: name, role: 'pengguna' }
+                ]);
+            }
+            
+            showToast('✅ Registrasi berhasil! Silakan login.');
             toggleAuthMode();
         } catch (err) {
-            errEl.textContent = err.message;
+            console.error('Register error:', err);
+            errEl.textContent = err.message || 'Terjadi kesalahan saat registrasi';
             errEl.classList.remove('hidden');
         }
     }
@@ -209,7 +260,7 @@
         document.getElementById('app-view').classList.add('fade-in');
         
         // Fetch role
-        const { data } = await supabase.from('profiles').select('role, name').eq('id', currentUser.id).single();
+        const { data, error } = await supabase.from('profiles').select('role, name').eq('id', currentUser.id).single();
         currentRole = data?.role || 'pengguna';
         
         document.getElementById('user-name').textContent = data?.name || 'User';
@@ -225,7 +276,7 @@
         let html = '';
         for(const [key, page] of Object.entries(pages)) {
             if(page.access.includes(currentRole)) {
-                html += `<a href="#" onclick="showPage('${key}')" id="nav-${key}" class="sidebar-link flex items-center gap-3 px-6 py-3 text-sm hover:bg-primary-900/30 transition-all">
+                html += `<a href="#" onclick="showPage('${key}'); return false;" id="nav-${key}" class="sidebar-link flex items-center gap-3 px-6 py-3 text-sm hover:bg-primary-900/30 transition-all">
                     <span class="w-5 h-5 text-primary-400">●</span> ${page.title}
                 </a>`;
             }
@@ -270,14 +321,17 @@
         const { data, error } = await supabase.from('tenders').select('*').order('created_at', { ascending: false });
         return error ? [] : (data || []);
     }
+    
     async function saveTender(item) {
         const { error } = await supabase.from('tenders').insert([item]);
         if(error) throw error;
     }
+    
     async function updateTender(id, updates) {
         const { error } = await supabase.from('tenders').update(updates).eq('id', id);
         if(error) throw error;
     }
+    
     async function deleteTender(id) {
         const { error } = await supabase.from('tenders').delete().eq('id', id);
         if(error) throw error;
@@ -318,13 +372,23 @@
         document.getElementById('c-hewan').textContent = data.filter(d => d.jenis === 'hewan').length;
 
         const list = document.getElementById('recent-list');
-        if(data.length === 0) { list.innerHTML = '<p class="text-gray-500 text-center py-8">Belum ada data</p>'; return; }
+        if(data.length === 0) { 
+            list.innerHTML = '<p class="text-gray-500 text-center py-8">Belum ada data</p>'; 
+            return; 
+        }
         list.innerHTML = data.slice(0,6).map(i => `
             <div class="glass-light rounded-lg p-4 card-hover">
-                <div class="flex justify-between items-start"><div><p class="font-semibold text-white">${i.nama_tender}</p><p class="text-sm text-gray-400">${i.pt_cust} - ${i.nama_cust}</p></div>
-                <span class="status-badge status-${i.status === 'ok' ? 'ok' : i.status === 'not-ok' ? 'revisi' : 'tender'}">${i.status}</span></div>
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="font-semibold text-white">${i.nama_tender}</p>
+                        <p class="text-sm text-gray-400">${i.pt_cust} - ${i.nama_cust}</p>
+                    </div>
+                    <span class="status-badge status-${i.status === 'ok' ? 'ok' : i.status === 'not-ok' ? 'revisi' : 'tender'}">${i.status}</span>
+                </div>
                 <div class="flex flex-wrap gap-2 text-xs mt-2">
-                    <span class="jenis-badge jenis-${i.jenis}">${i.jenis}</span><span class="text-gray-400">CS: ${i.karyawan}</span><span class="text-gray-400">📍 ${i.lokasi_asal} → ${i.lokasi_tujuan}</span>
+                    <span class="jenis-badge jenis-${i.jenis}">${i.jenis}</span>
+                    <span class="text-gray-400">CS: ${i.karyawan}</span>
+                    <span class="text-gray-400">📍 ${i.lokasi_asal} → ${i.lokasi_tujuan}</span>
                 </div>
             </div>`).join('');
     }
@@ -334,34 +398,86 @@
         <div class="max-w-3xl mx-auto glass rounded-xl p-6 lg:p-8">
             <h3 class="text-lg font-semibold text-white mb-6">📋 Input Rencana Tender</h3>
             <form id="tender-form" onsubmit="submitTender(event)">
-                <div class="form-section"><div class="form-section-title">Data Karyawan & Tender</div>
+                <div class="form-section">
+                    <div class="form-section-title">Data Karyawan & Tender</div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div><label class="block text-xs text-gray-400 mb-1">Nama Karyawan/CS *</label><input type="text" id="f-karyawan" required class="w-full rounded-lg px-4 py-3 text-sm"></div>
-                        <div><label class="block text-xs text-gray-400 mb-1">Nama Tender *</label><input type="text" id="f-tender" required class="w-full rounded-lg px-4 py-3 text-sm"></div>
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-1">Nama Karyawan/CS *</label>
+                            <input type="text" id="f-karyawan" required class="w-full rounded-lg px-4 py-3 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-1">Nama Tender *</label>
+                            <input type="text" id="f-tender" required class="w-full rounded-lg px-4 py-3 text-sm">
+                        </div>
                     </div>
                 </div>
-                <div class="form-section"><div class="form-section-title">Data Customer</div>
+                <div class="form-section">
+                    <div class="form-section-title">Data Customer</div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div><label class="block text-xs text-gray-400 mb-1">Nama Customer *</label><input type="text" id="f-cust" required class="w-full rounded-lg px-4 py-3 text-sm"></div>
-                        <div><label class="block text-xs text-gray-400 mb-1">PT Customer *</label><input type="text" id="f-pt" required class="w-full rounded-lg px-4 py-3 text-sm"></div>
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-1">Nama Customer *</label>
+                            <input type="text" id="f-cust" required class="w-full rounded-lg px-4 py-3 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-1">PT Customer *</label>
+                            <input type="text" id="f-pt" required class="w-full rounded-lg px-4 py-3 text-sm">
+                        </div>
                     </div>
                 </div>
-                <div class="form-section"><div class="form-section-title">Data Barang</div>
+                <div class="form-section">
+                    <div class="form-section-title">Data Barang</div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div><label class="block text-xs text-gray-400 mb-1">Nama Barang *</label><input type="text" id="f-barang" required class="w-full rounded-lg px-4 py-3 text-sm"></div>
-                        <div><label class="block text-xs text-gray-400 mb-1">Jenis *</label><select id="f-jenis" required class="w-full rounded-lg px-4 py-3 text-sm"><option value="">--</option><option value="berbahaya">🔴 Berbahaya</option><option value="aman">🟢 Aman</option><option value="kimia">🟡 Kimia</option><option value="hewan">🟣 Hewan</option></select></div>
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-1">Nama Barang *</label>
+                            <input type="text" id="f-barang" required class="w-full rounded-lg px-4 py-3 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-1">Jenis *</label>
+                            <select id="f-jenis" required class="w-full rounded-lg px-4 py-3 text-sm">
+                                <option value="">--</option>
+                                <option value="berbahaya">🔴 Berbahaya</option>
+                                <option value="aman">🟢 Aman</option>
+                                <option value="kimia">🟡 Kimia</option>
+                                <option value="hewan">🟣 Hewan</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
-                <div class="form-section"><div class="form-section-title">Lokasi</div>
+                <div class="form-section">
+                    <div class="form-section-title">Lokasi</div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div><label class="block text-xs text-gray-400 mb-1">Asal *</label><input type="text" id="f-asal" required class="w-full rounded-lg px-4 py-3 text-sm"></div>
-                        <div><label class="block text-xs text-gray-400 mb-1">Tujuan *</label><input type="text" id="f-tujuan" required class="w-full rounded-lg px-4 py-3 text-sm"></div>
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-1">Asal *</label>
+                            <input type="text" id="f-asal" required class="w-full rounded-lg px-4 py-3 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-1">Tujuan *</label>
+                            <input type="text" id="f-tujuan" required class="w-full rounded-lg px-4 py-3 text-sm">
+                        </div>
                     </div>
                 </div>
-                <div class="form-section"><div class="form-section-title">Status</div>
+                <div class="form-section">
+                    <div class="form-section-title">Status</div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div><label class="block text-xs text-gray-400 mb-1">Status Tender *</label><select id="f-status" required class="w-full rounded-lg px-4 py-3 text-sm"><option value="">--</option><option value="planning">📝 Planning</option><option value="tender">📋 Proses</option><option value="ok">✅ Deal</option><option value="not-ok">❌ Gagal</option></select></div>
-                        <div><label class="block text-xs text-gray-400 mb-1">Metode Kirim</label><select id="f-metode" class="w-full rounded-lg px-4 py-3 text-sm"><option value="">--</option><option value="udara">✈️ Udara</option><option value="laut">🚢 Laut</option><option value="darat">🚛 Darat</option></select></div>
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-1">Status Tender *</label>
+                            <select id="f-status" required class="w-full rounded-lg px-4 py-3 text-sm">
+                                <option value="">--</option>
+                                <option value="planning">📝 Planning</option>
+                                <option value="tender">📋 Proses</option>
+                                <option value="ok">✅ Deal</option>
+                                <option value="not-ok">❌ Gagal</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-1">Metode Kirim</label>
+                            <select id="f-metode" class="w-full rounded-lg px-4 py-3 text-sm">
+                                <option value="">--</option>
+                                <option value="udara">✈️ Udara</option>
+                                <option value="laut">🚢 Laut</option>
+                                <option value="darat">🚛 Darat</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
                 <button type="submit" class="w-full py-3.5 bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg font-semibold text-white">💾 Simpan</button>
@@ -382,7 +498,9 @@
             lokasi_tujuan: document.getElementById('f-tujuan').value.trim(),
             status: document.getElementById('f-status').value,
             shipping_method: document.getElementById('f-metode').value,
-            payment_status: 'pending', payment_amount: 0, progress: 0
+            payment_status: 'pending', 
+            payment_amount: 0, 
+            progress: 0
         };
         try { 
             await saveTender(item); 
@@ -402,7 +520,7 @@
             <h3 class="text-lg font-semibold text-white mb-4">🔍 Lacak Pengiriman (Khusus Customer)</h3>
             <div class="flex gap-3 mb-6">
                 <input type="text" id="resi-input" placeholder="Masukkan Nomor Resi / BL / AWB..." class="flex-1 rounded-lg px-4 py-3 text-sm">
-                <button onclick="trackResi()" class="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg font-medium">Lacak</button>
+                <button type="button" onclick="trackResi()" class="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg font-medium">Lacak</button>
             </div>
             <div id="resi-result" class="hidden glass-light rounded-lg p-5 border border-blue-500/30"></div>
             ` : `
@@ -415,7 +533,10 @@
 
     async function trackResi() {
         const resi = document.getElementById('resi-input').value.trim();
-        if(!resi) return;
+        if(!resi) {
+            showToast('❌ Masukkan nomor resi', 'error');
+            return;
+        }
         const { data } = await supabase.from('tenders').select('*').ilike('shipping_resi', `%${resi}%`).limit(1).single();
         const res = document.getElementById('resi-result');
         if(!data) { 
@@ -427,34 +548,66 @@
         res.innerHTML = `
             <h4 class="font-bold text-white mb-2">${data.nama_tender}</h4>
             <div class="grid grid-cols-2 gap-2 text-sm text-gray-300 mb-3">
-                <p>Customer: ${data.pt_cust}</p><p>Barang: ${data.nama_barang}</p>
-                <p>Rute: ${data.lokasi_asal} → ${data.lokasi_tujuan}</p><p>Status: ${data.status}</p>
-                <p>Pengiriman: ${data.shipping_method || 'Belum ada'}</p><p>Sampai: ${data.shipping_delivered ? '✅ Ya' : '⏳ Perjalanan'}</p>
+                <p>Customer: ${data.pt_cust}</p>
+                <p>Barang: ${data.nama_barang}</p>
+                <p>Rute: ${data.lokasi_asal} → ${data.lokasi_tujuan}</p>
+                <p>Status: ${data.status}</p>
+                <p>Pengiriman: ${data.shipping_method || 'Belum ada'}</p>
+                <p>Sampai: ${data.shipping_delivered ? '✅ Ya' : '⏳ Perjalanan'}</p>
             </div>
-            <div class="w-full bg-dark-700 rounded-full h-2"><div class="bg-blue-500 h-2 rounded-full" style="width:${calculateProgress(data)}%"></div></div>
+            <div class="w-full bg-dark-700 rounded-full h-2">
+                <div class="bg-blue-500 h-2 rounded-full" style="width:${calculateProgress(data)}%"></div>
+            </div>
         `;
     }
 
     async function loadTracking() {
         const data = await getTenders();
         const list = document.getElementById('tracking-list');
-        if(data.length === 0) { list.innerHTML = '<p class="text-gray-500 text-center py-8">Belum ada data</p>'; return; }
+        if(data.length === 0) { 
+            list.innerHTML = '<p class="text-gray-500 text-center py-8">Belum ada data</p>'; 
+            return; 
+        }
         list.innerHTML = data.map(i => `
             <div class="glass-light rounded-lg p-5 card-hover">
-                <div class="flex justify-between mb-3"><div><h4 class="font-semibold text-white">${i.nama_tender}</h4><p class="text-sm text-blue-400">${i.pt_cust}</p></div>
-                <span class="jenis-badge jenis-${i.jenis}">${i.jenis}</span></div>
-                <div class="mb-3"><div class="flex justify-between text-xs mb-1"><span class="text-gray-400">Progres</span><span class="text-blue-400">${calculateProgress(i)}%</span></div>
-                <div class="w-full bg-dark-700 rounded-full h-2"><div class="bg-gradient-to-r from-blue-500 to-blue-400 h-2 rounded-full" style="width:${calculateProgress(i)}%"></div></div></div>
+                <div class="flex justify-between mb-3">
+                    <div>
+                        <h4 class="font-semibold text-white">${i.nama_tender}</h4>
+                        <p class="text-sm text-blue-400">${i.pt_cust}</p>
+                    </div>
+                    <span class="jenis-badge jenis-${i.jenis}">${i.jenis}</span>
+                </div>
+                <div class="mb-3">
+                    <div class="flex justify-between text-xs mb-1">
+                        <span class="text-gray-400">Progres</span>
+                        <span class="text-blue-400">${calculateProgress(i)}%</span>
+                    </div>
+                    <div class="w-full bg-dark-700 rounded-full h-2">
+                        <div class="bg-gradient-to-r from-blue-500 to-blue-400 h-2 rounded-full" style="width:${calculateProgress(i)}%"></div>
+                    </div>
+                </div>
                 <div class="grid grid-cols-2 gap-3 text-sm mb-3">
-                    <div><p class="text-xs text-gray-500">Rute</p><p class="text-white text-xs">${i.lokasi_asal} → ${i.lokasi_tujuan}</p></div>
-                    <div><p class="text-xs text-gray-500">Resi</p><p class="text-white text-xs">${i.shipping_resi || '-'}</p></div>
-                    <div><p class="text-xs text-gray-500">Kirim</p><p class="text-white">${i.shipping_method || '-'}</p></div>
-                    <div><p class="text-xs text-gray-500">Bayar</p><p class="text-white">${i.payment_status}</p></div>
+                    <div>
+                        <p class="text-xs text-gray-500">Rute</p>
+                        <p class="text-white text-xs">${i.lokasi_asal} → ${i.lokasi_tujuan}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-500">Resi</p>
+                        <p class="text-white text-xs">${i.shipping_resi || '-'}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-500">Kirim</p>
+                        <p class="text-white">${i.shipping_method || '-'}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-500">Bayar</p>
+                        <p class="text-white">${i.payment_status}</p>
+                    </div>
                 </div>
                 <div class="flex gap-2">
-                    ${!i.shipping_method ? `<button onclick="updateField(${i.id},'shipping_method',prompt('Metode:'))" class="px-3 py-1.5 bg-blue-600 rounded text-xs">Update Kirim</button>` : ''}
-                    ${i.shipping_method && !i.shipping_delivered ? `<button onclick="updateField(${i.id},'shipping_delivered',true)" class="px-3 py-1.5 bg-green-600 rounded text-xs">Tandai Sampai</button>` : ''}
-                    ${currentRole === 'admin' ? `<button onclick="deleteItem(${i.id})" class="px-3 py-1.5 bg-red-600/50 rounded text-xs">Hapus</button>` : ''}
+                    ${!i.shipping_method ? `<button type="button" onclick="updateField(${i.id},'shipping_method',prompt('Metode:'))" class="px-3 py-1.5 bg-blue-600 rounded text-xs">Update Kirim</button>` : ''}
+                    ${i.shipping_method && !i.shipping_delivered ? `<button type="button" onclick="updateField(${i.id},'shipping_delivered',true)" class="px-3 py-1.5 bg-green-600 rounded text-xs">Tandai Sampai</button>` : ''}
+                    ${currentRole === 'admin' ? `<button type="button" onclick="deleteItem(${i.id})" class="px-3 py-1.5 bg-red-600/50 rounded text-xs">Hapus</button>` : ''}
                 </div>
             </div>`).join('');
     }
@@ -476,15 +629,23 @@
     function renderShipping(el) {
         el.innerHTML = `<div class="glass rounded-xl p-6"><h3 class="text-lg font-semibold text-white mb-6">Pengiriman Aktif</h3><div id="ship-list" class="space-y-4"><p class="text-gray-500 text-center py-8">Memuat...</p></div></div>`;
         loadPageData('ship-list', d => d.filter(i => i.shipping_method).map(i => `
-            <div class="glass-light rounded-lg p-5"><div class="flex justify-between mb-2"><h4 class="font-semibold text-white">${i.nama_tender}</h4><span class="status-badge status-ok">${i.shipping_method}</span></div>
-            <p class="text-sm text-gray-400">Rute: ${i.lokasi_asal} → ${i.lokasi_tujuan} | Resi: ${i.shipping_resi||'-'} | Sampai: ${i.shipping_delivered?'✅':'⏳'}</p></div>`));
+            <div class="glass-light rounded-lg p-5">
+                <div class="flex justify-between mb-2">
+                    <h4 class="font-semibold text-white">${i.nama_tender}</h4>
+                    <span class="status-badge status-ok">${i.shipping_method}</span>
+                </div>
+                <p class="text-sm text-gray-400">Rute: ${i.lokasi_asal} → ${i.lokasi_tujuan} | Resi: ${i.shipping_resi||'-'} | Sampai: ${i.shipping_delivered?'✅':'⏳'}</p>
+            </div>`));
     }
 
     function renderPayment(el) {
         el.innerHTML = `<div class="glass rounded-xl p-6"><h3 class="text-lg font-semibold text-white mb-6">Pembayaran</h3><div id="pay-list" class="space-y-4"><p class="text-gray-500 text-center py-8">Memuat...</p></div></div>`;
         loadPageData('pay-list', d => d.map(i => `
             <div class="glass-light rounded-lg p-5 flex justify-between items-center">
-                <div><h4 class="font-semibold text-white">${i.nama_tender}</h4><p class="text-sm text-gray-400">${i.pt_cust}</p></div>
+                <div>
+                    <h4 class="font-semibold text-white">${i.nama_tender}</h4>
+                    <p class="text-sm text-gray-400">${i.pt_cust}</p>
+                </div>
                 <span class="status-badge ${i.payment_status==='lunas'?'status-ok':'status-planning'}">${i.payment_status} ${i.payment_amount ? '(Rp '+i.payment_amount.toLocaleString('id-ID')+')' : ''}</span>
             </div>`));
     }
@@ -494,11 +655,21 @@
         loadPageData('label-list', d => d.map(i => {
             const p = calculateProgress(i);
             return `<div class="glass-light rounded-lg p-4 card-hover">
-                <div class="flex items-center gap-3 mb-3"><div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-xs font-bold">${i.karyawan[0]}</div>
-                <div class="flex-1"><p class="text-sm font-semibold text-white">${i.karyawan}</p><p class="text-xs text-gray-500">${i.pt_cust}</p></div></div>
+                <div class="flex items-center gap-3 mb-3">
+                    <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-xs font-bold">${i.karyawan[0]}</div>
+                    <div class="flex-1">
+                        <p class="text-sm font-semibold text-white">${i.karyawan}</p>
+                        <p class="text-xs text-gray-500">${i.pt_cust}</p>
+                    </div>
+                </div>
                 <p class="text-sm font-medium text-white mb-1">${i.nama_tender}</p>
-                <div class="w-full bg-dark-700 rounded-full h-2 mb-2"><div class="bg-blue-500 h-2 rounded-full" style="width:${p}%"></div></div>
-                <div class="flex justify-between text-xs text-gray-400"><span>📍 ${i.lokasi_tujuan}</span><span>${p}%</span></div>
+                <div class="w-full bg-dark-700 rounded-full h-2 mb-2">
+                    <div class="bg-blue-500 h-2 rounded-full" style="width:${p}%"></div>
+                </div>
+                <div class="flex justify-between text-xs text-gray-400">
+                    <span>📍 ${i.lokasi_tujuan}</span>
+                    <span>${p}%</span>
+                </div>
             </div>`;
         }));
     }
@@ -506,43 +677,99 @@
     function renderGrafik(el) {
         el.innerHTML = `
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div class="glass rounded-xl p-6"><h3 class="text-lg font-semibold text-white mb-4">Status Tender</h3><div class="chart-container"><canvas id="chart-status"></canvas></div></div>
-            <div class="glass rounded-xl p-6"><h3 class="text-lg font-semibold text-white mb-4">Jenis Barang</h3><div class="chart-container"><canvas id="chart-jenis"></canvas></div></div>
+            <div class="glass rounded-xl p-6">
+                <h3 class="text-lg font-semibold text-white mb-4">Status Tender</h3>
+                <div class="chart-container" style="height: 300px;">
+                    <canvas id="chart-status"></canvas>
+                </div>
+            </div>
+            <div class="glass rounded-xl p-6">
+                <h3 class="text-lg font-semibold text-white mb-4">Jenis Barang</h3>
+                <div class="chart-container" style="height: 300px;">
+                    <canvas id="chart-jenis"></canvas>
+                </div>
+            </div>
         </div>`;
-        loadGrafik();
+        setTimeout(() => loadGrafik(), 100);
     }
 
     async function loadGrafik() {
         const d = await getTenders();
-        Object.values(charts).forEach(c => c.destroy()); charts = {};
+        Object.values(charts).forEach(c => c.destroy()); 
+        charts = {};
         
-        const sc = {planning:0,tender:0,ok:0,'not-ok':0}; d.forEach(i => sc[i.status]=(sc[i.status]||0)+1);
+        const sc = {planning:0,tender:0,ok:0,'not-ok':0}; 
+        d.forEach(i => sc[i.status]=(sc[i.status]||0)+1);
+        
         charts.status = new Chart(document.getElementById('chart-status'), {
-            type:'doughnut', data:{labels:['Planning','Proses','Deal','Gagal'],datasets:[{data:[sc.planning,sc.tender,sc.ok,sc['not-ok']],backgroundColor:['#6b7280','#3b82f6','#22c55e','#ef4444'],borderWidth:0}]},
-            options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#9ca3af'}}}}
+            type:'doughnut', 
+            data:{
+                labels:['Planning','Proses','Deal','Gagal'],
+                datasets:[{
+                    data:[sc.planning,sc.tender,sc.ok,sc['not-ok']],
+                    backgroundColor:['#6b7280','#3b82f6','#22c55e','#ef4444'],
+                    borderWidth:0
+                }]
+            },
+            options:{
+                responsive:true,
+                maintainAspectRatio:false,
+                plugins:{
+                    legend:{labels:{color:'#9ca3af'}}
+                }
+            }
         });
 
-        const jc = {berbahaya:0,aman:0,kimia:0,hewan:0}; d.forEach(i => jc[i.jenis]=(jc[i.jenis]||0)+1);
+        const jc = {berbahaya:0,aman:0,kimia:0,hewan:0}; 
+        d.forEach(i => jc[i.jenis]=(jc[i.jenis]||0)+1);
+        
         charts.jenis = new Chart(document.getElementById('chart-jenis'), {
-            type:'bar', data:{labels:['🔴 Berbahaya','🟢 Aman',' Kimia','🟣 Hewan'],datasets:[{data:[jc.berbahaya,jc.aman,jc.kimia,jc.hewan],backgroundColor:['rgba(239,68,68,0.6)','rgba(34,197,94,0.6)','rgba(245,158,11,0.6)','rgba(168,85,247,0.6)'],borderRadius:6}]},
-            options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{color:'#9ca3af'},grid:{color:'rgba(59,130,246,0.1)'}},x:{ticks:{color:'#9ca3af'},grid:{color:'rgba(59,130,246,0.1)'}}}}
+            type:'bar', 
+            data:{
+                labels:['🔴 Berbahaya','🟢 Aman','🟡 Kimia','🟣 Hewan'],
+                datasets:[{
+                    data:[jc.berbahaya,jc.aman,jc.kimia,jc.hewan],
+                    backgroundColor:['rgba(239,68,68,0.6)','rgba(34,197,94,0.6)','rgba(245,158,11,0.6)','rgba(168,85,247,0.6)'],
+                    borderRadius:6
+                }]
+            },
+            options:{
+                responsive:true,
+                maintainAspectRatio:false,
+                plugins:{legend:{display:false}},
+                scales:{
+                    y:{
+                        beginAtZero:true,
+                        ticks:{color:'#9ca3af'},
+                        grid:{color:'rgba(59,130,246,0.1)'}
+                    },
+                    x:{
+                        ticks:{color:'#9ca3af'},
+                        grid:{color:'rgba(59,130,246,0.1)'}
+                    }
+                }
+            }
         });
     }
 
     function renderAdmin(el) {
+        const projectId = SUPABASE_URL.split('//')[1].split('.')[0];
         el.innerHTML = `
         <div class="glass rounded-xl p-6 mb-6">
             <h3 class="text-lg font-semibold text-white mb-4">🛡️ Admin Panel</h3>
             <p class="text-sm text-gray-400 mb-4">Hanya admin yang bisa melihat halaman ini.</p>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div class="glass-light rounded-lg p-4 text-center cursor-pointer hover:bg-primary-900/20 transition" onclick="window.open('https://supabase.com/dashboard/project/${SUPABASE_URL.split('//')[1].split('.')[0]}/auth/users','_blank')">
-                    <p class="text-2xl font-bold text-blue-400">👥</p><p class="text-sm text-gray-300 mt-1">Kelola User (Supabase)</p>
+                <div class="glass-light rounded-lg p-4 text-center cursor-pointer hover:bg-primary-900/20 transition" onclick="window.open('https://supabase.com/dashboard/project/${projectId}/auth/users','_blank')">
+                    <p class="text-2xl font-bold text-blue-400">👥</p>
+                    <p class="text-sm text-gray-300 mt-1">Kelola User (Supabase)</p>
                 </div>
-                <div class="glass-light rounded-lg p-4 text-center cursor-pointer hover:bg-primary-900/20 transition" onclick="window.open('https://supabase.com/dashboard/project/${SUPABASE_URL.split('//')[1].split('.')[0]}/editor','_blank')">
-                    <p class="text-2xl font-bold text-green-400">🗄️</p><p class="text-sm text-gray-300 mt-1">Database Editor</p>
+                <div class="glass-light rounded-lg p-4 text-center cursor-pointer hover:bg-primary-900/20 transition" onclick="window.open('https://supabase.com/dashboard/project/${projectId}/editor','_blank')">
+                    <p class="text-2xl font-bold text-green-400">🗄️</p>
+                    <p class="text-sm text-gray-300 mt-1">Database Editor</p>
                 </div>
                 <div class="glass-light rounded-lg p-4 text-center cursor-pointer hover:bg-primary-900/20 transition" onclick="exportData()">
-                    <p class="text-2xl font-bold text-purple-400">📥</p><p class="text-sm text-gray-300 mt-1">Export Data JSON</p>
+                    <p class="text-2xl font-bold text-purple-400">📥</p>
+                    <p class="text-sm text-gray-300 mt-1">Export Data JSON</p>
                 </div>
             </div>
         </div>`;
@@ -554,14 +781,22 @@
     }
 
     function calculateProgress(i) {
-        let p = 0; if(i.status==='ok') p+=20; if(i.shipping_method) p+=30; if(i.shipping_delivered) p+=30; if(i.payment_status==='lunas') p+=20; return Math.min(p,100);
+        let p = 0; 
+        if(i.status==='ok') p+=20; 
+        if(i.shipping_method) p+=30; 
+        if(i.shipping_delivered) p+=30; 
+        if(i.payment_status==='lunas') p+=20; 
+        return Math.min(p,100);
     }
 
     function exportData() {
         getTenders().then(d => {
             const blob = new Blob([JSON.stringify(d,null,2)], {type:'application/json'});
             const url = URL.createObjectURL(blob);
-            const a = document.createElement('a'); a.href=url; a.download='logistics_export.json'; a.click();
+            const a = document.createElement('a'); 
+            a.href=url; 
+            a.download='logistics_export.json'; 
+            a.click();
             showToast('📥 Data terexport');
         });
     }
@@ -590,4 +825,3 @@
     </script>
 </body>
 </html>
-fix: duplicate supabase declaration
