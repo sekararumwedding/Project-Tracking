@@ -1,0 +1,1603 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logistics Tracking System - PT. Cahaya Sejati Teknologi</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: { 50:'#eff6ff',100:'#dbeafe',200:'#bfdbfe',300:'#93c5fd',400:'#60a5fa',500:'#3b82f6',600:'#2563eb',700:'#1d4ed8',800:'#1e3a5f',900:'#0f1f3d' },
+                        dark: { 700:'#1a2332',800:'#111827',900:'#0a0f1a' }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        * { font-family: 'Inter', sans-serif; }
+        body { background-color: #0a0f1a; }
+        .glass { background: rgba(30, 58, 95, 0.15); backdrop-filter: blur(12px); border: 1px solid rgba(59,130,246,0.15); }
+        .glass-light { background: rgba(30, 58, 95, 0.08); backdrop-filter: blur(8px); border: 1px solid rgba(59,130,246,0.1); }
+        .card-hover:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(59,130,246,0.15); }
+        .card-hover { transition: all 0.3s ease; }
+        .sidebar-link.active { background: linear-gradient(90deg, rgba(59,130,246,0.2), transparent); border-left: 3px solid #3b82f6; }
+        .fade-in { animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+        .pulse-dot { animation: pulse 2s infinite; }
+        @keyframes pulse { 0%,100%{ opacity:1; } 50%{ opacity:0.4; } }
+        ::-webkit-scrollbar { width:6px; }
+        ::-webkit-scrollbar-track { background:#111827; }
+        ::-webkit-scrollbar-thumb { background:#1e3a5f; border-radius:3px; }
+        ::-webkit-scrollbar-thumb:hover { background:#2563eb; }
+        select, input, textarea { background-color: rgba(15,31,61,0.8) !important; color: #e2e8f0 !important; border: 1px solid rgba(59,130,246,0.2) !important; }
+        select:focus, input:focus, textarea:focus { border-color: #3b82f6 !important; box-shadow: 0 0 0 3px rgba(59,130,246,0.15) !important; outline: none !important; }
+        .status-badge { padding: 4px 12px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; display: inline-block; }
+        .status-planning { background: rgba(107, 114, 128, 0.2); color: #9ca3af; }
+        .status-tender { background: rgba(59, 130, 246, 0.2); color: #60a5fa; }
+        .status-ok { background: rgba(34, 197, 94, 0.2); color: #4ade80; }
+        .status-revisi { background: rgba(239, 68, 68, 0.2); color: #f87171; }
+        .status-negosiasi { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
+        .status-kontrak { background: rgba(59, 130, 246, 0.2); color: #60a5fa; }
+        .status-konfirmasi { background: rgba(168, 85, 247, 0.2); color: #c084fc; }
+        .status-siap-kirim { background: rgba(20, 184, 166, 0.2); color: #2dd4bf; }
+        .status-pengiriman { background: rgba(59, 130, 246, 0.2); color: #60a5fa; }
+        .status-sampai { background: rgba(34, 197, 94, 0.2); color: #4ade80; }
+        .status-payment-pending { background: rgba(239, 68, 68, 0.2); color: #f87171; }
+        .status-payment-dp { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
+        .status-payment-lunas { background: rgba(34, 197, 94, 0.2); color: #4ade80; }
+        .status-payment-termin { background: rgba(168, 85, 247, 0.2); color: #c084fc; }
+        .jenis-badge { padding: 3px 10px; border-radius: 8px; font-size: 0.7rem; font-weight: 600; display: inline-block; }
+        .jenis-berbahaya { background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
+        .jenis-aman { background: rgba(34, 197, 94, 0.2); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.3); }
+        .jenis-kimia { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+        .jenis-hewan { background: rgba(168, 85, 247, 0.2); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.3); }
+        .label-card { background: linear-gradient(135deg, rgba(59,130,246,0.1), rgba(168,85,247,0.1)); border: 1px solid rgba(59,130,246,0.2); border-radius: 12px; padding: 16px; position: relative; overflow: hidden; }
+        .label-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+        .label-card.progress-0::before { background: linear-gradient(90deg, #ef4444, #f97316); }
+        .label-card.progress-25::before { background: linear-gradient(90deg, #f97316, #eab308); }
+        .label-card.progress-50::before { background: linear-gradient(90deg, #eab308, #22c55e); }
+        .label-card.progress-75::before { background: linear-gradient(90deg, #22c55e, #3b82f6); }
+        .label-card.progress-100::before { background: linear-gradient(90deg, #3b82f6, #a855f7); }
+        .doc-card { transition: all 0.3s ease; }
+        .doc-card:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(59,130,246,0.1); }
+        .chart-container { position: relative; height: 300px; }
+        .tracking-timeline { position: relative; padding-left: 30px; }
+        .tracking-timeline::before { content: ''; position: absolute; left: 10px; top: 0; bottom: 0; width: 2px; background: rgba(59,130,246,0.3); }
+        .timeline-dot { width: 22px; height: 22px; border-radius: 50%; position: absolute; left: 0; top: 2px; display: flex; align-items: center; justify-content: center; font-size: 10px; }
+        .timeline-dot.active { background: #3b82f6; box-shadow: 0 0 10px rgba(59,130,246,0.5); }
+        .timeline-dot.completed { background: #22c55e; box-shadow: 0 0 10px rgba(34,197,94,0.5); }
+        .timeline-dot.pending { background: #374151; }
+        .form-section { border: 1px solid rgba(59,130,246,0.15); border-radius: 12px; padding: 20px; margin-bottom: 16px; background: rgba(15,31,61,0.3); }
+        .form-section-title { font-size: 0.85rem; font-weight: 600; color: #60a5fa; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+        .tender-step { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px; font-size: 0.8rem; }
+        .tender-step.active { background: rgba(59,130,246,0.2); color: #60a5fa; }
+        .tender-step.done { background: rgba(34,197,94,0.2); color: #4ade80; }
+        .tender-step.pending { background: rgba(55,65,81,0.3); color: #6b7280; }
+    </style>
+</head>
+<body class="text-gray-200 min-h-screen">
+
+    <!-- SIDEBAR -->
+    <div id="sidebar" class="fixed top-0 left-0 h-full w-64 bg-dark-900 border-r border-primary-800 z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-300">
+        <div class="p-6 border-b border-primary-800">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center text-white font-bold text-lg">CS</div>
+                <div>
+                    <h1 class="font-bold text-white text-sm">Cahaya Sejati</h1>
+                    <p class="text-xs text-gray-500">Logistics Tracker</p>
+                </div>
+            </div>
+        </div>
+        <nav class="mt-4">
+            <a href="#" onclick="showPage('dashboard')" id="nav-dashboard" class="sidebar-link active flex items-center gap-3 px-6 py-3 text-sm hover:bg-primary-900/30 transition-all">
+                <svg class="w-5 h-5 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+                Dashboard
+            </a>
+            <a href="#" onclick="showPage('input')" id="nav-input" class="sidebar-link flex items-center gap-3 px-6 py-3 text-sm hover:bg-primary-900/30 transition-all">
+                <svg class="w-5 h-5 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                Rencana Tender
+            </a>
+            <a href="#" onclick="showPage('tracking')" id="nav-tracking" class="sidebar-link flex items-center gap-3 px-6 py-3 text-sm hover:bg-primary-900/30 transition-all">
+                <svg class="w-5 h-5 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0121 18.382V7.618a1 1 0 01-.806-.984A1 1 0 0021 7.618l-4.553-2.276A1 1 0 0115 7m0 13V7"/></svg>
+                Tracking
+            </a>
+            <a href="#" onclick="showPage('shipping')" id="nav-shipping" class="sidebar-link flex items-center gap-3 px-6 py-3 text-sm hover:bg-primary-900/30 transition-all">
+                <svg class="w-5 h-5 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"/></svg>
+                Pengiriman
+            </a>
+            <a href="#" onclick="showPage('payment')" id="nav-payment" class="sidebar-link flex items-center gap-3 px-6 py-3 text-sm hover:bg-primary-900/30 transition-all">
+                <svg class="w-5 h-5 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                Pembayaran
+            </a>
+            <a href="#" onclick="showPage('documents')" id="nav-documents" class="sidebar-link flex items-center gap-3 px-6 py-3 text-sm hover:bg-primary-900/30 transition-all">
+                <svg class="w-5 h-5 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                Dokumen
+            </a>
+            <a href="#" onclick="showPage('labels')" id="nav-labels" class="sidebar-link flex items-center gap-3 px-6 py-3 text-sm hover:bg-primary-900/30 transition-all">
+                <svg class="w-5 h-5 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
+                Label & Progres
+            </a>
+            <a href="#" onclick="showPage('grafik')" id="nav-grafik" class="sidebar-link flex items-center gap-3 px-6 py-3 text-sm hover:bg-primary-900/30 transition-all">
+                <svg class="w-5 h-5 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                Grafik
+            </a>
+        </nav>
+        <div class="absolute bottom-0 w-full p-4 border-t border-primary-800">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-full bg-primary-600 flex items-center justify-center text-xs font-bold">CST</div>
+                <div>
+                    <p class="text-sm font-medium text-white">Logistics Department</p>
+                    <p class="text-xs text-gray-500">PT. Cahaya Sejati</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="lg:ml-64 min-h-screen">
+        <!-- Top Bar -->
+        <header class="sticky top-0 z-40 glass-light border-b border-primary-800/50">
+            <div class="flex items-center justify-between px-4 lg:px-8 py-4">
+                <div class="flex items-center gap-4">
+                    <button onclick="toggleSidebar()" class="lg:hidden p-2 rounded-lg hover:bg-primary-900/30">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                    </button>
+                    <div>
+                        <h2 id="page-title" class="text-xl font-bold text-white">Dashboard</h2>
+                        <p id="page-subtitle" class="text-sm text-gray-400">Logistics Tracking System</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <div class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary-900/30 border border-primary-700/30">
+                        <span class="pulse-dot w-2 h-2 rounded-full bg-green-400"></span>
+                        <span class="text-xs text-gray-300" id="live-clock">Loading...</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- PAGE: DASHBOARD -->
+        <main id="page-dashboard" class="page-content p-4 lg:p-8 fade-in">
+            <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+                <div class="glass rounded-xl p-5 card-hover">
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-xs text-gray-400 uppercase">Total Tender</span>
+                        <div class="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center">
+                            <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                        </div>
+                    </div>
+                    <p class="text-2xl font-bold text-white" id="stat-total">0</p>
+                    <p class="text-xs text-gray-500 mt-1">Semua tender</p>
+                </div>
+                <div class="glass rounded-xl p-5 card-hover">
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-xs text-gray-400 uppercase">Dalam Proses</span>
+                        <div class="w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center">
+                            <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        </div>
+                    </div>
+                    <p class="text-2xl font-bold text-white" id="stat-process">0</p>
+                    <p class="text-xs text-gray-500 mt-1">Sedang berjalan</p>
+                </div>
+                <div class="glass rounded-xl p-5 card-hover">
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-xs text-gray-400 uppercase">Sudah Dikirim</span>
+                        <div class="w-8 h-8 rounded-lg bg-green-500/20 flex items-center justify-center">
+                            <svg class="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                        </div>
+                    </div>
+                    <p class="text-2xl font-bold text-white" id="stat-shipped">0</p>
+                    <p class="text-xs text-gray-500 mt-1">Sudah dikirim</p>
+                </div>
+                <div class="glass rounded-xl p-5 card-hover">
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-xs text-gray-400 uppercase">Lunas</span>
+                        <div class="w-8 h-8 rounded-lg bg-purple-500/20 flex items-center justify-center">
+                            <svg class="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        </div>
+                    </div>
+                    <p class="text-2xl font-bold text-white" id="stat-paid">0</p>
+                    <p class="text-xs text-gray-500 mt-1">Pembayaran lunas</p>
+                </div>
+                <div class="glass rounded-xl p-5 card-hover">
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-xs text-gray-400 uppercase">Dokumen</span>
+                        <div class="w-8 h-8 rounded-lg bg-cyan-500/20 flex items-center justify-center">
+                            <svg class="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                        </div>
+                    </div>
+                    <p class="text-2xl font-bold text-white" id="stat-docs">0</p>
+                    <p class="text-xs text-gray-500 mt-1">File tersimpan</p>
+                </div>
+            </div>
+
+            <!-- Summary by Jenis -->
+            <div class="glass rounded-xl p-6 mb-6">
+                <h3 class="text-lg font-semibold text-white mb-4">Ringkasan per Jenis Barang</h3>
+                <div id="jenis-summary" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="glass-light rounded-lg p-4 text-center">
+                        <p class="text-2xl font-bold text-red-400" id="count-berbahaya">0</p>
+                        <p class="text-xs text-gray-400 mt-1">🔴 Berbahaya</p>
+                    </div>
+                    <div class="glass-light rounded-lg p-4 text-center">
+                        <p class="text-2xl font-bold text-green-400" id="count-aman">0</p>
+                        <p class="text-xs text-gray-400 mt-1">🟢 Aman</p>
+                    </div>
+                    <div class="glass-light rounded-lg p-4 text-center">
+                        <p class="text-2xl font-bold text-amber-400" id="count-kimia">0</p>
+                        <p class="text-xs text-gray-400 mt-1">🟡 Kimia</p>
+                    </div>
+                    <div class="glass-light rounded-lg p-4 text-center">
+                        <p class="text-2xl font-bold text-purple-400" id="count-hewan">0</p>
+                        <p class="text-xs text-gray-400 mt-1">🟣 Hewan Hidup</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass rounded-xl p-6">
+                <h3 class="text-lg font-semibold text-white mb-4">Tender Terbaru</h3>
+                <div id="recent-activities" class="space-y-3">
+                    <p class="text-gray-500 text-center py-8">Belum ada data</p>
+                </div>
+            </div>
+        </main>
+
+        <!-- PAGE: INPUT RENCANA TENDER -->
+        <main id="page-input" class="page-content hidden p-4 lg:p-8 fade-in">
+            <div class="max-w-4xl mx-auto">
+                <div class="glass rounded-xl p-6 lg:p-8">
+                    <h3 class="text-lg font-semibold text-white mb-2">📋 Rencana Pekerjaan / Rencana Tender</h3>
+                    <p class="text-sm text-gray-400 mb-6">Isi semua data rencana tender dan logistik secara lengkap</p>
+                    
+                    <form id="tender-form" onsubmit="submitTender(event)">
+                        
+                        <!-- SECTION: DATA KARYAWAN & TENDER -->
+                        <div class="form-section">
+                            <div class="form-section-title">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                                Data Karyawan & Tender
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs text-gray-400 mb-1">Nama Karyawan / CS <span class="text-red-400">*</span></label>
+                                    <input type="text" id="input-karyawan" required placeholder="Nama lengkap karyawan..." class="w-full rounded-lg px-4 py-3 text-sm">
+                                </div>
+                                <div>
+                                    <label class="block text-xs text-gray-400 mb-1">Nama Tender <span class="text-red-400">*</span></label>
+                                    <input type="text" id="input-nama-tender" required placeholder="Nama / judul tender..." class="w-full rounded-lg px-4 py-3 text-sm">
+                                </div>
+                                <div>
+                                    <label class="block text-xs text-gray-400 mb-1">Tanggal Tender</label>
+                                    <input type="date" id="input-tgl-tender" class="w-full rounded-lg px-4 py-3 text-sm">
+                                </div>
+                                <div>
+                                    <label class="block text-xs text-gray-400 mb-1">Nilai Tender (Rp)</label>
+                                    <input type="number" id="input-nilai-tender" placeholder="0" class="w-full rounded-lg px-4 py-3 text-sm">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- SECTION: DATA CUSTOMER -->
+                        <div class="form-section">
+                            <div class="form-section-title">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                                Data Customer
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs text-gray-400 mb-1">Nama Customer <span class="text-red-400">*</span></label>
+                                    <input type="text" id="input-nama-cust" required placeholder="Nama kontak customer..." class="w-full rounded-lg px-4 py-3 text-sm">
+                                </div>
+                                <div>
+                                    <label class="block text-xs text-gray-400 mb-1">Nama PT Customer <span class="text-red-400">*</span></label>
+                                    <input type="text" id="input-pt-cust" required placeholder="PT. ..." class="w-full rounded-lg px-4 py-3 text-sm">
+                                </div>
+                                <div>
+                                    <label class="block text-xs text-gray-400 mb-1">No. Telepon Customer</label>
+                                    <input type="tel" id="input-telp-cust" placeholder="08xxxxxxxxxx" class="w-full rounded-lg px-4 py-3 text-sm">
+                                </div>
+                                <div>
+                                    <label class="block text-xs text-gray-400 mb-1">Email Customer</label>
+                                    <input type="email" id="input-email-cust" placeholder="email@company.com" class="w-full rounded-lg px-4 py-3 text-sm">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- SECTION: DATA BARANG -->
+                        <div class="form-section">
+                            <div class="form-section-title">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                                Data Barang & Jenis Pengiriman
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs text-gray-400 mb-1">Nama Barang <span class="text-red-400">*</span></label>
+                                    <input type="text" id="input-nama-barang" required placeholder="Nama / deskripsi barang..." class="w-full rounded-lg px-4 py-3 text-sm">
+                                </div>
+                                <div>
+                                    <label class="block text-xs text-gray-400 mb-1">Jenis Barang <span class="text-red-400">*</span></label>
+                                    <select id="input-jenis" required class="w-full rounded-lg px-4 py-3 text-sm">
+                                        <option value="">-- Pilih Jenis --</option>
+                                        <option value="berbahaya">🔴 Berbahaya (DG)</option>
+                                        <option value="aman">🟢 Aman / Umum</option>
+                                        <option value="kimia">🟡 Kimia</option>
+                                        <option value="hewan">🟣 Hewan Hidup</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs text-gray-400 mb-1">Berat / Volume</label>
+                                    <input type="text" id="input-berat" placeholder="Contoh: 500 kg / 2 CBM" class="w-full rounded-lg px-4 py-3 text-sm">
+                                </div>
+                                <div>
+                                    <label class="block text-xs text-gray-400 mb-1">Jumlah / Kuantitas</label>
+                                    <input type="text" id="input-jumlah" placeholder="Contoh: 10 pallet" class="w-full rounded-lg px-4 py-3 text-sm">
+                                </div>
+                            </div>
+                            <div class="mt-4">
+                                <label class="block text-xs text-gray-400 mb-1">Keterangan Barang Tambahan</label>
+                                <textarea id="input-ket-barang" rows="2" placeholder="Catatan khusus tentang barang..." class="w-full rounded-lg px-4 py-3 text-sm resize-none"></textarea>
+                            </div>
+                        </div>
+
+                        <!-- SECTION: LOKASI & TUJUAN -->
+                        <div class="form-section">
+                            <div class="form-section-title">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                Lokasi & Tujuan
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs text-gray-400 mb-1">Lokasi Asal / Pickup <span class="text-red-400">*</span></label>
+                                    <input type="text" id="input-lokasi-asal" required placeholder="Kota / alamat asal..." class="w-full rounded-lg px-4 py-3 text-sm">
+                                </div>
+                                <div>
+                                    <label class="block text-xs text-gray-400 mb-1">Lokasi Tujuan / Delivery <span class="text-red-400">*</span></label>
+                                    <input type="text" id="input-lokasi-tujuan" required placeholder="Kota / alamat tujuan..." class="w-full rounded-lg px-4 py-3 text-sm">
+                                </div>
+                                <div>
+                                    <label class="block text-xs text-gray-400 mb-1">Negara Tujuan</label>
+                                    <input type="text" id="input-negara-tujuan" placeholder="Indonesia / Internasional" class="w-full rounded-lg px-4 py-3 text-sm">
+                                </div>
+                                <div>
+                                    <label class="block text-xs text-gray-400 mb-1">Metode Pengiriman</label>
+                                    <select id="input-metode" class="w-full rounded-lg px-4 py-3 text-sm">
+                                        <option value="">-- Pilih Metode --</option>
+                                        <option value="udara">✈️ Udara (Air Freight)</option>
+                                        <option value="laut">🚢 Laut (Sea Freight)</option>
+                                        <option value="darat">🚛 Darat (Land Transport)</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- SECTION: STATUS & PROSPEK -->
+                        <div class="form-section">
+                            <div class="form-section-title">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                Status & Prospek
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs text-gray-400 mb-1">Status Tender <span class="text-red-400">*</span></label>
+                                    <select id="input-status" required class="w-full rounded-lg px-4 py-3 text-sm" onchange="handleStatusChange(this.value)">
+                                        <option value="">-- Pilih Status --</option>
+                                        <option value="planning">📝 Planning / Persiapan</option>
+                                        <option value="tender">📋 Proses Tender</option>
+                                        <option value="ok">✅ OK - Deal / Menang</option>
+                                        <option value="not-ok">❌ Tidak OK / Kalah</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs text-gray-400 mb-1">Tahap Prospek</label>
+                                    <select id="input-prospek" class="w-full rounded-lg px-4 py-3 text-sm">
+                                        <option value="">-- Pilih Tahap --</option>
+                                        <option value="survey">Survey & Penawaran</option>
+                                        <option value="negosiasi">Negosiasi</option>
+                                        <option value="kontrak">Penyusunan Kontrak</option>
+                                        <option value="konfirmasi">Konfirmasi Order</option>
+                                        <option value="siap-kirim">Siap Kirim</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div id="section-kelanjutan" class="mt-4 hidden">
+                                <label class="block text-xs text-gray-400 mb-1">Kelanjutan / Revisi</label>
+                                <textarea id="input-kelanjutan" rows="2" placeholder="Catatan kelanjutan..." class="w-full rounded-lg px-4 py-3 text-sm resize-none"></textarea>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="w-full py-3.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 rounded-lg font-semibold text-white transition-all flex items-center justify-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                            Simpan Rencana Tender
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </main>
+
+        <!-- PAGE: TRACKING -->
+        <main id="page-tracking" class="page-content hidden p-4 lg:p-8 fade-in">
+            <div class="flex gap-2 mb-6 overflow-x-auto pb-2">
+                <button onclick="filterTracking('all')" id="filter-all" class="px-4 py-2 bg-blue-600 rounded-lg text-sm font-medium whitespace-nowrap">Semua</button>
+                <button onclick="filterTracking('berbahaya')" id="filter-berbahaya" class="px-4 py-2 glass-light rounded-lg text-sm font-medium whitespace-nowrap">🔴 Berbahaya</button>
+                <button onclick="filterTracking('aman')" id="filter-aman" class="px-4 py-2 glass-light rounded-lg text-sm font-medium whitespace-nowrap">🟢 Aman</button>
+                <button onclick="filterTracking('kimia')" id="filter-kimia" class="px-4 py-2 glass-light rounded-lg text-sm font-medium whitespace-nowrap">🟡 Kimia</button>
+                <button onclick="filterTracking('hewan')" id="filter-hewan" class="px-4 py-2 glass-light rounded-lg text-sm font-medium whitespace-nowrap">🟣 Hewan Hidup</button>
+            </div>
+            <div class="glass rounded-xl p-6">
+                <h3 class="text-lg font-semibold text-white mb-6">Tracking Status Logistik</h3>
+                <div id="tracking-list" class="space-y-4">
+                    <p class="text-gray-500 text-center py-8">Belum ada data</p>
+                </div>
+            </div>
+        </main>
+
+        <!-- PAGE: SHIPPING -->
+        <main id="page-shipping" class="page-content hidden p-4 lg:p-8 fade-in">
+            <div class="glass rounded-xl p-6">
+                <h3 class="text-lg font-semibold text-white mb-6">Informasi Pengiriman</h3>
+                <div id="shipping-list" class="space-y-4">
+                    <p class="text-gray-500 text-center py-8">Belum ada data pengiriman</p>
+                </div>
+            </div>
+        </main>
+
+        <!-- PAGE: PAYMENT -->
+        <main id="page-payment" class="page-content hidden p-4 lg:p-8 fade-in">
+            <div class="glass rounded-xl p-6">
+                <h3 class="text-lg font-semibold text-white mb-6">Status Pembayaran</h3>
+                <div id="payment-list" class="space-y-4">
+                    <p class="text-gray-500 text-center py-8">Belum ada data pembayaran</p>
+                </div>
+            </div>
+        </main>
+
+        <!-- PAGE: DOKUMEN -->
+        <main id="page-documents" class="page-content hidden p-4 lg:p-8 fade-in">
+            <div class="flex gap-2 mb-6 overflow-x-auto pb-2">
+                <button onclick="showDocTab('special')" id="doc-tab-special" class="px-4 py-2 bg-blue-600 rounded-lg text-sm font-medium whitespace-nowrap">Dokumen Barang Khusus</button>
+                <button onclick="showDocTab('invoice')" id="doc-tab-invoice" class="px-4 py-2 glass-light rounded-lg text-sm font-medium whitespace-nowrap">Invoice & Packing List</button>
+            </div>
+
+            <div id="doc-tab-content-special" class="doc-tab-content">
+                <div class="glass rounded-xl p-6 mb-6">
+                    <h3 class="text-lg font-semibold text-white mb-4">Upload Dokumen Barang Khusus (DG, Curah, dll)</h3>
+                    <form onsubmit="uploadSpecialDoc(event)">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label class="block text-xs text-gray-400 mb-1">Tender Terkait</label>
+                                <select id="special-doc-tender" class="w-full rounded-lg px-4 py-3 text-sm">
+                                    <option value="">-- Pilih Tender --</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs text-gray-400 mb-1">Jenis Dokumen</label>
+                                <select id="special-doc-type" required class="w-full rounded-lg px-4 py-3 text-sm">
+                                    <option value="">-- Pilih Jenis --</option>
+                                    <option value="dg">🔴 Dangerous Goods (DG)</option>
+                                    <option value="curah">📦 Muatan Curah (Bulk)</option>
+                                    <option value="perishable">🥶 Perishable / Mudah Rusak</option>
+                                    <option value="oversize">📐 Oversize / Overweight</option>
+                                    <option value="fragile">⚠️ Fragile / Mudah Pecah</option>
+                                    <option value="cold-chain">❄️ Cold Chain / Rantai Dingin</option>
+                                    <option value="hazmat">☢️ Hazardous Material</option>
+                                    <option value="sdm">🐄 SDS (Safety Data Material)</option>
+                                    <option value="lainnya">📋 Lainnya</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-xs text-gray-400 mb-1">Keterangan</label>
+                            <textarea id="special-doc-note" rows="2" placeholder="Catatan tambahan..." class="w-full rounded-lg px-4 py-3 text-sm resize-none"></textarea>
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-xs text-gray-400 mb-1">File Dokumen</label>
+                            <input type="file" id="special-doc-file" multiple accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx" required class="w-full rounded-lg px-4 py-3 text-sm">
+                            <p class="text-xs text-gray-500 mt-1">PDF, JPG, PNG, DOC, XLS (Maks. 10MB per file)</p>
+                        </div>
+                        <button type="submit" class="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+                            Upload Dokumen
+                        </button>
+                    </form>
+                </div>
+                <div class="glass rounded-xl p-6">
+                    <h3 class="text-lg font-semibold text-white mb-4">Daftar Dokumen Barang Khusus</h3>
+                    <div id="special-doc-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <p class="text-gray-500 text-center py-8 col-span-full">Belum ada dokumen</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="doc-tab-content-invoice" class="doc-tab-content hidden">
+                <div class="glass rounded-xl p-6 mb-6">
+                    <h3 class="text-lg font-semibold text-white mb-4">Upload Invoice & Packing List Customer</h3>
+                    <form onsubmit="uploadInvoiceDoc(event)">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label class="block text-xs text-gray-400 mb-1">Tender Terkait</label>
+                                <select id="invoice-doc-tender" class="w-full rounded-lg px-4 py-3 text-sm">
+                                    <option value="">-- Pilih Tender --</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs text-gray-400 mb-1">Jenis Dokumen</label>
+                                <select id="invoice-doc-type" required class="w-full rounded-lg px-4 py-3 text-sm">
+                                    <option value="">-- Pilih Jenis --</option>
+                                    <option value="invoice">🧾 Invoice / Tagihan</option>
+                                    <option value="packing-list">📋 Packing List</option>
+                                    <option value="delivery-order">🚛 Delivery Order (DO)</option>
+                                    <option value="surat-jalan">📄 Surat Jalan</option>
+                                    <option value="kwitansi">💳 Kwitansi / Bukti Bayar</option>
+                                    <option value="lainnya">📎 Lainnya</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label class="block text-xs text-gray-400 mb-1">Nomor Invoice / Ref</label>
+                                <input type="text" id="invoice-doc-number" placeholder="No. Invoice..." class="w-full rounded-lg px-4 py-3 text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs text-gray-400 mb-1">Tanggal Dokumen</label>
+                                <input type="date" id="invoice-doc-date" class="w-full rounded-lg px-4 py-3 text-sm">
+                            </div>
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-xs text-gray-400 mb-1">File Dokumen</label>
+                            <input type="file" id="invoice-doc-file" multiple accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx" required class="w-full rounded-lg px-4 py-3 text-sm">
+                        </div>
+                        <button type="submit" class="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+                            Upload Dokumen
+                        </button>
+                    </form>
+                </div>
+                <div class="glass rounded-xl p-6">
+                    <h3 class="text-lg font-semibold text-white mb-4">Daftar Invoice & Packing List</h3>
+                    <div id="invoice-doc-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <p class="text-gray-500 text-center py-8 col-span-full">Belum ada dokumen</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- PAGE: LABEL & PROGRES -->
+        <main id="page-labels" class="page-content hidden p-4 lg:p-8 fade-in">
+            <div class="glass rounded-xl p-6 mb-6">
+                <h3 class="text-lg font-semibold text-white mb-2">🏷️ Label Progres & CS</h3>
+                <p class="text-sm text-gray-400 mb-4">Monitoring progres setiap tender dan penanggung jawab (CS)</p>
+            </div>
+            <div id="labels-list" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                <p class="text-gray-500 text-center py-8 col-span-full">Belum ada data</p>
+            </div>
+        </main>
+
+        <!-- PAGE: GRAFIK -->
+        <main id="page-grafik" class="page-content hidden p-4 lg:p-8 fade-in">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                <div class="glass rounded-xl p-6">
+                    <h3 class="text-lg font-semibold text-white mb-4">Grafik Status Tender</h3>
+                    <div class="chart-container"><canvas id="chart-status"></canvas></div>
+                </div>
+                <div class="glass rounded-xl p-6">
+                    <h3 class="text-lg font-semibold text-white mb-4">Grafik Jenis Barang</h3>
+                    <div class="chart-container"><canvas id="chart-jenis"></canvas></div>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                <div class="glass rounded-xl p-6">
+                    <h3 class="text-lg font-semibold text-white mb-4">Grafik Per CS / Karyawan</h3>
+                    <div class="chart-container"><canvas id="chart-cs"></canvas></div>
+                </div>
+                <div class="glass rounded-xl p-6">
+                    <h3 class="text-lg font-semibold text-white mb-4">Grafik Metode Pengiriman</h3>
+                    <div class="chart-container"><canvas id="chart-shipping"></canvas></div>
+                </div>
+            </div>
+            <div class="glass rounded-xl p-6">
+                <h3 class="text-lg font-semibold text-white mb-4">Tren Bulanan</h3>
+                <div class="chart-container"><canvas id="chart-trend"></canvas></div>
+            </div>
+        </main>
+    </div>
+
+    <!-- MODAL: UPDATE SHIPPING -->
+    <div id="modal-shipping" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="glass rounded-xl p-6 w-full max-w-md">
+            <h3 class="text-lg font-semibold text-white mb-4">Update Informasi Pengiriman</h3>
+            <form onsubmit="updateShipping(event)">
+                <input type="hidden" id="shipping-id">
+                <div class="mb-4">
+                    <label class="block text-xs text-gray-400 mb-1">Metode Pengiriman</label>
+                    <select id="shipping-method" required class="w-full rounded-lg px-4 py-3 text-sm">
+                        <option value="udara">✈️ Udara (Air Freight)</option>
+                        <option value="laut">🚢 Laut (Sea Freight)</option>
+                        <option value="darat">🚛 Darat (Land Transport)</option>
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-xs text-gray-400 mb-1">Nomor Resi / BL / AWB</label>
+                    <input type="text" id="shipping-resi" placeholder="Nomor resi..." class="w-full rounded-lg px-4 py-3 text-sm">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-xs text-gray-400 mb-1">Estimasi Sampai (ETA)</label>
+                    <input type="date" id="shipping-eta" class="w-full rounded-lg px-4 py-3 text-sm">
+                </div>
+                <div class="mb-6">
+                    <label class="block text-xs text-gray-400 mb-1">Catatan Pengiriman</label>
+                    <textarea id="shipping-notes" rows="2" placeholder="Catatan..." class="w-full rounded-lg px-4 py-3 text-sm resize-none"></textarea>
+                </div>
+                <div class="flex gap-3">
+                    <button type="button" onclick="closeModal('modal-shipping')" class="flex-1 py-3 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm font-medium">Batal</button>
+                    <button type="submit" class="flex-1 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-medium">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: UPDATE PAYMENT -->
+    <div id="modal-payment" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="glass rounded-xl p-6 w-full max-w-md">
+            <h3 class="text-lg font-semibold text-white mb-4">Update Pembayaran</h3>
+            <form onsubmit="updatePayment(event)">
+                <input type="hidden" id="payment-id">
+                <div class="mb-4">
+                    <label class="block text-xs text-gray-400 mb-1">Status Pembayaran</label>
+                    <select id="payment-status" required class="w-full rounded-lg px-4 py-3 text-sm">
+                        <option value="pending">⏰ Pending</option>
+                        <option value="dp">💳 DP Dibayar</option>
+                        <option value="lunas">✅ Lunas</option>
+                        <option value="termin">📊 Termin</option>
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-xs text-gray-400 mb-1">Total Amount (Rp)</label>
+                    <input type="number" id="payment-amount" placeholder="0" class="w-full rounded-lg px-4 py-3 text-sm">
+                </div>
+                <div class="mb-6">
+                    <label class="block text-xs text-gray-400 mb-1">Catatan Pembayaran</label>
+                    <textarea id="payment-notes" rows="2" placeholder="Catatan..." class="w-full rounded-lg px-4 py-3 text-sm resize-none"></textarea>
+                </div>
+                <div class="flex gap-3">
+                    <button type="button" onclick="closeModal('modal-payment')" class="flex-1 py-3 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm font-medium">Batal</button>
+                    <button type="submit" class="flex-1 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-medium">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: VIEW DOCUMENT -->
+    <div id="modal-view-doc" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4" onclick="closeModal('modal-view-doc')">
+        <div class="glass rounded-xl p-4 max-w-4xl w-full max-h-[90vh] overflow-auto" onclick="event.stopPropagation()">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold text-white" id="view-doc-title">Dokumen</h3>
+                <button onclick="closeModal('modal-view-doc')" class="p-2 hover:bg-gray-700 rounded-lg">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <div id="view-doc-content" class="text-center"></div>
+        </div>
+    </div>
+
+    <!-- TOAST -->
+    <div id="toast" class="hidden fixed bottom-6 right-6 z-50 glass rounded-lg px-5 py-3 flex items-center gap-3 shadow-2xl">
+        <svg id="toast-icon" class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+        <span id="toast-message" class="text-sm text-white">Berhasil!</span>
+    </div>
+
+    <script>
+    const DB_KEY = 'cst_logistics_data';
+    const DOCS_KEY = 'cst_documents_data';
+
+    function getData() { return JSON.parse(localStorage.getItem(DB_KEY) || '[]'); }
+    function setData(data) { localStorage.setItem(DB_KEY, JSON.stringify(data)); }
+    function getDocs() { return JSON.parse(localStorage.getItem(DOCS_KEY) || '[]'); }
+    function setDocs(data) { localStorage.setItem(DOCS_KEY, JSON.stringify(data)); }
+
+    let currentFilter = 'all';
+    let charts = {};
+
+    const pages = ['dashboard', 'input', 'tracking', 'shipping', 'payment', 'documents', 'labels', 'grafik'];
+    const pageTitles = {
+        'dashboard': ['Dashboard', 'Logistics Tracking System'],
+        'input': ['Rencana Tender', 'Input rencana pekerjaan / tender baru'],
+        'tracking': ['Tracking', 'Pantau status pengiriman'],
+        'shipping': ['Pengiriman', 'Informasi pengiriman'],
+        'payment': ['Pembayaran', 'Status pembayaran'],
+        'documents': ['Dokumen', 'Penyimpanan dokumen logistik'],
+        'labels': ['Label & Progres', 'Monitoring progres dan CS'],
+        'grafik': ['Grafik', 'Visualisasi data tracking']
+    };
+
+    function showPage(page) {
+        pages.forEach(p => {
+            document.getElementById(`page-${p}`).classList.add('hidden');
+            document.getElementById(`nav-${p}`).classList.remove('active');
+        });
+        document.getElementById(`page-${page}`).classList.remove('hidden');
+        document.getElementById(`nav-${page}`).classList.add('active');
+        document.getElementById('page-title').textContent = pageTitles[page][0];
+        document.getElementById('page-subtitle').textContent = pageTitles[page][1];
+
+        if (page === 'dashboard') renderDashboard();
+        if (page === 'tracking') renderTracking();
+        if (page === 'shipping') renderShipping();
+        if (page === 'payment') renderPayment();
+        if (page === 'documents') renderDocuments();
+        if (page === 'labels') renderLabels();
+        if (page === 'grafik') renderGrafik();
+
+        if (window.innerWidth < 1024) {
+            document.getElementById('sidebar').classList.add('-translate-x-full');
+        }
+    }
+
+    function toggleSidebar() {
+        document.getElementById('sidebar').classList.toggle('-translate-x-full');
+    }
+
+    function handleStatusChange(value) {
+        document.getElementById('section-kelanjutan').classList.toggle('hidden', value !== 'not-ok');
+    }
+
+    function submitTender(e) {
+        e.preventDefault();
+        const data = getData();
+        const newItem = {
+            id: Date.now(),
+            karyawan: document.getElementById('input-karyawan').value.trim(),
+            namaTender: document.getElementById('input-nama-tender').value.trim(),
+            tglTender: document.getElementById('input-tgl-tender').value,
+            nilaiTender: parseInt(document.getElementById('input-nilai-tender').value) || 0,
+            namaCust: document.getElementById('input-nama-cust').value.trim(),
+            ptCust: document.getElementById('input-pt-cust').value.trim(),
+            telpCust: document.getElementById('input-telp-cust').value.trim(),
+            emailCust: document.getElementById('input-email-cust').value.trim(),
+            namaBarang: document.getElementById('input-nama-barang').value.trim(),
+            jenis: document.getElementById('input-jenis').value,
+            berat: document.getElementById('input-berat').value.trim(),
+            jumlah: document.getElementById('input-jumlah').value.trim(),
+            ketBarang: document.getElementById('input-ket-barang').value.trim(),
+            lokasiAsal: document.getElementById('input-lokasi-asal').value.trim(),
+            lokasiTujuan: document.getElementById('input-lokasi-tujuan').value.trim(),
+            negaraTujuan: document.getElementById('input-negara-tujuan').value.trim(),
+            metode: document.getElementById('input-metode').value,
+            status: document.getElementById('input-status').value,
+            prospek: document.getElementById('input-prospek').value,
+            kelanjutan: document.getElementById('input-kelanjutan').value.trim(),
+            shipping: { method: '', resi: '', eta: '', notes: '', delivered: false },
+            payment: { status: 'pending', amount: 0, notes: '' },
+            progress: 0,
+            created: new Date().toISOString(),
+            updated: new Date().toISOString()
+        };
+        data.push(newItem);
+        setData(data);
+        document.getElementById('tender-form').reset();
+        document.getElementById('section-kelanjutan').classList.add('hidden');
+        showToast('Rencana tender berhasil disimpan!');
+    }
+
+    function calculateProgress(item) {
+        let p = 0;
+        if (item.status === 'ok') p += 15;
+        if (item.prospek) p += 10;
+        if (item.prospek === 'konfirmasi') p += 10;
+        if (item.prospek === 'siap-kirim') p += 5;
+        if (item.metode) p += 10;
+        if (item.shipping.method) p += 20;
+        if (item.shipping.delivered) p += 20;
+        if (item.payment.status !== 'pending') p += 5;
+        if (item.payment.status === 'lunas') p += 5;
+        return Math.min(p, 100);
+    }
+
+    function renderDashboard() {
+        const data = getData();
+        const docs = getDocs();
+        document.getElementById('stat-total').textContent = data.length;
+        document.getElementById('stat-process').textContent = data.filter(d => d.status === 'ok' && !d.shipping.method).length;
+        document.getElementById('stat-shipped').textContent = data.filter(d => d.shipping.method).length;
+        document.getElementById('stat-paid').textContent = data.filter(d => d.payment.status === 'lunas').length;
+        document.getElementById('stat-docs').textContent = docs.length;
+
+        // Count by jenis
+        document.getElementById('count-berbahaya').textContent = data.filter(d => d.jenis === 'berbahaya').length;
+        document.getElementById('count-aman').textContent = data.filter(d => d.jenis === 'aman').length;
+        document.getElementById('count-kimia').textContent = data.filter(d => d.jenis === 'kimia').length;
+        document.getElementById('count-hewan').textContent = data.filter(d => d.jenis === 'hewan').length;
+
+        const recentDiv = document.getElementById('recent-activities');
+        if (data.length === 0) {
+            recentDiv.innerHTML = '<p class="text-gray-500 text-center py-8">Belum ada data tender</p>';
+        } else {
+            recentDiv.innerHTML = data.slice(-8).reverse().map(item => `
+                <div class="glass-light rounded-lg p-4 card-hover">
+                    <div class="flex justify-between items-start mb-2">
+                        <div>
+                            <p class="font-semibold text-white">${item.namaTender}</p>
+                            <p class="text-sm text-gray-400">${item.ptCust} - ${item.namaCust}</p>
+                        </div>
+                        <div class="flex gap-1">
+                            <span class="status-badge status-${getStatusClass(item.status)}">${getStatusText(item.status)}</span>
+                        </div>
+                    </div>
+                    <div class="flex flex-wrap gap-2 text-xs mt-2">
+                        <span class="jenis-badge jenis-${item.jenis}">${getJenisLabel(item.jenis)}</span>
+                        <span class="text-gray-400">CS: ${item.karyawan}</span>
+                        <span class="text-gray-400">Barang: ${item.namaBarang}</span>
+                        <span class="text-gray-400">📍 ${item.lokasiAsal} → ${item.lokasiTujuan}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+    }
+
+    function filterTracking(type) {
+        currentFilter = type;
+        ['all','berbahaya','aman','kimia','hewan'].forEach(t => {
+            const btn = document.getElementById(`filter-${t}`);
+            btn.className = t === type ? 'px-4 py-2 bg-blue-600 rounded-lg text-sm font-medium whitespace-nowrap' : 'px-4 py-2 glass-light rounded-lg text-sm font-medium whitespace-nowrap';
+        });
+        renderTracking();
+    }
+
+    function renderTracking() {
+        const data = getData();
+        const trackingDiv = document.getElementById('tracking-list');
+        const filtered = currentFilter === 'all' ? data : data.filter(d => d.jenis === currentFilter);
+
+        if (filtered.length === 0) {
+            trackingDiv.innerHTML = '<p class="text-gray-500 text-center py-8">Belum ada data</p>';
+            return;
+        }
+
+        trackingDiv.innerHTML = filtered.map(item => {
+            const progress = calculateProgress(item);
+            return `
+            <div class="glass-light rounded-lg p-5 card-hover">
+                <!-- Header -->
+                <div class="flex justify-between items-start mb-3">
+                    <div>
+                        <h4 class="font-semibold text-white text-lg">${item.namaTender}</h4>
+                        <p class="text-sm text-blue-400">${item.ptCust} • ${item.namaCust}</p>
+                    </div>
+                    <div class="flex gap-1 flex-wrap justify-end">
+                        <span class="jenis-badge jenis-${item.jenis}">${getJenisLabel(item.jenis)}</span>
+                        <span class="status-badge status-${getStatusClass(item.status)}">${getStatusText(item.status)}</span>
+                    </div>
+                </div>
+
+                <!-- Info Grid -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4 text-sm">
+                    <div>
+                        <p class="text-xs text-gray-500">Karyawan/CS</p>
+                        <p class="text-white font-medium">${item.karyawan}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-500">Nama Barang</p>
+                        <p class="text-white font-medium">${item.namaBarang}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-500">Rute</p>
+                        <p class="text-white font-medium text-xs">${item.lokasiAsal} → ${item.lokasiTujuan}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-500">Berat/Jumlah</p>
+                        <p class="text-white font-medium text-xs">${item.berat || '-'} / ${item.jumlah || '-'}</p>
+                    </div>
+                </div>
+
+                <!-- Progress Bar -->
+                <div class="mb-4">
+                    <div class="flex justify-between text-xs mb-1">
+                        <span class="text-gray-400">Progres Keseluruhan</span>
+                        <span class="text-blue-400 font-bold">${progress}%</span>
+                    </div>
+                    <div class="w-full bg-dark-700 rounded-full h-2">
+                        <div class="bg-gradient-to-r from-blue-500 to-blue-400 h-2 rounded-full transition-all duration-700" style="width:${progress}%"></div>
+                    </div>
+                </div>
+
+                <!-- Timeline -->
+                <div class="tracking-timeline space-y-3 mb-4">
+                    <div class="relative">
+                        <div class="timeline-dot ${item.status !== 'planning' ? 'completed' : 'pending'}">✓</div>
+                        <div class="ml-7">
+                            <p class="text-sm font-medium ${item.status !== 'planning' ? 'text-white' : 'text-gray-500'}">Planning & Tender</p>
+                            <p class="text-xs text-gray-500">${item.tglTender ? formatDate(item.tglTender) : formatDate(item.created)}</p>
+                        </div>
+                    </div>
+                    <div class="relative">
+                        <div class="timeline-dot ${item.prospek ? 'completed' : 'pending'}">${item.prospek ? '✓' : ''}</div>
+                        <div class="ml-7">
+                            <p class="text-sm font-medium ${item.prospek ? 'text-white' : 'text-gray-500'}">Prospek: ${item.prospek ? getProspekText(item.prospek) : 'Menunggu'}</p>
+                        </div>
+                    </div>
+                    <div class="relative">
+                        <div class="timeline-dot ${item.shipping.method ? 'completed' : item.metode ? 'active' : 'pending'}">${item.shipping.method ? '✓' : ''}</div>
+                        <div class="ml-7">
+                            <p class="text-sm font-medium ${item.shipping.method ? 'text-white' : 'text-gray-500'}">Pengiriman: ${item.shipping.method ? getShippingMethodText(item.shipping.method) : item.metode ? getShippingMethodText(item.metode) : 'Menunggu'}</p>
+                            ${item.shipping.resi ? `<p class="text-xs text-gray-500">Resi: ${item.shipping.resi}</p>` : ''}
+                        </div>
+                    </div>
+                    <div class="relative">
+                        <div class="timeline-dot ${item.shipping.delivered ? 'completed' : 'pending'}">${item.shipping.delivered ? '✓' : ''}</div>
+                        <div class="ml-7">
+                            <p class="text-sm font-medium ${item.shipping.delivered ? 'text-white' : 'text-gray-500'}">Sampai Tujuan: ${item.shipping.delivered ? '✅ Sudah sampai' : '⏳ Dalam perjalanan'}</p>
+                        </div>
+                    </div>
+                    <div class="relative">
+                        <div class="timeline-dot ${item.payment.status === 'lunas' ? 'completed' : item.payment.status !== 'pending' ? 'active' : 'pending'}">${item.payment.status === 'lunas' ? '✓' : ''}</div>
+                        <div class="ml-7">
+                            <p class="text-sm font-medium ${item.payment.status !== 'pending' ? 'text-white' : 'text-gray-500'}">Pembayaran: ${getPaymentStatusText(item.payment.status)}</p>
+                            ${item.payment.amount > 0 ? `<p class="text-xs text-gray-500">Rp ${item.payment.amount.toLocaleString('id-ID')}</p>` : ''}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex gap-2 flex-wrap">
+                    ${!item.shipping.method ? `<button onclick="openShippingModal(${item.id})" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 rounded text-xs font-medium">Update Pengiriman</button>` : ''}
+                    ${item.shipping.method && !item.shipping.delivered ? `<button onclick="markDelivered(${item.id})" class="px-3 py-1.5 bg-green-600 hover:bg-green-700 rounded text-xs font-medium">Tandai Sampai</button>` : ''}
+                    <button onclick="openPaymentModal(${item.id})" class="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 rounded text-xs font-medium">Update Pembayaran</button>
+                    <button onclick="editTender(${item.id})" class="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 rounded text-xs font-medium">Edit</button>
+                    <button onclick="deleteTender(${item.id})" class="px-3 py-1.5 bg-red-600/50 hover:bg-red-600 rounded text-xs font-medium">Hapus</button>
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    function renderShipping() {
+        const data = getData();
+        const shippingDiv = document.getElementById('shipping-list');
+        const withShipping = data.filter(d => d.shipping.method || d.metode);
+        if (withShipping.length === 0) {
+            shippingDiv.innerHTML = '<p class="text-gray-500 text-center py-8">Belum ada data pengiriman</p>';
+            return;
+        }
+        shippingDiv.innerHTML = withShipping.map(item => `
+            <div class="glass-light rounded-lg p-5">
+                <div class="flex justify-between items-start mb-3">
+                    <div>
+                        <h4 class="font-semibold text-white">${item.namaTender}</h4>
+                        <p class="text-sm text-gray-400">${item.ptCust} - ${item.namaCust}</p>
+                        <p class="text-xs text-gray-500">CS: ${item.karyawan} • ${item.namaBarang}</p>
+                    </div>
+                    <div class="text-right">
+                        <span class="jenis-badge jenis-${item.jenis}">${getJenisLabel(item.jenis)}</span>
+                        <span class="status-badge status-pengiriman ml-1">${getShippingMethodText(item.shipping.method || item.metode)}</span>
+                        ${item.shipping.delivered ? '<span class="status-badge status-sampai ml-1">Sampai</span>' : ''}
+                    </div>
+                </div>
+                <div class="space-y-2 text-sm">
+                    <p class="text-gray-400">Rute: <span class="text-white">${item.lokasiAsal} → ${item.lokasiTujuan}</span></p>
+                    <p class="text-gray-400">Resi/BL: <span class="text-white">${item.shipping.resi || '-'}</span></p>
+                    <p class="text-gray-400">ETA: <span class="text-white">${item.shipping.eta ? formatDate(item.shipping.eta) : '-'}</span></p>
+                    ${item.shipping.notes ? `<p class="text-gray-400">Catatan: <span class="text-gray-300">${item.shipping.notes}</span></p>` : ''}
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function renderPayment() {
+        const data = getData();
+        const paymentDiv = document.getElementById('payment-list');
+        if (data.length === 0) {
+            paymentDiv.innerHTML = '<p class="text-gray-500 text-center py-8">Belum ada data pembayaran</p>';
+            return;
+        }
+        paymentDiv.innerHTML = data.map(item => `
+            <div class="glass-light rounded-lg p-5">
+                <div class="flex justify-between items-start mb-3">
+                    <div>
+                        <h4 class="font-semibold text-white">${item.namaTender}</h4>
+                        <p class="text-sm text-gray-400">${item.ptCust} - ${item.namaCust}</p>
+                        <p class="text-xs text-gray-500">CS: ${item.karyawan}</p>
+                    </div>
+                    <span class="status-badge ${getPaymentBadgeClass(item.payment.status)}">${getPaymentStatusText(item.payment.status)}</span>
+                </div>
+                <div class="space-y-2 text-sm">
+                    <p class="text-gray-400">Total: <span class="text-white font-semibold">Rp ${item.payment.amount.toLocaleString('id-ID')}</span></p>
+                    ${item.payment.notes ? `<p class="text-gray-400">Catatan: <span class="text-gray-300">${item.payment.notes}</span></p>` : ''}
+                </div>
+            </div>
+        `).join('');
+    }
+
+    // ==================== DOCUMENTS ====================
+    function renderDocuments() {
+        populateTenderSelects();
+        renderSpecialDocs();
+        renderInvoiceDocs();
+    }
+
+    function populateTenderSelects() {
+        const data = getData();
+        const options = '<option value="">-- Pilih Tender --</option>' + data.map(d => `<option value="${d.id}">${d.namaTender} - ${d.ptCust}</option>`).join('');
+        document.getElementById('special-doc-tender').innerHTML = options;
+        document.getElementById('invoice-doc-tender').innerHTML = options;
+    }
+
+    function showDocTab(tab) {
+        document.querySelectorAll('.doc-tab-content').forEach(el => el.classList.add('hidden'));
+        document.getElementById(`doc-tab-content-${tab}`).classList.remove('hidden');
+        document.getElementById('doc-tab-special').className = tab === 'special' ? 'px-4 py-2 bg-blue-600 rounded-lg text-sm font-medium whitespace-nowrap' : 'px-4 py-2 glass-light rounded-lg text-sm font-medium whitespace-nowrap';
+        document.getElementById('doc-tab-invoice').className = tab === 'invoice' ? 'px-4 py-2 bg-blue-600 rounded-lg text-sm font-medium whitespace-nowrap' : 'px-4 py-2 glass-light rounded-lg text-sm font-medium whitespace-nowrap';
+    }
+
+    function uploadSpecialDoc(e) {
+        e.preventDefault();
+        const tenderId = document.getElementById('special-doc-tender').value;
+        const type = document.getElementById('special-doc-type').value;
+        const note = document.getElementById('special-doc-note').value;
+        const files = document.getElementById('special-doc-file').files;
+
+        if (!tenderId || !type || files.length === 0) {
+            showToast('Lengkapi semua field!', 'error');
+            return;
+        }
+
+        const docs = getDocs();
+        const data = getData();
+        const tender = data.find(d => d.id === parseInt(tenderId));
+
+        Array.from(files).forEach(file => {
+            if (file.size > 10 * 1024 * 1024) {
+                showToast(`${file.name} terlalu besar (maks 10MB)`, 'error');
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                docs.push({
+                    id: Date.now() + Math.random(),
+                    tenderId: parseInt(tenderId),
+                    tenderName: tender ? tender.namaTender : '-',
+                    ptCust: tender ? tender.ptCust : '-',
+                    type: type,
+                    category: 'special',
+                    fileName: file.name,
+                    fileData: ev.target.result,
+                    fileType: file.type,
+                    note: note,
+                    uploadedBy: tender ? tender.karyawan : 'Unknown',
+                    created: new Date().toISOString()
+                });
+                setDocs(docs);
+                renderSpecialDocs();
+                showToast(`Dokumen "${file.name}" berhasil diupload!`);
+            };
+            reader.readAsDataURL(file);
+        });
+
+        e.target.reset();
+    }
+
+    function uploadInvoiceDoc(e) {
+        e.preventDefault();
+        const tenderId = document.getElementById('invoice-doc-tender').value;
+        const type = document.getElementById('invoice-doc-type').value;
+        const number = document.getElementById('invoice-doc-number').value;
+        const date = document.getElementById('invoice-doc-date').value;
+        const files = document.getElementById('invoice-doc-file').files;
+
+        if (!tenderId || !type || files.length === 0) {
+            showToast('Lengkapi semua field!', 'error');
+            return;
+        }
+
+        const docs = getDocs();
+        const data = getData();
+        const tender = data.find(d => d.id === parseInt(tenderId));
+
+        Array.from(files).forEach(file => {
+            if (file.size > 10 * 1024 * 1024) {
+                showToast(`${file.name} terlalu besar (maks 10MB)`, 'error');
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                docs.push({
+                    id: Date.now() + Math.random(),
+                    tenderId: parseInt(tenderId),
+                    tenderName: tender ? tender.namaTender : '-',
+                    ptCust: tender ? tender.ptCust : '-',
+                    type: type,
+                    category: 'invoice',
+                    fileName: file.name,
+                    fileData: ev.target.result,
+                    fileType: file.type,
+                    docNumber: number,
+                    docDate: date,
+                    uploadedBy: tender ? tender.karyawan : 'Unknown',
+                    created: new Date().toISOString()
+                });
+                setDocs(docs);
+                renderInvoiceDocs();
+                showToast(`Dokumen "${file.name}" berhasil diupload!`);
+            };
+            reader.readAsDataURL(file);
+        });
+
+        e.target.reset();
+    }
+
+    function renderSpecialDocs() {
+        const docs = getDocs().filter(d => d.category === 'special');
+        const div = document.getElementById('special-doc-list');
+        if (docs.length === 0) {
+            div.innerHTML = '<p class="text-gray-500 text-center py-8 col-span-full">Belum ada dokumen</p>';
+            return;
+        }
+        div.innerHTML = docs.map(doc => `
+            <div class="glass-light rounded-lg p-4 doc-card">
+                <div class="flex items-start justify-between mb-3">
+                    <span class="status-badge status-pengiriman text-xs">${getDocTypeLabel(doc.type)}</span>
+                    <button onclick="deleteDoc(${doc.id})" class="text-red-400 hover:text-red-300 text-xs">🗑</button>
+                </div>
+                <h4 class="font-medium text-white text-sm mb-1">${doc.tenderName}</h4>
+                <p class="text-xs text-gray-400 mb-1">${doc.ptCust}</p>
+                <p class="text-xs text-gray-500 mb-3">${doc.fileName}</p>
+                <p class="text-xs text-gray-500 mb-3">Oleh: ${doc.uploadedBy} • ${formatDate(doc.created)}</p>
+                <button onclick="viewDoc('${doc.id}')" class="w-full py-2 bg-blue-600/30 hover:bg-blue-600/50 rounded text-xs font-medium transition-colors">📄 Lihat Dokumen</button>
+            </div>
+        `).join('');
+    }
+
+    function renderInvoiceDocs() {
+        const docs = getDocs().filter(d => d.category === 'invoice');
+        const div = document.getElementById('invoice-doc-list');
+        if (docs.length === 0) {
+            div.innerHTML = '<p class="text-gray-500 text-center py-8 col-span-full">Belum ada dokumen</p>';
+            return;
+        }
+        div.innerHTML = docs.map(doc => `
+            <div class="glass-light rounded-lg p-4 doc-card">
+                <div class="flex items-start justify-between mb-3">
+                    <span class="status-badge status-konfirmasi text-xs">${getInvoiceTypeLabel(doc.type)}</span>
+                    <button onclick="deleteDoc(${doc.id})" class="text-red-400 hover:text-red-300 text-xs">🗑</button>
+                </div>
+                <h4 class="font-medium text-white text-sm mb-1">${doc.tenderName}</h4>
+                <p class="text-xs text-gray-400 mb-1">${doc.ptCust}</p>
+                ${doc.docNumber ? `<p class="text-xs text-blue-400 mb-1">No: ${doc.docNumber}</p>` : ''}
+                <p class="text-xs text-gray-500 mb-3">${doc.fileName}</p>
+                <p class="text-xs text-gray-500 mb-3">Oleh: ${doc.uploadedBy} • ${formatDate(doc.created)}</p>
+                <button onclick="viewDoc('${doc.id}')" class="w-full py-2 bg-blue-600/30 hover:bg-blue-600/50 rounded text-xs font-medium transition-colors">📄 Lihat Dokumen</button>
+            </div>
+        `).join('');
+    }
+
+    function viewDoc(docId) {
+        const docs = getDocs();
+        const doc = docs.find(d => String(d.id) === String(docId));
+        if (!doc) return;
+
+        document.getElementById('view-doc-title').textContent = doc.fileName;
+        const content = document.getElementById('view-doc-content');
+
+        if (doc.fileType && doc.fileType.startsWith('image/')) {
+            content.innerHTML = `<img src="${doc.fileData}" class="max-w-full rounded-lg" alt="${doc.fileName}">`;
+        } else if (doc.fileType && doc.fileType === 'application/pdf') {
+            content.innerHTML = `<iframe src="${doc.fileData}" class="w-full h-[70vh] rounded-lg" frameborder="0"></iframe>`;
+        } else {
+            content.innerHTML = `
+                <div class="py-8">
+                    <svg class="w-16 h-16 text-gray-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    <p class="text-gray-400 mb-4">File: ${doc.fileName}</p>
+                    <a href="${doc.fileData}" download="${doc.fileName}" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-medium">Download File</a>
+                </div>
+            `;
+        }
+
+        document.getElementById('modal-view-doc').classList.remove('hidden');
+    }
+
+    function deleteDoc(docId) {
+        if (!confirm('Hapus dokumen ini?')) return;
+        let docs = getDocs();
+        docs = docs.filter(d => String(d.id) !== String(docId));
+        setDocs(docs);
+        renderDocuments();
+        showToast('Dokumen dihapus');
+    }
+
+    function getDocTypeLabel(type) {
+        const map = { 'dg': '🔴 DG', 'curah': '📦 Curah', 'perishable': '🥶 Perishable', 'oversize': '📐 Oversize', 'fragile': '⚠️ Fragile', 'cold-chain': '❄️ Cold Chain', 'hazmat': '☢️ Hazmat', 'sdm': '📋 SDS', 'lainnya': '📋 Lainnya' };
+        return map[type] || type;
+    }
+
+    function getInvoiceTypeLabel(type) {
+        const map = { 'invoice': '🧾 Invoice', 'packing-list': '📋 Packing List', 'delivery-order': ' DO', 'surat-jalan': '🚛 Surat Jalan', 'kwitansi': '💳 Kwitansi', 'lainnya': '📄 Lainnya' };
+        return map[type] || type;
+    }
+
+    // ==================== LABELS & PROGRES ====================
+    function renderLabels() {
+        const data = getData();
+        const div = document.getElementById('labels-list');
+        if (data.length === 0) {
+            div.innerHTML = '<p class="text-gray-500 text-center py-8 col-span-full">Belum ada data</p>';
+            return;
+        }
+        div.innerHTML = data.map(item => {
+            const progress = calculateProgress(item);
+            const progressClass = progress === 100 ? 'progress-100' : progress >= 75 ? 'progress-75' : progress >= 50 ? 'progress-50' : progress >= 25 ? 'progress-25' : 'progress-0';
+            return `
+            <div class="label-card ${progressClass} card-hover">
+                <div class="flex items-center gap-3 mb-3">
+                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold text-sm">
+                        ${item.karyawan.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
+                    </div>
+                    <div class="flex-1">
+                        <p class="font-semibold text-white text-sm">${item.karyawan}</p>
+                        <p class="text-xs text-gray-400">CS / Karyawan</p>
+                    </div>
+                    <span class="jenis-badge jenis-${item.jenis}">${getJenisLabel(item.jenis)}</span>
+                </div>
+
+                <h4 class="font-medium text-white mb-1">${item.namaTender}</h4>
+                <p class="text-xs text-blue-400 mb-1">${item.ptCust} - ${item.namaCust}</p>
+                <p class="text-xs text-gray-400 mb-3">Barang: ${item.namaBarang}</p>
+
+                <div class="flex items-center gap-2 mb-2">
+                    <div class="flex-1 bg-dark-700 rounded-full h-2">
+                        <div class="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full" style="width:${progress}%"></div>
+                    </div>
+                    <span class="text-xs font-bold text-blue-400">${progress}%</span>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2 text-xs mt-3">
+                    <div class="flex items-center gap-1">
+                        <span>${item.shipping.method ? '🚛' : '⏳'}</span>
+                        <span class="text-gray-400">${item.shipping.method ? getShippingMethodText(item.shipping.method) : 'Belum kirim'}</span>
+                    </div>
+                    <div class="flex items-center gap-1">
+                        <span>${item.shipping.delivered ? '✅' : '📍'}</span>
+                        <span class="text-gray-400">${item.shipping.delivered ? 'Sampai' : 'Dalam perjalanan'}</span>
+                    </div>
+                    <div class="flex items-center gap-1">
+                        <span>${item.payment.status === 'lunas' ? '💰' : item.payment.status !== 'pending' ? '💳' : '⏰'}</span>
+                        <span class="text-gray-400">${getPaymentStatusText(item.payment.status)}</span>
+                    </div>
+                    <div class="flex items-center gap-1">
+                        <span>📍</span>
+                        <span class="text-gray-400">${item.lokasiTujuan}</span>
+                    </div>
+                </div>
+
+                ${item.prospek ? `<p class="text-xs text-amber-400 mt-2">📈 ${getProspekText(item.prospek)}</p>` : ''}
+                ${item.nilaiTender > 0 ? `<p class="text-xs text-green-400 mt-1">💰 Rp ${item.nilaiTender.toLocaleString('id-ID')}</p>` : ''}
+            </div>`;
+        }).join('');
+    }
+
+    // ==================== GRAFIK / CHARTS ====================
+    function renderGrafik() {
+        const data = getData();
+
+        Object.values(charts).forEach(c => c.destroy());
+        charts = {};
+
+        // Chart 1: Status Overview (Doughnut)
+        const statusCounts = { planning: 0, tender: 0, ok: 0, 'not-ok': 0 };
+        data.forEach(d => { statusCounts[d.status] = (statusCounts[d.status] || 0) + 1; });
+
+        charts.status = new Chart(document.getElementById('chart-status'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Planning', 'Proses Tender', 'OK - Deal', 'Tidak OK'],
+                datasets: [{
+                    data: [statusCounts.planning, statusCounts.tender, statusCounts.ok, statusCounts['not-ok']],
+                    backgroundColor: ['#6b7280', '#3b82f6', '#22c55e', '#ef4444'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { labels: { color: '#9ca3af' } } }
+            }
+        });
+
+        // Chart 2: Jenis Barang (Bar)
+        const jenisCounts = { berbahaya: 0, aman: 0, kimia: 0, hewan: 0 };
+        data.forEach(d => { jenisCounts[d.jenis] = (jenisCounts[d.jenis] || 0) + 1; });
+
+        charts.jenis = new Chart(document.getElementById('chart-jenis'), {
+            type: 'bar',
+            data: {
+                labels: ['🔴 Berbahaya', '🟢 Aman', '🟡 Kimia', '🟣 Hewan Hidup'],
+                datasets: [{
+                    label: 'Jumlah',
+                    data: [jenisCounts.berbahaya, jenisCounts.aman, jenisCounts.kimia, jenisCounts.hewan],
+                    backgroundColor: ['rgba(239,68,68,0.6)', 'rgba(34,197,94,0.6)', 'rgba(245,158,11,0.6)', 'rgba(168,85,247,0.6)'],
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, ticks: { color: '#9ca3af' }, grid: { color: 'rgba(59,130,246,0.1)' } },
+                    x: { ticks: { color: '#9ca3af' }, grid: { color: 'rgba(59,130,246,0.1)' } }
+                }
+            }
+        });
+
+        // Chart 3: Per CS (Bar)
+        const csCounts = {};
+        data.forEach(d => {
+            const cs = d.karyawan || 'Unknown';
+            if (!csCounts[cs]) csCounts[cs] = { total: 0, progress: 0, count: 0 };
+            csCounts[cs].total++;
+            csCounts[cs].progress += calculateProgress(d);
+            csCounts[cs].count++;
+        });
+
+        const csLabels = Object.keys(csCounts);
+        const csData = csLabels.map(c => csCounts[c].count > 0 ? Math.round(csCounts[c].progress / csCounts[c].count) : 0);
+
+        charts.cs = new Chart(document.getElementById('chart-cs'), {
+            type: 'bar',
+            data: {
+                labels: csLabels,
+                datasets: [{
+                    label: 'Rata-rata Progres (%)',
+                    data: csData,
+                    backgroundColor: 'rgba(59, 130, 246, 0.6)',
+                    borderColor: '#3b82f6',
+                    borderWidth: 1,
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: { beginAtZero: true, max: 100, ticks: { color: '#9ca3af' }, grid: { color: 'rgba(59,130,246,0.1)' } },
+                    x: { ticks: { color: '#9ca3af' }, grid: { color: 'rgba(59,130,246,0.1)' } }
+                },
+                plugins: { legend: { labels: { color: '#9ca3af' } } }
+            }
+        });
+
+        // Chart 4: Shipping Method (Pie)
+        const shipCounts = { udara: 0, laut: 0, darat: 0, belum: 0 };
+        data.forEach(d => {
+            if (d.shipping.method) { shipCounts[d.shipping.method]++; }
+            else { shipCounts.belum++; }
+        });
+
+        charts.shipping = new Chart(document.getElementById('chart-shipping'), {
+            type: 'pie',
+            data: {
+                labels: ['Udara', 'Laut', 'Darat', 'Belum Dikirim'],
+                datasets: [{
+                    data: [shipCounts.udara, shipCounts.laut, shipCounts.darat, shipCounts.belum],
+                    backgroundColor: ['#3b82f6', '#06b6d4', '#22c55e', '#374151'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { labels: { color: '#9ca3af' } } }
+            }
+        });
+
+        // Chart 5: Monthly Trend (Line)
+        const monthData = {};
+        data.forEach(d => {
+            const date = new Date(d.created);
+            const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+            if (!monthData[key]) monthData[key] = { count: 0, totalAmount: 0 };
+            monthData[key].count++;
+            monthData[key].totalAmount += d.nilaiTender || 0;
+        });
+
+        const sortedMonths = Object.keys(monthData).sort();
+        charts.trend = new Chart(document.getElementById('chart-trend'), {
+            type: 'line',
+            data: {
+                labels: sortedMonths,
+                datasets: [
+                    {
+                        label: 'Jumlah Tender',
+                        data: sortedMonths.map(m => monthData[m].count),
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59,130,246,0.1)',
+                        fill: true,
+                        tension: 0.4
+                    },
+                    {
+                        label: 'Total Nilai (Rp Juta)',
+                        data: sortedMonths.map(m => Math.round(monthData[m].totalAmount / 1000000)),
+                        borderColor: '#a855f7',
+                        backgroundColor: 'rgba(168,85,247,0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: { beginAtZero: true, ticks: { color: '#9ca3af' }, grid: { color: 'rgba(59,130,246,0.1)' } },
+                    x: { ticks: { color: '#9ca3af' }, grid: { color: 'rgba(59,130,246,0.1)' } }
+                },
+                plugins: { legend: { labels: { color: '#9ca3af' } } }
+            }
+        });
+    }
+
+    // ==================== MODALS ====================
+    function openShippingModal(id) {
+        document.getElementById('shipping-id').value = id;
+        document.getElementById('modal-shipping').classList.remove('hidden');
+    }
+
+    function openPaymentModal(id) {
+        document.getElementById('payment-id').value = id;
+        document.getElementById('modal-payment').classList.remove('hidden');
+    }
+
+    function closeModal(modalId) {
+        document.getElementById(modalId).classList.add('hidden');
+    }
+
+    function updateShipping(e) {
+        e.preventDefault();
+        const id = parseInt(document.getElementById('shipping-id').value);
+        const data = getData();
+        const item = data.find(d => d.id === id);
+        if (item) {
+            item.shipping = {
+                method: document.getElementById('shipping-method').value,
+                resi: document.getElementById('shipping-resi').value,
+                eta: document.getElementById('shipping-eta').value,
+                notes: document.getElementById('shipping-notes').value,
+                delivered: item.shipping.delivered || false
+            };
+            item.updated = new Date().toISOString();
+            setData(data);
+            closeModal('modal-shipping');
+            showToast('Informasi pengiriman berhasil diupdate!');
+            renderTracking();
+        }
+    }
+
+    function updatePayment(e) {
+        e.preventDefault();
+        const id = parseInt(document.getElementById('payment-id').value);
+        const data = getData();
+        const item = data.find(d => d.id === id);
+        if (item) {
+            item.payment = {
+                status: document.getElementById('payment-status').value,
+                amount: parseInt(document.getElementById('payment-amount').value) || 0,
+                notes: document.getElementById('payment-notes').value
+            };
+            item.updated = new Date().toISOString();
+            setData(data);
+            closeModal('modal-payment');
+            showToast('Status pembayaran berhasil diupdate!');
+            renderTracking();
+        }
+    }
+
+    function markDelivered(id) {
+        const data = getData();
+        const item = data.find(d => d.id === id);
+        if (item) {
+            item.shipping.delivered = true;
+            item.updated = new Date().toISOString();
+            setData(data);
+            renderTracking();
+            showToast('Barang sudah sampai tujuan!');
+        }
+    }
+
+    function editTender(id) {
+        const data = getData();
+        const item = data.find(d => d.id === id);
+        if (!item) return;
+
+        const newProgress = prompt(`Edit progress untuk "${item.namaTender}" (0-100):`, calculateProgress(item));
+        if (newProgress === null) return;
+        const prog = parseInt(newProgress);
+        if (isNaN(prog) || prog < 0 || prog > 100) { showToast('Persentase harus 0-100!', 'error'); return; }
+
+        item.progress = prog;
+        item.updated = new Date().toISOString();
+        setData(data);
+        renderTracking();
+        showToast(`Progress diupdate menjadi ${prog}%`);
+    }
+
+    function deleteTender(id) {
+        if (!confirm('Yakin ingin menghapus tender ini?')) return;
+        let data = getData();
+        data = data.filter(d => d.id !== id);
+        setData(data);
+        renderTracking();
+        showToast('Tender dihapus');
+    }
+
+    // ==================== HELPERS ====================
+    function getStatusClass(status) {
+        const map = { 'planning': 'planning', 'tender': 'tender', 'ok': 'ok', 'not-ok': 'revisi' };
+        return map[status] || 'planning';
+    }
+
+    function getStatusText(status) {
+        const map = { 'planning': 'Planning', 'tender': 'Proses Tender', 'ok': 'OK - Deal', 'not-ok': 'Tidak OK' };
+        return map[status] || status;
+    }
+
+    function getProspekText(prospek) {
+        const map = { 'survey': 'Survey & Penawaran', 'negosiasi': 'Negosiasi', 'kontrak': 'Penyusunan Kontrak', 'konfirmasi': 'Konfirmasi Order', 'siap-kirim': 'Siap Kirim' };
+        return map[prospek] || prospek;
+    }
+
+    function getShippingMethodText(method) {
+        const map = { 'udara': '✈️ Udara', 'laut': '🚢 Laut', 'darat': '🚛 Darat' };
+        return map[method] || method;
+    }
+
+    function getPaymentStatusText(status) {
+        const map = { 'pending': 'Pending', 'dp': 'DP Dibayar', 'lunas': 'Lunas', 'termin': 'Termin' };
+        return map[status] || status;
+    }
+
+    function getPaymentBadgeClass(status) {
+        const map = { 'pending': 'status-payment-pending', 'dp': 'status-payment-dp', 'lunas': 'status-payment-lunas', 'termin': 'status-payment-termin' };
+        return map[status] || 'status-payment-pending';
+    }
+
+    function getJenisLabel(jenis) {
+        const map = { 'berbahaya': '🔴 Berbahaya', 'aman': '🟢 Aman', 'kimia': '🟡 Kimia', 'hewan': '🟣 Hewan Hidup' };
+        return map[jenis] || jenis;
+    }
+
+    function formatDate(dateStr) {
+        if (!dateStr) return '-';
+        const d = new Date(dateStr);
+        return d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+    }
+
+    function showToast(message, type = 'success') {
+        const toast = document.getElementById('toast');
+        const icon = document.getElementById('toast-icon');
+        document.getElementById('toast-message').textContent = message;
+        if (type === 'error') {
+            icon.classList.remove('text-green-400');
+            icon.classList.add('text-red-400');
+        } else {
+            icon.classList.remove('text-red-400');
+            icon.classList.add('text-green-400');
+        }
+        toast.classList.remove('hidden');
+        setTimeout(() => toast.classList.add('hidden'), 3000);
+    }
+
+    function updateClock() {
+        const now = new Date();
+        document.getElementById('live-clock').textContent = now.toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }) + ' • ' + now.toLocaleTimeString('id-ID');
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        updateClock();
+        setInterval(updateClock, 1000);
+        showPage('dashboard');
+    });
+    </script>
+</body>
+</html>
