@@ -22,201 +22,105 @@
         .alert-success { background: #14532d; color: #86efac; }
     </style>
 </head>
-<body class="min-h-screen flex items-center justify-center p-4">
-
-    <!-- HALAMAN LOGIN & REGISTER -->
-    <div id="auth-page" class="w-full max-w-md">
+<body>
+    <div id="auth-page">
         <div class="card">
-            <div class="text-center mb-6">
-                <div class="w-12 h-12 bg-blue-600 rounded-lg mx-auto flex items-center justify-center text-xl font-bold mb-2">CS</div>
-                <h1 class="text-2xl font-bold">Logistics Tracker</h1>
-                <p class="text-slate-400 text-sm">PT. Cahaya Sejati Teknologi</p>
-            </div>
+            <h1 class="text-2xl font-bold">Logistics Tracker</h1>
+            <p class="text-slate-400 text-sm">PT. Cahaya Sejati Teknologi</p>
+            <div class="alert hidden" id="alert-box"></div>
 
-            <div id="alert-box" class="alert hidden"></div>
-
-            <!-- Form Login -->
-            <div id="form-login">
-                <label class="text-sm text-slate-300">Email</label>
-                <input type="email" id="login-email" placeholder="email@contoh.com">
-                <label class="text-sm text-slate-300">Password</label>
-                <input type="password" id="login-password" placeholder="******">
-                <button onclick="doLogin()" class="btn-primary">Masuk</button>
-                <p class="text-center text-sm text-slate-400 mt-4">
-                    Belum punya akun? <a href="#" onclick="showRegister()" class="text-blue-400 underline">Daftar</a>
-                </p>
-            </div>
-
-            <!-- Form Register -->
-            <div id="form-register" class="hidden">
-                <label class="text-sm text-slate-300">Nama Lengkap</label>
-                <input type="text" id="reg-name" placeholder="Nama Anda">
-                <label class="text-sm text-slate-300">Email</label>
-                <input type="email" id="reg-email" placeholder="email@contoh.com">
-                <label class="text-sm text-slate-300">Password</label>
-                <input type="password" id="reg-password" placeholder="Minimal 6 karakter">
-                <button onclick="doRegister()" class="btn-primary bg-green-600 hover:bg-green-700">Daftar Akun</button>
-                <p class="text-center text-sm text-slate-400 mt-4">
-                    Sudah punya akun? <a href="#" onclick="showLogin()" class="text-blue-400 underline">Masuk</a>
-                </p>
-            </div>
+            <!-- Login Form -->
+            <label class="text-sm text-slate-300">Email</label>
+            <input type="email" id="login-email" placeholder="Email">
+            <label class="text-sm text-slate-300">Password</label>
+            <input type="password" id="login-password" placeholder="Password">
+            <button class="btn-primary" onclick="doLogin()">Masuk</button>
+            <a class="text-blue-400 underline" href="#" onclick="showRegister()">Daftar</a>
         </div>
     </div>
 
-    <!-- HALAMAN DASHBOARD (Awalnya Tersembunyi) -->
-    <div id="dashboard-page" class="hidden w-full max-w-6xl">
-        <!-- Navbar -->
-        <div class="flex justify-between items-center mb-8 bg-slate-800 p-4 rounded-lg">
-            <h1 class="text-xl font-bold">CS Logistics</h1>
-            <div class="flex items-center gap-3">
-                <span id="user-display-name" class="text-slate-300">User</span>
-                <span id="admin-badge" class="hidden bg-yellow-500 text-black text-xs font-bold px-2 py-1 rounded">ADMIN</span>
-                <button onclick="doLogout()" class="btn-logout">Logout</button>
-            </div>
+    <div id="register-page" class="hidden">
+        <div class="card">
+            <h1 class="text-2xl font-bold">Daftar Akun</h1>
+            <label class="text-sm text-slate-300">Nama Lengkap</label>
+            <input type="text" id="register-name" placeholder="Nama Lengkap">
+            <label class="text-sm text-slate-300">Email</label>
+            <input type="email" id="register-email" placeholder="Email">
+            <label class="text-sm text-slate-300">Password</label>
+            <input type="password" id="register-password" placeholder="Password">
+            <button class="btn-primary bg-green-600 hover:bg-green-700" onclick="doRegister()">Daftar Akun</button>
         </div>
+    </div>
 
-        <!-- Konten -->
-        <div class="bg-slate-800 p-8 rounded-lg text-center">
-            <h2 class="text-3xl font-bold mb-2">Selamat Datang! 👋</h2>
-            <p class="text-slate-400 mb-8">Anda berhasil login ke Logistics Tracker</p>
-            
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-left">
-                <div class="bg-slate-700 p-6 rounded-lg">
-                    <h3 class="text-2xl font-bold text-blue-400">0</h3>
-                    <p class="text-sm text-slate-300">Total Tender</p>
-                </div>
-                <div class="bg-slate-700 p-6 rounded-lg">
-                    <h3 class="text-2xl font-bold text-yellow-400">0</h3>
-                    <p class="text-sm text-slate-300">Dalam Proses</p>
-                </div>
-                <div class="bg-slate-700 p-6 rounded-lg">
-                    <h3 class="text-2xl font-bold text-green-400">0</h3>
-                    <p class="text-sm text-slate-300">Selesai</p>
-                </div>
-                <div class="bg-slate-700 p-6 rounded-lg">
-                    <h3 class="text-2xl font-bold text-purple-400">0</h3>
-                    <p class="text-sm text-slate-300">Lunas</p>
-                </div>
-            </div>
-        </div>
+    <div id="dashboard-page" class="hidden">
+        <h1>Dashboard</h1>
+        <p>Selamat datang, <span id="user-display-name"></span></p>
+        <button class="btn-logout" onclick="doLogout()">Logout</button>
     </div>
 
     <script>
-        // ==========================================
-        // KONFIGURASI SUPABASE - GANTI INI!
-        // ==========================================
-        const SUPABASE_URL = 'https://ixgwxbehsmgmczzfvjse.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml4Z3d4YmVoc21nbWN6emZ2anNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5Njk3OTksImV4cCI6MjA5MjU0NTc5OX0.rnZYdHiqLzRz5xAb9DR3YmeWY91LsfJJYYoeWa7s7WA'; 
+        const client = supabase.createClient('https://ixgwxbehsmgmczzfvjse.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml4Z3d4YmVoc21nbWN6emZ2anNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5Njk3OTksImV4cCI6MjA5MjU0NTc5OX0.rnZYdHiqLzRz5xAb9DR3YmeWY91LsfJJYYoeWa7s7WA');
 
-        // Inisialisasi Supabase
-        const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-        // Fungsi Tampilkan Pesan
-        function showAlert(msg, type) {
-            const el = document.getElementById('alert-box');
-            el.textContent = msg;
-            el.className = `alert alert-${type}`;
-            el.style.display = 'block';
-            setTimeout(() => el.style.display = 'none', 3000);
-        }
-
-        // Fungsi Ganti Tampilan Login/Register
-        function showRegister() {
-            document.getElementById('form-login').classList.add('hidden');
-            document.getElementById('form-register').classList.remove('hidden');
-        }
-        function showLogin() {
-            document.getElementById('form-register').classList.add('hidden');
-            document.getElementById('form-login').classList.remove('hidden');
-        }
-
-        // --- FUNGSI LOGIN ---
         async function doLogin() {
-            const email = document.getElementById('login-email').value.trim();
-            const pass = document.getElementById('login-password').value;
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            const { user, error } = await client.auth.signInWithPassword({ email, password });
 
-            if (!email || !pass) return showAlert('Isi email dan password!', 'error');
-
-            const { data, error } = await client.auth.signInWithPassword({
-                email: email,
-                password: pass
-            });
-
-            if (error) return showAlert(error.message, 'error');
-
-            // Jika berhasil, masuk ke Dashboard
-            enterDashboard(data.session);
-        }
-
-        // --- FUNGSI REGISTER ---
-        async function doRegister() {
-            const name = document.getElementById('reg-name').value.trim();
-            const email = document.getElementById('reg-email').value.trim();
-            const pass = document.getElementById('reg-password').value;
-
-            if (!name || !email || !pass) return showAlert('Lengkapi semua data!', 'error');
-            if (pass.length < 6) return showAlert('Password minimal 6 karakter!', 'error');
-
-            const { data, error } = await client.auth.signUp({
-                email: email,
-                password: pass,
-                options: {
-                     { name: name }
-                }
-            });
-
-            if (error) return showAlert(error.message, 'error');
-            
-            // Simpan data profil ke tabel 'profiles'
-            if (data.user) {
-                await client.from('profiles').insert([
-                    { id: data.user.id, name: name, email: email, role: 'pengguna' }
-                ]);
+            if (error) {
+                showAlert(error.message, 'error');
+            } else {
+                enterDashboard(user);
             }
-
-            showAlert('Registrasi berhasil! Silakan login.', 'success');
-            setTimeout(showLogin, 1500);
         }
 
-        // --- FUNGSI MASUK DASHBOARD ---
-        async function enterDashboard(session) {
+        async function doRegister() {
+            const name = document.getElementById('register-name').value;
+            const email = document.getElementById('register-email').value;
+            const password = document.getElementById('register-password').value;
+
+            const { user, error } = await client.auth.signUp({ email, password });
+
+            if (error) {
+                showAlert(error.message, 'error');
+            } else {
+                await client.from('profiles').insert([{ id: user.id, name, email, role: 'pengguna' }]);
+                showAlert('Registrasi berhasil! Silakan login.', 'success');
+                setTimeout(showLogin, 1500);
+            }
+        }
+
+        async function enterDashboard(user) {
             document.getElementById('auth-page').classList.add('hidden');
             document.getElementById('dashboard-page').classList.remove('hidden');
-            
-            // Tampilkan Nama User
-            document.getElementById('user-display-name').textContent = session.user.email;
-
-            // CEK APAKAH ADMIN
-            // Kita cek di tabel 'profiles' apakah role = 'admin'
-            const {  profile, error } = await client
-                .from('profiles')
-                .select('role, name')
-                .eq('id', session.user.id)
-                .single();
-
-            if (profile) {
-                // Jika ada nama di database, pakai itu. Jika tidak, pakai email.
-                if(profile.name) document.getElementById('user-display-name').textContent = profile.name;
-                
-                // Jika role admin, tampilkan badge
-                if (profile.role === 'admin') {
-                    document.getElementById('admin-badge').classList.remove('hidden');
-                    console.log("Admin detected!");
-                }
-            }
+            document.getElementById('user-display-name').textContent = user.email;
         }
 
-        // --- FUNGSI LOGOUT ---
         async function doLogout() {
             await client.auth.signOut();
-            location.reload(); // Refresh halaman
+            location.reload();
         }
 
-        // CEK SESI SAAT HALAMAN DIBUKA
+        function showAlert(message, type) {
+            const alertBox = document.getElementById('alert-box');
+            alertBox.classList.remove('hidden');
+            alertBox.classList.add(`alert-${type}`);
+            alertBox.textContent = message;
+        }
+
+        function showLogin() {
+            document.getElementById('register-page').classList.add('hidden');
+            document.getElementById('auth-page').classList.remove('hidden');
+        }
+
+        function showRegister() {
+            document.getElementById('auth-page').classList.add('hidden');
+            document.getElementById('register-page').classList.remove('hidden');
+        }
+
         window.addEventListener('DOMContentLoaded', async () => {
             const { data: { session } } = await client.auth.getSession();
             if (session) {
-                enterDashboard(session);
+                enterDashboard(session.user);
             }
         });
     </script>
