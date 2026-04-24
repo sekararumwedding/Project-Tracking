@@ -254,320 +254,301 @@
     </div>
 
     <!-- ==================== JAVASCRIPT ==================== -->
-    <script>
-    // ⚠️️⚠️ GANTI DENGAN DATA SUPABASE ANDA ⚠️⚠️⚠️
-    const SUPABASE_URL = 'https://ixgwxbehsmgmczzfvjse.supabase.co';
-    const SUPABASE_KEY = 'sb_publishable_xIL19QNKrG2iBzQyiO6EYw_LV0sda5-';
-    
-    // Initialize Supabase
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+<script>
+// ⚠️ GANTI DENGAN DATA SUPABASE ANDA ⚠️
+const SUPABASE_URL = 'https://xxxxxxxx.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...';
 
-    // Navigation
-    const pages = ['dashboard', 'input', 'tracking'];
-    const pageTitles = {
-        'dashboard': ['Dashboard', 'Logistics Tracking System'],
-        'input': ['Rencana Tender', 'Input data tender baru'],
-        'tracking': ['Tracking', 'Pantau status pengiriman']
-    };
+// ✅ Safe initialization: cek dulu apakah sudah ada
+let supabaseClient;
+if (!window.supabaseClient) {
+    window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+}
+supabaseClient = window.supabaseClient;
 
-    function showPage(page) {
-        pages.forEach(p => {
-            document.getElementById(`page-${p}`).classList.add('hidden');
-            document.getElementById(`nav-${p}`).classList.remove('active');
-        });
-        document.getElementById(`page-${page}`).classList.remove('hidden');
-        document.getElementById(`nav-${page}`).classList.add('active');
-        document.getElementById('page-title').textContent = pageTitles[page][0];
-        document.getElementById('page-subtitle').textContent = pageTitles[page][1];
+// Navigation
+const pages = ['dashboard', 'input', 'tracking'];
+const pageTitles = {
+    'dashboard': ['Dashboard', 'Logistics Tracking System'],
+    'input': ['Rencana Tender', 'Input data tender baru'],
+    'tracking': ['Tracking', 'Pantau status pengiriman']
+};
 
-        if (page === 'dashboard') renderDashboard();
-        if (page === 'tracking') renderTracking();
+function showPage(page) {
+    pages.forEach(p => {
+        document.getElementById(`page-${p}`).classList.add('hidden');
+        document.getElementById(`nav-${p}`).classList.remove('active');
+    });
+    document.getElementById(`page-${page}`).classList.remove('hidden');
+    document.getElementById(`nav-${page}`).classList.add('active');
+    document.getElementById('page-title').textContent = pageTitles[page][0];
+    document.getElementById('page-subtitle').textContent = pageTitles[page][1];
 
-        if (window.innerWidth < 1024) {
-            document.getElementById('sidebar').classList.add('-translate-x-full');
-        }
+    if (page === 'dashboard') renderDashboard();
+    if (page === 'tracking') renderTracking();
+
+    if (window.innerWidth < 1024) {
+        document.getElementById('sidebar').classList.add('-translate-x-full');
     }
+}
 
-    function toggleSidebar() {
-        document.getElementById('sidebar').classList.toggle('-translate-x-full');
-    }
+function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('-translate-x-full');
+}
 
-    // ==================== DATABASE FUNCTIONS ====================
-    
-    // Ambil semua data dari Supabase
-    async function getTenders() {
-        try {
-            const { data, error } = await supabase
-                .from('tenders')
-                .select('*')
-                .order('created_at', { ascending: false });
-            
-            if (error) {
-                console.error('Error fetching data:', error);
-                return [];
-            }
-            return data || [];
-        } catch (err) {
-            console.error('Connection error:', err);
-            showToast('⚠️ Tidak bisa koneksi ke database. Periksa konfigurasi Supabase.', 'error');
+// ==================== DATABASE FUNCTIONS ====================
+
+async function getTenders() {
+    try {
+        const { data, error } = await supabaseClient
+            .from('tenders')
+            .select('*')
+            .order('created_at', { ascending: false });
+        
+        if (error) {
+            console.error('Error fetching data:', error);
             return [];
         }
+        return data || [];
+    } catch (err) {
+        console.error('Connection error:', err);
+        showToast('⚠️ Tidak bisa koneksi ke database.', 'error');
+        return [];
     }
+}
 
-    // Simpan data ke Supabase
-    async function saveTender(item) {
-        const { data, error } = await supabase
-            .from('tenders')
-            .insert([item])
-            .select();
-        
-        if (error) throw error;
-        return data[0];
+async function saveTender(item) {
+    const { data, error } = await supabaseClient
+        .from('tenders')
+        .insert([item])
+        .select();
+    if (error) throw error;
+    return data[0];
+}
+
+async function updateTender(id, updates) {
+    const { error } = await supabaseClient
+        .from('tenders')
+        .update(updates)
+        .eq('id', id);
+    if (error) throw error;
+}
+
+async function deleteTender(id) {
+    const { error } = await supabaseClient
+        .from('tenders')
+        .delete()
+        .eq('id', id);
+    if (error) throw error;
+}
+
+// ==================== RENDER FUNCTIONS ====================
+
+async function renderDashboard() {
+    const data = await getTenders();
+    
+    document.getElementById('stat-total').textContent = data.length;
+    document.getElementById('stat-process').textContent = data.filter(d => d.status === 'ok' && !d.shipping_method).length;
+    document.getElementById('stat-shipped').textContent = data.filter(d => d.shipping_method).length;
+    document.getElementById('stat-paid').textContent = data.filter(d => d.payment_status === 'lunas').length;
+
+    const recentDiv = document.getElementById('recent-activities');
+    if (!data || data.length === 0) {
+        recentDiv.innerHTML = '<p class="text-gray-500 text-center py-8">Belum ada data. Silakan input tender pertama Anda!</p>';
+        return;
     }
-
-    // Update data
-    async function updateTender(id, updates) {
-        const { error } = await supabase
-            .from('tenders')
-            .update(updates)
-            .eq('id', id);
-        if (error) throw error;
-    }
-
-    // Hapus data
-    async function deleteTender(id) {
-        const { error } = await supabase
-            .from('tenders')
-            .delete()
-            .eq('id', id);
-        if (error) throw error;
-    }
-
-    // ==================== RENDER FUNCTIONS ====================
-
-    async function renderDashboard() {
-        const data = await getTenders();
-        
-        document.getElementById('stat-total').textContent = data.length;
-        document.getElementById('stat-process').textContent = data.filter(d => d.status === 'ok' && !d.shipping_method).length;
-        document.getElementById('stat-shipped').textContent = data.filter(d => d.shipping_method).length;
-        document.getElementById('stat-paid').textContent = data.filter(d => d.payment_status === 'lunas').length;
-
-        const recentDiv = document.getElementById('recent-activities');
-        if (data.length === 0) {
-            recentDiv.innerHTML = '<p class="text-gray-500 text-center py-8">Belum ada data. Silakan input tender pertama Anda!</p>';
-        } else {
-            recentDiv.innerHTML = data.slice(0, 8).map(item => `
-                <div class="glass-light rounded-lg p-4 card-hover">
-                    <div class="flex justify-between items-start mb-2">
-                        <div>
-                            <p class="font-semibold text-white">${item.nama_tender}</p>
-                            <p class="text-sm text-gray-400">${item.pt_cust} - ${item.nama_cust}</p>
-                        </div>
-                        <span class="status-badge status-${getStatusClass(item.status)}">${getStatusText(item.status)}</span>
-                    </div>
-                    <div class="flex flex-wrap gap-2 text-xs mt-2">
-                        <span class="jenis-badge jenis-${item.jenis}">${getJenisLabel(item.jenis)}</span>
-                        <span class="text-gray-400">CS: ${item.karyawan}</span>
-                        <span class="text-gray-400">📍 ${item.lokasi_asal} → ${item.lokasi_tujuan}</span>
-                    </div>
+    
+    recentDiv.innerHTML = data.slice(0, 8).map(item => `
+        <div class="glass-light rounded-lg p-4 card-hover">
+            <div class="flex justify-between items-start mb-2">
+                <div>
+                    <p class="font-semibold text-white">${item.nama_tender}</p>
+                    <p class="text-sm text-gray-400">${item.pt_cust} - ${item.nama_cust}</p>
                 </div>
-            `).join('');
-        }
+                <span class="status-badge status-${getStatusClass(item.status)}">${getStatusText(item.status)}</span>
+            </div>
+            <div class="flex flex-wrap gap-2 text-xs mt-2">
+                <span class="jenis-badge jenis-${item.jenis}">${getJenisLabel(item.jenis)}</span>
+                <span class="text-gray-400">CS: ${item.karyawan}</span>
+                <span class="text-gray-400">📍 ${item.lokasi_asal} → ${item.lokasi_tujuan}</span>
+            </div>
+        </div>
+    `).join('');
+}
+
+async function renderTracking() {
+    const data = await getTenders();
+    const trackingDiv = document.getElementById('tracking-list');
+
+    if (!data || data.length === 0) {
+        trackingDiv.innerHTML = '<p class="text-gray-500 text-center py-8">Belum ada data</p>';
+        return;
     }
 
-    async function renderTracking() {
-        const data = await getTenders();
-        const trackingDiv = document.getElementById('tracking-list');
-
-        if (data.length === 0) {
-            trackingDiv.innerHTML = '<p class="text-gray-500 text-center py-8">Belum ada data</p>';
-            return;
-        }
-
-        trackingDiv.innerHTML = data.map(item => {
-            const progress = calculateProgress(item);
-            return `
-            <div class="glass-light rounded-lg p-5 card-hover">
-                <div class="flex justify-between items-start mb-3">
-                    <div>
-                        <h4 class="font-semibold text-white text-lg">${item.nama_tender}</h4>
-                        <p class="text-sm text-blue-400">${item.pt_cust} • ${item.nama_cust}</p>
-                    </div>
-                    <div class="flex gap-1">
-                        <span class="jenis-badge jenis-${item.jenis}">${getJenisLabel(item.jenis)}</span>
-                        <span class="status-badge status-${getStatusClass(item.status)}">${getStatusText(item.status)}</span>
-                    </div>
+    trackingDiv.innerHTML = data.map(item => {
+        const progress = calculateProgress(item);
+        return `
+        <div class="glass-light rounded-lg p-5 card-hover">
+            <div class="flex justify-between items-start mb-3">
+                <div>
+                    <h4 class="font-semibold text-white text-lg">${item.nama_tender}</h4>
+                    <p class="text-sm text-blue-400">${item.pt_cust} • ${item.nama_cust}</p>
                 </div>
-
-                <div class="mb-4">
-                    <div class="flex justify-between text-xs mb-1">
-                        <span class="text-gray-400">Progres</span>
-                        <span class="text-blue-400 font-bold">${progress}%</span>
-                    </div>
-                    <div class="w-full bg-dark-700 rounded-full h-2">
-                        <div class="bg-gradient-to-r from-blue-500 to-blue-400 h-2 rounded-full" style="width:${progress}%"></div>
-                    </div>
+                <div class="flex gap-1">
+                    <span class="jenis-badge jenis-${item.jenis}">${getJenisLabel(item.jenis)}</span>
+                    <span class="status-badge status-${getStatusClass(item.status)}">${getStatusText(item.status)}</span>
                 </div>
+            </div>
 
-                <div class="grid grid-cols-2 gap-3 text-sm mb-4">
-                    <div>
-                        <p class="text-xs text-gray-500">Barang</p>
-                        <p class="text-white">${item.nama_barang}</p>
-                    </div>
-                    <div>
-                        <p class="text-xs text-gray-500">Rute</p>
-                        <p class="text-white text-xs">${item.lokasi_asal} → ${item.lokasi_tujuan}</p>
-                    </div>
-                    <div>
-                        <p class="text-xs text-gray-500">Pengiriman</p>
-                        <p class="text-white">${item.shipping_method ? getShippingMethodText(item.shipping_method) : 'Belum ada'}</p>
-                    </div>
-                    <div>
-                        <p class="text-xs text-gray-500">Pembayaran</p>
-                        <p class="text-white">${getPaymentStatusText(item.payment_status)}</p>
-                    </div>
+            <div class="mb-4">
+                <div class="flex justify-between text-xs mb-1">
+                    <span class="text-gray-400">Progres</span>
+                    <span class="text-blue-400 font-bold">${progress}%</span>
                 </div>
-
-                <div class="flex gap-2">
-                    ${!item.shipping_method ? `<button onclick="updateShipping(${item.id})" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 rounded text-xs">Update Pengiriman</button>` : ''}
-                    ${item.shipping_method && !item.shipping_delivered ? `<button onclick="markDelivered(${item.id})" class="px-3 py-1.5 bg-green-600 hover:bg-green-700 rounded text-xs">Tandai Sampai</button>` : ''}
-                    <button onclick="deleteItem(${item.id})" class="px-3 py-1.5 bg-red-600/50 hover:bg-red-600 rounded text-xs">Hapus</button>
+                <div class="w-full bg-dark-700 rounded-full h-2">
+                    <div class="bg-gradient-to-r from-blue-500 to-blue-400 h-2 rounded-full" style="width:${progress}%"></div>
                 </div>
-            </div>`;
-        }).join('');
-    }
+            </div>
 
-    // ==================== FORM SUBMIT ====================
+            <div class="grid grid-cols-2 gap-3 text-sm mb-4">
+                <div><p class="text-xs text-gray-500">Barang</p><p class="text-white">${item.nama_barang}</p></div>
+                <div><p class="text-xs text-gray-500">Rute</p><p class="text-white text-xs">${item.lokasi_asal} → ${item.lokasi_tujuan}</p></div>
+                <div><p class="text-xs text-gray-500">Pengiriman</p><p class="text-white">${item.shipping_method ? getShippingMethodText(item.shipping_method) : 'Belum ada'}</p></div>
+                <div><p class="text-xs text-gray-500">Pembayaran</p><p class="text-white">${getPaymentStatusText(item.payment_status)}</p></div>
+            </div>
 
-    async function submitTender(e) {
-        e.preventDefault();
-        
-        const newItem = {
-            karyawan: document.getElementById('input-karyawan').value.trim(),
-            nama_tender: document.getElementById('input-nama-tender').value.trim(),
-            nama_cust: document.getElementById('input-nama-cust').value.trim(),
-            pt_cust: document.getElementById('input-pt-cust').value.trim(),
-            nama_barang: document.getElementById('input-nama-barang').value.trim(),
-            jenis: document.getElementById('input-jenis').value,
-            lokasi_asal: document.getElementById('input-lokasi-asal').value.trim(),
-            lokasi_tujuan: document.getElementById('input-lokasi-tujuan').value.trim(),
-            status: document.getElementById('input-status').value,
-            shipping_method: document.getElementById('input-metode').value,
-            payment_status: 'pending',
-            payment_amount: 0,
-            progress: 0
-        };
+            <div class="flex gap-2">
+                ${!item.shipping_method ? `<button onclick="updateShipping(${item.id})" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 rounded text-xs">Update Pengiriman</button>` : ''}
+                ${item.shipping_method && !item.shipping_delivered ? `<button onclick="markDelivered(${item.id})" class="px-3 py-1.5 bg-green-600 hover:bg-green-700 rounded text-xs">Tandai Sampai</button>` : ''}
+                <button onclick="deleteItem(${item.id})" class="px-3 py-1.5 bg-red-600/50 hover:bg-red-600 rounded text-xs">Hapus</button>
+            </div>
+        </div>`;
+    }).join('');
+}
 
-        try {
-            await saveTender(newItem);
-            showToast('✅ Data berhasil disimpan ke cloud!');
-            document.getElementById('tender-form').reset();
-            showPage('dashboard');
-        } catch (err) {
-            showToast('❌ Gagal menyimpan: ' + err.message, 'error');
-        }
-    }
+// ==================== FORM SUBMIT ====================
 
-    async function updateShipping(id) {
-        const method = prompt('Metode pengiriman (udara/laut/darat):');
-        if (!method) return;
-        
-        const resi = prompt('Nomor resi/BL:');
-        
-        try {
-            await updateTender(id, {
-                shipping_method: method,
-                shipping_resi: resi || ''
-            });
-            showToast('Pengiriman diupdate!');
-            renderTracking();
-        } catch (err) {
-            showToast('Gagal update: ' + err.message, 'error');
-        }
-    }
+async function submitTender(e) {
+    e.preventDefault();
+    
+    const newItem = {
+        karyawan: document.getElementById('input-karyawan').value.trim(),
+        nama_tender: document.getElementById('input-nama-tender').value.trim(),
+        nama_cust: document.getElementById('input-nama-cust').value.trim(),
+        pt_cust: document.getElementById('input-pt-cust').value.trim(),
+        nama_barang: document.getElementById('input-nama-barang').value.trim(),
+        jenis: document.getElementById('input-jenis').value,
+        lokasi_asal: document.getElementById('input-lokasi-asal').value.trim(),
+        lokasi_tujuan: document.getElementById('input-lokasi-tujuan').value.trim(),
+        status: document.getElementById('input-status').value,
+        shipping_method: document.getElementById('input-metode').value,
+        payment_status: 'pending',
+        payment_amount: 0,
+        progress: 0
+    };
 
-    async function markDelivered(id) {
-        if (!confirm('Tandai barang sudah sampai?')) return;
-        
-        try {
-            await updateTender(id, { shipping_delivered: true });
-            showToast('✅ Barang sudah sampai!');
-            renderTracking();
-        } catch (err) {
-            showToast('Gagal update: ' + err.message, 'error');
-        }
-    }
-
-    async function deleteItem(id) {
-        if (!confirm('Yakin hapus data ini?')) return;
-        
-        try {
-            await deleteTender(id);
-            showToast('Data dihapus');
-            renderTracking();
-        } catch (err) {
-            showToast('Gagal hapus: ' + err.message, 'error');
-        }
-    }
-
-    // ==================== HELPERS ====================
-
-    function calculateProgress(item) {
-        let p = 0;
-        if (item.status === 'ok') p += 20;
-        if (item.shipping_method) p += 30;
-        if (item.shipping_delivered) p += 30;
-        if (item.payment_status === 'lunas') p += 20;
-        return Math.min(p, 100);
-    }
-
-    function getStatusClass(status) {
-        const map = { 'planning': 'planning', 'tender': 'tender', 'ok': 'ok', 'not-ok': 'revisi' };
-        return map[status] || 'planning';
-    }
-
-    function getStatusText(status) {
-        const map = { 'planning': 'Planning', 'tender': 'Proses Tender', 'ok': 'OK - Deal', 'not-ok': 'Tidak OK' };
-        return map[status] || status;
-    }
-
-    function getJenisLabel(jenis) {
-        const map = { 'berbahaya': '🔴 Berbahaya', 'aman': '🟢 Aman', 'kimia': '🟡 Kimia', 'hewan': '🟣 Hewan' };
-        return map[jenis] || jenis;
-    }
-
-    function getShippingMethodText(method) {
-        const map = { 'udara': '✈️ Udara', 'laut': '🚢 Laut', 'darat': '🚛 Darat' };
-        return map[method] || method;
-    }
-
-    function getPaymentStatusText(status) {
-        const map = { 'pending': '⏰ Pending', 'dp': '💳 DP', 'lunas': '✅ Lunas' };
-        return map[status] || status;
-    }
-
-    function showToast(message, type = 'success') {
-        const toast = document.getElementById('toast');
-        document.getElementById('toast-message').textContent = message;
-        document.getElementById('toast-icon').textContent = type === 'error' ? '❌' : '✅';
-        toast.classList.remove('hidden');
-        setTimeout(() => toast.classList.add('hidden'), 3000);
-    }
-
-    function updateClock() {
-        const now = new Date();
-        document.getElementById('live-clock').textContent = now.toLocaleDateString('id-ID', { 
-            weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' 
-        }) + ' • ' + now.toLocaleTimeString('id-ID');
-    }
-
-    // Initialize
-    document.addEventListener('DOMContentLoaded', () => {
-        updateClock();
-        setInterval(updateClock, 1000);
+    try {
+        await saveTender(newItem);
+        showToast('✅ Data berhasil disimpan ke cloud!');
+        document.getElementById('tender-form').reset();
         showPage('dashboard');
-    });
-    </script>
-</body>
-</html>
+    } catch (err) {
+        showToast('❌ Gagal: ' + err.message, 'error');
+    }
+}
+
+async function updateShipping(id) {
+    const method = prompt('Metode pengiriman (udara/laut/darat):');
+    if (!method) return;
+    const resi = prompt('Nomor resi/BL:');
+    
+    try {
+        await updateTender(id, { shipping_method: method, shipping_resi: resi || '' });
+        showToast('Pengiriman diupdate!');
+        renderTracking();
+    } catch (err) {
+        showToast('Gagal: ' + err.message, 'error');
+    }
+}
+
+async function markDelivered(id) {
+    if (!confirm('Tandai barang sudah sampai?')) return;
+    try {
+        await updateTender(id, { shipping_delivered: true });
+        showToast('✅ Barang sudah sampai!');
+        renderTracking();
+    } catch (err) {
+        showToast('Gagal: ' + err.message, 'error');
+    }
+}
+
+async function deleteItem(id) {
+    if (!confirm('Yakin hapus data ini?')) return;
+    try {
+        await deleteTender(id);
+        showToast('Data dihapus');
+        renderTracking();
+    } catch (err) {
+        showToast('Gagal: ' + err.message, 'error');
+    }
+}
+
+// ==================== HELPERS ====================
+
+function calculateProgress(item) {
+    let p = 0;
+    if (item.status === 'ok') p += 20;
+    if (item.shipping_method) p += 30;
+    if (item.shipping_delivered) p += 30;
+    if (item.payment_status === 'lunas') p += 20;
+    return Math.min(p, 100);
+}
+
+function getStatusClass(status) {
+    const map = { 'planning': 'planning', 'tender': 'tender', 'ok': 'ok', 'not-ok': 'revisi' };
+    return map[status] || 'planning';
+}
+
+function getStatusText(status) {
+    const map = { 'planning': 'Planning', 'tender': 'Proses Tender', 'ok': 'OK - Deal', 'not-ok': 'Tidak OK' };
+    return map[status] || status;
+}
+
+function getJenisLabel(jenis) {
+    const map = { 'berbahaya': '🔴 Berbahaya', 'aman': '🟢 Aman', 'kimia': '🟡 Kimia', 'hewan': '🟣 Hewan' };
+    return map[jenis] || jenis;
+}
+
+function getShippingMethodText(method) {
+    const map = { 'udara': '✈️ Udara', 'laut': '🚢 Laut', 'darat': '🚛 Darat' };
+    return map[method] || method;
+}
+
+function getPaymentStatusText(status) {
+    const map = { 'pending': '⏰ Pending', 'dp': '💳 DP', 'lunas': '✅ Lunas' };
+    return map[status] || status;
+}
+
+function showToast(message, type = 'success') {
+    const toast = document.getElementById('toast');
+    document.getElementById('toast-message').textContent = message;
+    document.getElementById('toast-icon').textContent = type === 'error' ? '❌' : '✅';
+    toast.classList.remove('hidden');
+    setTimeout(() => toast.classList.add('hidden'), 3000);
+}
+
+function updateClock() {
+    const now = new Date();
+    document.getElementById('live-clock').textContent = now.toLocaleDateString('id-ID', { 
+        weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' 
+    }) + ' • ' + now.toLocaleTimeString('id-ID');
+}
+
+// Initialize
+document.addEventListener('DOMContentLoaded', () => {
+    updateClock();
+    setInterval(updateClock, 1000);
+    showPage('dashboard');
+});
+</script>
+Fix: supabase redeclaration error
