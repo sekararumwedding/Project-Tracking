@@ -3,247 +3,223 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Logistics Tracker - PT. Cahaya Sejati Teknologi</title>
+    <title>Login - Logistics Tracker</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script>
-        tailwind.config = {
-            theme: { 
-                extend: { 
-                    colors: { 
-                        primary: { 
-                            50:'#eff6ff', 100:'#dbeafe', 200:'#bfdbfe', 300:'#93c5fd',
-                            400:'#60a5fa', 500:'#3b82f6', 600:'#2563eb', 700:'#1d4ed8',
-                            800:'#1e3a5f', 900:'#0f1f3d' 
-                        }, 
-                        dark: { 700:'#1a2332', 800:'#111827', 900:'#0a0f1a' } 
-                    } 
-                } 
-            }
-        }
-    </script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
         * { font-family: 'Inter', sans-serif; }
         body { 
-            background: linear-gradient(135deg, #0a0f1a 0%, #1a2332 100%);
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
             min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         .glass { 
-            background: rgba(30, 58, 95, 0.4); 
-            backdrop-filter: blur(12px); 
-            border: 1px solid rgba(59, 130, 246, 0.2); 
+            background: rgba(30, 58, 95, 0.5); 
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(148, 163, 184, 0.1);
         }
-        input { 
-            background: rgba(15, 31, 61, 0.6) !important; 
-            color: #e2e8f0 !important; 
-            border: 1px solid rgba(59, 130, 246, 0.3) !important; 
+        .input-field {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            color: white;
+            transition: all 0.2s;
         }
-        input:focus { 
-            border-color: #3b82f6 !important; 
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2) !important; 
-            outline: none !important; 
+        .input-field:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+            outline: none;
         }
-        .fade-in { animation: fadeIn 0.3s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
-<body class="text-gray-200 flex items-center justify-center p-4">
+<body>
 
-    <!-- LOGIN VIEW -->
-    <div id="login-view" class="w-full max-w-md fade-in">
-        <div class="glass rounded-2xl p-8 shadow-2xl">
-            <div class="text-center mb-8">
-                <div class="w-16 h-16 rounded-xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white font-bold text-2xl mx-auto mb-4 shadow-lg">
-                    CS
-                </div>
-                <h2 class="text-3xl font-bold text-white mb-2">Logistics Tracker</h2>
-                <p class="text-sm text-gray-400">PT. Cahaya Sejati Teknologi</p>
+<div class="w-full max-w-md p-6">
+    <div class="glass rounded-2xl p-8 shadow-2xl">
+        <!-- Logo -->
+        <div class="text-center mb-8">
+            <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl flex items-center justify-center text-white font-bold text-2xl mx-auto mb-4">
+                CS
             </div>
-            
-            <!-- Login Form -->
-            <div id="login-form">
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-300 mb-2">Email</label>
-                        <input type="email" id="login-email" placeholder="nama@email.com" 
-                               class="w-full rounded-lg px-4 py-3 text-sm">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-300 mb-2">Password</label>
-                        <input type="password" id="login-password" placeholder="••••••••" 
-                               class="w-full rounded-lg px-4 py-3 text-sm">
-                    </div>
-                </div>
-                
-                <button type="button" onclick="handleLogin()" 
-                        class="w-full mt-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 rounded-lg font-semibold text-white shadow-lg transition-all transform hover:scale-[1.02]">
-                    Masuk
-                </button>
-                
-                <p class="text-center text-sm text-gray-400 mt-6">
-                    Belum punya akun? 
-                    <button type="button" onclick="toggleAuthMode()" 
-                            class="text-blue-400 hover:text-blue-300 font-medium underline underline-offset-2">
-                        Daftar
-                    </button>
-                </p>
-            </div>
-
-            <!-- Register Form -->
-            <div id="register-form" class="hidden">
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-300 mb-2">Nama Lengkap</label>
-                        <input type="text" id="reg-name" placeholder="Nama Lengkap" 
-                               class="w-full rounded-lg px-4 py-3 text-sm">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-300 mb-2">Email</label>
-                        <input type="email" id="reg-email" placeholder="nama@email.com" 
-                               class="w-full rounded-lg px-4 py-3 text-sm">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-300 mb-2">Password</label>
-                        <input type="password" id="reg-password" placeholder="Minimal 6 karakter" 
-                               class="w-full rounded-lg px-4 py-3 text-sm">
-                    </div>
-                </div>
-                
-                <button type="button" onclick="handleRegister()" 
-                        class="w-full mt-6 py-3 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 rounded-lg font-semibold text-white shadow-lg transition-all transform hover:scale-[1.02]">
-                    Daftar Akun
-                </button>
-                
-                <p class="text-center text-sm text-gray-400 mt-6">
-                    Sudah punya akun? 
-                    <button type="button" onclick="toggleAuthMode()" 
-                            class="text-blue-400 hover:text-blue-300 font-medium underline underline-offset-2">
-                        Masuk
-                    </button>
-                </p>
-            </div>
-            
-            <p id="auth-error" class="text-red-400 text-sm text-center mt-4 hidden bg-red-400/10 px-4 py-2 rounded-lg"></p>
+            <h1 class="text-3xl font-bold text-white mb-2">Logistics Tracker</h1>
+            <p class="text-slate-400 text-sm">PT. Cahaya Sejati Teknologi</p>
         </div>
+
+        <!-- Form Login -->
+        <div id="loginForm">
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-slate-300 text-sm font-medium mb-2">Email</label>
+                    <input type="email" id="email" class="input-field w-full px-4 py-3 rounded-lg" placeholder="nama@email.com">
+                </div>
+                <div>
+                    <label class="block text-slate-300 text-sm font-medium mb-2">Password</label>
+                    <input type="password" id="password" class="input-field w-full px-4 py-3 rounded-lg" placeholder="••••••••">
+                </div>
+            </div>
+
+            <button onclick="doLogin()" class="w-full mt-6 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold py-3 rounded-lg transition-all transform hover:scale-[1.02]">
+                Masuk
+            </button>
+
+            <p class="text-center text-slate-400 mt-6 text-sm">
+                Belum punya akun? 
+                <button onclick="toggleForm()" class="text-blue-400 hover:text-blue-300 font-medium underline">Daftar</button>
+            </p>
+        </div>
+
+        <!-- Form Register -->
+        <div id="registerForm" class="hidden">
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-slate-300 text-sm font-medium mb-2">Nama Lengkap</label>
+                    <input type="text" id="regName" class="input-field w-full px-4 py-3 rounded-lg" placeholder="Nama Lengkap">
+                </div>
+                <div>
+                    <label class="block text-slate-300 text-sm font-medium mb-2">Email</label>
+                    <input type="email" id="regEmail" class="input-field w-full px-4 py-3 rounded-lg" placeholder="nama@email.com">
+                </div>
+                <div>
+                    <label class="block text-slate-300 text-sm font-medium mb-2">Password</label>
+                    <input type="password" id="regPassword" class="input-field w-full px-4 py-3 rounded-lg" placeholder="Minimal 6 karakter">
+                </div>
+            </div>
+
+            <button onclick="doRegister()" class="w-full mt-6 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold py-3 rounded-lg transition-all transform hover:scale-[1.02]">
+                Daftar Akun
+            </button>
+
+            <p class="text-center text-slate-400 mt-6 text-sm">
+                Sudah punya akun? 
+                <button onclick="toggleForm()" class="text-blue-400 hover:text-blue-300 font-medium underline">Masuk</button>
+            </p>
+        </div>
+
+        <!-- Error Message -->
+        <div id="errorMsg" class="hidden mt-4 p-3 bg-red-500/20 border border-red-500/50 rounded-lg text-red-300 text-sm text-center"></div>
     </div>
+</div>
 
-    <script>
-    // ==========================================
-    // ⚠️ GANTI DENGAN DATA SUPABASE ANDA ⚠️
-    // ==========================================
-    const SUPABASE_URL = 'https://ixgwxbehsmgmczzfvjse.supabase.co';
-    const SUPABASE_ANON_KEY = 'sb_publishable_xIL19QNKrG2iBzQyiO6EYw_LV0sda5-';
+<script>
+// ========================================
+// KONFIGURASI SUPABASE - GANTI DISINI!
+// ========================================
+const SUPABASE_URL = 'https://ixgwxbehsmgmczzfvjse.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_xIL19QNKrG2iBzQyiO6EYw_LV0sda5-';
+
+// Inisialisasi Supabase Client
+const _supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// Toggle Form Login/Register
+function toggleForm() {
+    const loginForm = document.getElementById('loginForm');
+    const registerForm = document.getElementById('registerForm');
+    const errorMsg = document.getElementById('errorMsg');
     
-    // Initialize Supabase - HANYA SEKALI (PENTING!)
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    loginForm.classList.toggle('hidden');
+    registerForm.classList.toggle('hidden');
+    errorMsg.classList.add('hidden');
+    
+    // Clear inputs
+    document.getElementById('email').value = '';
+    document.getElementById('password').value = '';
+    document.getElementById('regName').value = '';
+    document.getElementById('regEmail').value = '';
+    document.getElementById('regPassword').value = '';
+}
 
-    // Toggle antara Login dan Register
-    function toggleAuthMode() {
-        const loginForm = document.getElementById('login-form');
-        const registerForm = document.getElementById('register-form');
-        const errorEl = document.getElementById('auth-error');
-        
-        loginForm.classList.toggle('hidden');
-        registerForm.classList.toggle('hidden');
-        errorEl.classList.add('hidden');
-        errorEl.textContent = '';
+// Fungsi Login
+async function doLogin() {
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    const errorMsg = document.getElementById('errorMsg');
+    
+    if (!email || !password) {
+        errorMsg.textContent = '⚠️ Email dan password wajib diisi';
+        errorMsg.classList.remove('hidden');
+        return;
     }
-
-    // Handle Login
-    async function handleLogin() {
-        const email = document.getElementById('login-email').value.trim();
-        const password = document.getElementById('login-password').value;
-        const errorEl = document.getElementById('auth-error');
+    
+    try {
+        const { data, error } = await _supabaseClient.auth.signInWithPassword({
+            email: email,
+            password: password
+        });
         
-        if (!email || !password) {
-            errorEl.textContent = '⚠️ Email dan password wajib diisi';
-            errorEl.classList.remove('hidden');
-            return;
-        }
+        if (error) throw error;
         
-        try {
-            const { data, error } = await supabase.auth.signInWithPassword({ 
-                email: email, 
-                password: password 
-            });
-            
-            if (error) throw error;
-            
-            alert('✅ Login berhasil!');
-            location.reload();
-            
-        } catch (err) {
-            errorEl.textContent = '❌ ' + err.message;
-            errorEl.classList.remove('hidden');
-            console.error('Login error:', err);
-        }
+        alert('✅ Login berhasil!');
+        // window.location.href = 'dashboard.html'; // Redirect ke dashboard
+        
+    } catch (err) {
+        errorMsg.textContent = '❌ ' + err.message;
+        errorMsg.classList.remove('hidden');
+        console.error('Login error:', err);
     }
+}
 
-    // Handle Register
-    async function handleRegister() {
-        const name = document.getElementById('reg-name').value.trim();
-        const email = document.getElementById('reg-email').value.trim();
-        const password = document.getElementById('reg-password').value;
-        const errorEl = document.getElementById('auth-error');
-        
-        if (!name || !email || !password) {
-            errorEl.textContent = '⚠️ Semua field wajib diisi';
-            errorEl.classList.remove('hidden');
-            return;
-        }
-        
-        if (password.length < 6) {
-            errorEl.textContent = '⚠️ Password minimal 6 karakter';
-            errorEl.classList.remove('hidden');
-            return;
-        }
-        
-        try {
-            const { data, error } = await supabase.auth.signUp({ 
-                email: email, 
-                password: password,
-                options: {
-                    data: { 
-                        name: name 
-                    }
-                }
-            });
-            
-            if (error) throw error;
-            
-            // Simpan data profile ke database
-            if (data.user) {
-                await supabase.from('profiles').insert([
-                    { 
-                        id: data.user.id, 
-                        name: name, 
-                        role: 'pengguna',
-                        created_at: new Date().toISOString()
-                    }
-                ]);
+// Fungsi Register
+async function doRegister() {
+    const name = document.getElementById('regName').value.trim();
+    const email = document.getElementById('regEmail').value.trim();
+    const password = document.getElementById('regPassword').value;
+    const errorMsg = document.getElementById('errorMsg');
+    
+    if (!name || !email || !password) {
+        errorMsg.textContent = '⚠️ Semua field wajib diisi';
+        errorMsg.classList.remove('hidden');
+        return;
+    }
+    
+    if (password.length < 6) {
+        errorMsg.textContent = '⚠️ Password minimal 6 karakter';
+        errorMsg.classList.remove('hidden');
+        return;
+    }
+    
+    try {
+        const { data, error } = await _supabaseClient.auth.signUp({
+            email: email,
+            password: password,
+            options: {
+                 { name: name }
             }
-            
-            alert('✅ Registrasi berhasil! Silakan login.');
-            toggleAuthMode();
-            
-        } catch (err) {
-            errorEl.textContent = '❌ ' + err.message;
-            errorEl.classList.remove('hidden');
-            console.error('Register error:', err);
+        });
+        
+        if (error) throw error;
+        
+        // Simpan ke tabel profiles
+        if (data.user) {
+            await _supabaseClient.from('profiles').insert([{
+                id: data.user.id,
+                name: name,
+                role: 'pengguna'
+            }]);
+        }
+        
+        alert('✅ Registrasi berhasil! Silakan login.');
+        toggleForm();
+        
+    } catch (err) {
+        errorMsg.textContent = '❌ ' + err.message;
+        errorMsg.classList.remove('hidden');
+        console.error('Register error:', err);
+    }
+}
+
+// Enter key handler
+document.addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        if (!document.getElementById('loginForm').classList.contains('hidden')) {
+            doLogin();
+        } else {
+            doRegister();
         }
     }
+});
+</script>
 
-    // Enter key support
-    document.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            if (!document.getElementById('login-form').classList.contains('hidden')) {
-                handleLogin();
-            } else {
-                handleRegister();
-            }
-        }
-    });
-    </script>
 </body>
 </html>
