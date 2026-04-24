@@ -66,9 +66,16 @@
             font-weight: 600;
             cursor: pointer;
             margin-top: 10px;
+            transition: all 0.3s;
         }
         button:hover {
             background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            transform: translateY(-2px);
+        }
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
         }
         .toggle {
             text-align: center;
@@ -92,6 +99,11 @@
             display: none;
         }
         .error.show { display: block; }
+        .success {
+            background: rgba(34,197,94,0.15);
+            border: 1px solid rgba(34,197,94,0.4);
+            color: #86efac;
+        }
         .hidden { display: none !important; }
     </style>
 </head>
@@ -114,7 +126,7 @@
             <label>Password</label>
             <input type="password" id="loginPassword" placeholder="••••••••">
         </div>
-        <button type="button" onclick="handleLogin()">Masuk</button>
+        <button type="button" onclick="handleLogin()" id="loginBtn">Masuk</button>
         <div class="toggle">
             Belum punya akun? <a onclick="showRegister()">Daftar</a>
         </div>
@@ -134,7 +146,7 @@
             <label>Password</label>
             <input type="password" id="regPassword" placeholder="Minimal 6 karakter">
         </div>
-        <button type="button" onclick="handleRegister()">Daftar Akun</button>
+        <button type="button" onclick="handleRegister()" id="registerBtn">Daftar Akun</button>
         <div class="toggle">
             Sudah punya akun? <a onclick="showLogin()">Masuk</a>
         </div>
@@ -151,13 +163,13 @@ var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYm
 // Initialize Supabase
 var supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// Show error message
-function showMessage(message) {
+// Show message
+function showMessage(message, type) {
     var errorBox = document.getElementById('errorBox');
     errorBox.textContent = message;
-    errorBox.classList.add('show');
+    errorBox.className = 'error show' + (type === 'success' ? ' success' : '');
     setTimeout(function() {
-        errorBox.classList.remove('show');
+        errorBox.className = 'error';
     }, 5000);
 }
 
@@ -165,24 +177,28 @@ function showMessage(message) {
 function showRegister() {
     document.getElementById('loginForm').classList.add('hidden');
     document.getElementById('registerForm').classList.remove('hidden');
-    document.getElementById('errorBox').classList.remove('show');
+    document.getElementById('errorBox').className = 'error';
 }
 
 function showLogin() {
     document.getElementById('registerForm').classList.add('hidden');
     document.getElementById('loginForm').classList.remove('hidden');
-    document.getElementById('errorBox').classList.remove('show');
+    document.getElementById('errorBox').className = 'error';
 }
 
 // Handle Login
 function handleLogin() {
     var email = document.getElementById('loginEmail').value.trim();
     var password = document.getElementById('loginPassword').value;
+    var btn = document.getElementById('loginBtn');
 
     if (!email || !password) {
         showMessage('⚠️ Email dan password wajib diisi');
         return;
     }
+
+    btn.textContent = 'Memproses...';
+    btn.disabled = true;
 
     supabaseClient.auth.signInWithPassword({
         email: email,
@@ -190,14 +206,20 @@ function handleLogin() {
     }).then(function(result) {
         if (result.error) {
             showMessage('❌ ' + result.error.message);
+            btn.textContent = 'Masuk';
+            btn.disabled = false;
         } else {
-            showMessage('✅ Login berhasil!');
+            showMessage('✅ Login berhasil! Mengalihkan...', 'success');
+            
+            // REDIRECT ke dashboard setelah 1 detik
             setTimeout(function() {
-                alert('Login berhasil!');
-            }, 500);
+                window.location.href = 'dashboard.html';
+            }, 1000);
         }
     }).catch(function(err) {
         showMessage('❌ ' + err.message);
+        btn.textContent = 'Masuk';
+        btn.disabled = false;
     });
 }
 
@@ -206,6 +228,7 @@ function handleRegister() {
     var name = document.getElementById('regName').value.trim();
     var email = document.getElementById('regEmail').value.trim();
     var password = document.getElementById('regPassword').value;
+    var btn = document.getElementById('registerBtn');
 
     if (!name || !email || !password) {
         showMessage('⚠️ Semua field wajib diisi');
@@ -217,20 +240,23 @@ function handleRegister() {
         return;
     }
 
-    // Sign up dengan Supabase Auth
+    btn.textContent = 'Memproses...';
+    btn.disabled = true;
+
     supabaseClient.auth.signUp({
         email: email,
         password: password,
         options: {
-            data: {
+             {
                 name: name
             }
         }
     }).then(function(result) {
         if (result.error) {
             showMessage('❌ ' + result.error.message);
+            btn.textContent = 'Daftar Akun';
+            btn.disabled = false;
         } else {
-            // Simpan ke tabel profiles
             if (result.data && result.data.user) {
                 supabaseClient
                     .from('profiles')
@@ -240,24 +266,27 @@ function handleRegister() {
                         email: email,
                         role: 'pengguna'
                     }])
-                    .then(function(insertResult) {
-                        if (insertResult.error) {
-                            console.error('Error save profile:', insertResult.error);
-                        }
-                        showMessage('✅ Registrasi berhasil! Silakan login.');
+                    .then(function() {
+                        showMessage('✅ Registrasi berhasil! Silakan login.', 'success');
                         setTimeout(function() {
                             showLogin();
+                            btn.textContent = 'Daftar Akun';
+                            btn.disabled = false;
                         }, 1500);
                     });
             } else {
-                showMessage('✅ Registrasi berhasil! Silakan login.');
+                showMessage('✅ Registrasi berhasil! Silakan login.', 'success');
                 setTimeout(function() {
                     showLogin();
+                    btn.textContent = 'Daftar Akun';
+                    btn.disabled = false;
                 }, 1500);
             }
         }
     }).catch(function(err) {
         showMessage('❌ ' + err.message);
+        btn.textContent = 'Daftar Akun';
+        btn.disabled = false;
     });
 }
 
@@ -271,6 +300,15 @@ document.addEventListener('keypress', function(e) {
             handleRegister();
         }
     }
+});
+
+// Cek session - jika sudah login, redirect ke dashboard
+window.addEventListener('load', function() {
+    supabaseClient.auth.getSession().then(function(sessionData) {
+        if (sessionData.data && sessionData.data.session) {
+            window.location.href = 'dashboard.html';
+        }
+    });
 });
 </script>
 
