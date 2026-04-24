@@ -4,16 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Logistics Tracking System - PT. Cahaya Sejati Teknologi</title>
-    
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
-    <!-- ⚠️ SUPABASE - Library Database Cloud -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
     <script>
         tailwind.config = {
             theme: {
@@ -26,7 +19,6 @@
             }
         }
     </script>
-    
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
         * { font-family: 'Inter', sans-serif; }
@@ -59,11 +51,20 @@
         .chart-container { position: relative; height: 300px; }
         .form-section { border: 1px solid rgba(59,130,246,0.15); border-radius: 12px; padding: 20px; margin-bottom: 16px; background: rgba(15,31,61,0.3); }
         .form-section-title { font-size: 0.85rem; font-weight: 600; color: #60a5fa; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+        .label-card { background: linear-gradient(135deg, rgba(59,130,246,0.1), rgba(168,85,247,0.1)); border: 1px solid rgba(59,130,246,0.2); border-radius: 12px; padding: 16px; position: relative; overflow: hidden; }
+        .label-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+        .label-card.progress-0::before { background: linear-gradient(90deg, #ef4444, #f97316); }
+        .label-card.progress-25::before { background: linear-gradient(90deg, #f97316, #eab308); }
+        .label-card.progress-50::before { background: linear-gradient(90deg, #eab308, #22c55e); }
+        .label-card.progress-75::before { background: linear-gradient(90deg, #22c55e, #3b82f6); }
+        .label-card.progress-100::before { background: linear-gradient(90deg, #3b82f6, #a855f7); }
+        .doc-card { transition: all 0.3s ease; }
+        .doc-card:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(59,130,246,0.1); }
     </style>
 </head>
 <body class="text-gray-200 min-h-screen">
 
-    <!-- SIDEBAR -->
+    <!-- SIDEBAR LENGKAP -->
     <div id="sidebar" class="fixed top-0 left-0 h-full w-64 bg-dark-900 border-r border-primary-800 z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-300">
         <div class="p-6 border-b border-primary-800">
             <div class="flex items-center gap-3">
@@ -87,16 +88,50 @@
                 <svg class="w-5 h-5 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7"/></svg>
                 Tracking
             </a>
+            <a href="#" onclick="showPage('shipping')" id="nav-shipping" class="sidebar-link flex items-center gap-3 px-6 py-3 text-sm hover:bg-primary-900/30 transition-all">
+                <svg class="w-5 h-5 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"/></svg>
+                Pengiriman
+            </a>
+            <a href="#" onclick="showPage('payment')" id="nav-payment" class="sidebar-link flex items-center gap-3 px-6 py-3 text-sm hover:bg-primary-900/30 transition-all">
+                <svg class="w-5 h-5 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                Pembayaran
+            </a>
+            <a href="#" onclick="showPage('documents')" id="nav-documents" class="sidebar-link flex items-center gap-3 px-6 py-3 text-sm hover:bg-primary-900/30 transition-all">
+                <svg class="w-5 h-5 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                Dokumen
+            </a>
+            <a href="#" onclick="showPage('labels')" id="nav-labels" class="sidebar-link flex items-center gap-3 px-6 py-3 text-sm hover:bg-primary-900/30 transition-all">
+                <svg class="w-5 h-5 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
+                Label & Progres
+            </a>
+            <a href="#" onclick="showPage('grafik')" id="nav-grafik" class="sidebar-link flex items-center gap-3 px-6 py-3 text-sm hover:bg-primary-900/30 transition-all">
+                <svg class="w-5 h-5 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                Grafik
+            </a>
         </nav>
+        <div class="absolute bottom-0 w-full p-4 border-t border-primary-800">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-full bg-primary-600 flex items-center justify-center text-xs font-bold">CST</div>
+                <div>
+                    <p class="text-sm font-medium text-white">Logistics Department</p>
+                    <p class="text-xs text-gray-500">PT. Cahaya Sejati</p>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- MAIN CONTENT -->
     <div class="lg:ml-64 min-h-screen">
         <header class="sticky top-0 z-40 glass-light border-b border-primary-800/50">
             <div class="flex items-center justify-between px-4 lg:px-8 py-4">
-                <div>
-                    <h2 id="page-title" class="text-xl font-bold text-white">Dashboard</h2>
-                    <p id="page-subtitle" class="text-sm text-gray-400">Logistics Tracking System</p>
+                <div class="flex items-center gap-4">
+                    <button onclick="toggleSidebar()" class="lg:hidden p-2 rounded-lg hover:bg-primary-900/30">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                    </button>
+                    <div>
+                        <h2 id="page-title" class="text-xl font-bold text-white">Dashboard</h2>
+                        <p id="page-subtitle" class="text-sm text-gray-400">Logistics Tracking System</p>
+                    </div>
                 </div>
                 <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary-900/30">
                     <span class="pulse-dot w-2 h-2 rounded-full bg-green-400"></span>
@@ -107,22 +142,49 @@
 
         <!-- PAGE: DASHBOARD -->
         <main id="page-dashboard" class="page-content p-4 lg:p-8 fade-in">
-            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-                <div class="glass rounded-xl p-5">
+            <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+                <div class="glass rounded-xl p-5 card-hover">
                     <p class="text-xs text-gray-400 uppercase">Total Tender</p>
                     <p class="text-2xl font-bold text-white mt-2" id="stat-total">0</p>
                 </div>
-                <div class="glass rounded-xl p-5">
+                <div class="glass rounded-xl p-5 card-hover">
                     <p class="text-xs text-gray-400 uppercase">Dalam Proses</p>
                     <p class="text-2xl font-bold text-amber-400 mt-2" id="stat-process">0</p>
                 </div>
-                <div class="glass rounded-xl p-5">
+                <div class="glass rounded-xl p-5 card-hover">
                     <p class="text-xs text-gray-400 uppercase">Selesai</p>
                     <p class="text-2xl font-bold text-green-400 mt-2" id="stat-shipped">0</p>
                 </div>
-                <div class="glass rounded-xl p-5">
+                <div class="glass rounded-xl p-5 card-hover">
                     <p class="text-xs text-gray-400 uppercase">Lunas</p>
                     <p class="text-2xl font-bold text-purple-400 mt-2" id="stat-paid">0</p>
+                </div>
+                <div class="glass rounded-xl p-5 card-hover">
+                    <p class="text-xs text-gray-400 uppercase">Dokumen</p>
+                    <p class="text-2xl font-bold text-cyan-400 mt-2" id="stat-docs">0</p>
+                </div>
+            </div>
+
+            <!-- Ringkasan per Jenis Barang -->
+            <div class="glass rounded-xl p-6 mb-6">
+                <h3 class="text-lg font-semibold text-white mb-4">Ringkasan per Jenis Barang</h3>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="glass-light rounded-lg p-4 text-center">
+                        <p class="text-2xl font-bold text-red-400" id="count-berbahaya">0</p>
+                        <p class="text-xs text-gray-400 mt-1">🔴 Berbahaya</p>
+                    </div>
+                    <div class="glass-light rounded-lg p-4 text-center">
+                        <p class="text-2xl font-bold text-green-400" id="count-aman">0</p>
+                        <p class="text-xs text-gray-400 mt-1">🟢 Aman</p>
+                    </div>
+                    <div class="glass-light rounded-lg p-4 text-center">
+                        <p class="text-2xl font-bold text-amber-400" id="count-kimia">0</p>
+                        <p class="text-xs text-gray-400 mt-1">🟡 Kimia</p>
+                    </div>
+                    <div class="glass-light rounded-lg p-4 text-center">
+                        <p class="text-2xl font-bold text-purple-400" id="count-hewan">0</p>
+                        <p class="text-xs text-gray-400 mt-1">🟣 Hewan Hidup</p>
+                    </div>
                 </div>
             </div>
 
@@ -139,45 +201,26 @@
             <div class="max-w-3xl mx-auto">
                 <div class="glass rounded-xl p-6 lg:p-8">
                     <h3 class="text-lg font-semibold text-white mb-6">📋 Rencana Pekerjaan / Tender</h3>
-                    
                     <form id="tender-form" onsubmit="submitTender(event)">
                         <div class="form-section">
                             <div class="form-section-title">Data Karyawan & Tender</div>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-xs text-gray-400 mb-1">Nama Karyawan / CS *</label>
-                                    <input type="text" id="input-karyawan" required class="w-full rounded-lg px-4 py-3 text-sm">
-                                </div>
-                                <div>
-                                    <label class="block text-xs text-gray-400 mb-1">Nama Tender *</label>
-                                    <input type="text" id="input-nama-tender" required class="w-full rounded-lg px-4 py-3 text-sm">
-                                </div>
+                                <div><label class="block text-xs text-gray-400 mb-1">Nama Karyawan / CS *</label><input type="text" id="input-karyawan" required class="w-full rounded-lg px-4 py-3 text-sm"></div>
+                                <div><label class="block text-xs text-gray-400 mb-1">Nama Tender *</label><input type="text" id="input-nama-tender" required class="w-full rounded-lg px-4 py-3 text-sm"></div>
                             </div>
                         </div>
-
                         <div class="form-section">
                             <div class="form-section-title">Data Customer</div>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-xs text-gray-400 mb-1">Nama Customer *</label>
-                                    <input type="text" id="input-nama-cust" required class="w-full rounded-lg px-4 py-3 text-sm">
-                                </div>
-                                <div>
-                                    <label class="block text-xs text-gray-400 mb-1">Nama PT Customer *</label>
-                                    <input type="text" id="input-pt-cust" required class="w-full rounded-lg px-4 py-3 text-sm">
-                                </div>
+                                <div><label class="block text-xs text-gray-400 mb-1">Nama Customer *</label><input type="text" id="input-nama-cust" required class="w-full rounded-lg px-4 py-3 text-sm"></div>
+                                <div><label class="block text-xs text-gray-400 mb-1">Nama PT Customer *</label><input type="text" id="input-pt-cust" required class="w-full rounded-lg px-4 py-3 text-sm"></div>
                             </div>
                         </div>
-
                         <div class="form-section">
                             <div class="form-section-title">Data Barang</div>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-xs text-gray-400 mb-1">Nama Barang *</label>
-                                    <input type="text" id="input-nama-barang" required class="w-full rounded-lg px-4 py-3 text-sm">
-                                </div>
-                                <div>
-                                    <label class="block text-xs text-gray-400 mb-1">Jenis Barang *</label>
+                                <div><label class="block text-xs text-gray-400 mb-1">Nama Barang *</label><input type="text" id="input-nama-barang" required class="w-full rounded-lg px-4 py-3 text-sm"></div>
+                                <div><label class="block text-xs text-gray-400 mb-1">Jenis Barang *</label>
                                     <select id="input-jenis" required class="w-full rounded-lg px-4 py-3 text-sm">
                                         <option value="">-- Pilih --</option>
                                         <option value="berbahaya">🔴 Berbahaya</option>
@@ -188,26 +231,17 @@
                                 </div>
                             </div>
                         </div>
-
                         <div class="form-section">
                             <div class="form-section-title">Lokasi</div>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-xs text-gray-400 mb-1">Lokasi Asal *</label>
-                                    <input type="text" id="input-lokasi-asal" required class="w-full rounded-lg px-4 py-3 text-sm">
-                                </div>
-                                <div>
-                                    <label class="block text-xs text-gray-400 mb-1">Lokasi Tujuan *</label>
-                                    <input type="text" id="input-lokasi-tujuan" required class="w-full rounded-lg px-4 py-3 text-sm">
-                                </div>
+                                <div><label class="block text-xs text-gray-400 mb-1">Lokasi Asal *</label><input type="text" id="input-lokasi-asal" required class="w-full rounded-lg px-4 py-3 text-sm"></div>
+                                <div><label class="block text-xs text-gray-400 mb-1">Lokasi Tujuan *</label><input type="text" id="input-lokasi-tujuan" required class="w-full rounded-lg px-4 py-3 text-sm"></div>
                             </div>
                         </div>
-
                         <div class="form-section">
                             <div class="form-section-title">Status</div>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-xs text-gray-400 mb-1">Status Tender *</label>
+                                <div><label class="block text-xs text-gray-400 mb-1">Status Tender *</label>
                                     <select id="input-status" required class="w-full rounded-lg px-4 py-3 text-sm">
                                         <option value="">-- Pilih --</option>
                                         <option value="planning">📝 Planning</option>
@@ -216,8 +250,7 @@
                                         <option value="not-ok">❌ Tidak OK</option>
                                     </select>
                                 </div>
-                                <div>
-                                    <label class="block text-xs text-gray-400 mb-1">Metode Pengiriman</label>
+                                <div><label class="block text-xs text-gray-400 mb-1">Metode Pengiriman</label>
                                     <select id="input-metode" class="w-full rounded-lg px-4 py-3 text-sm">
                                         <option value="">-- Pilih --</option>
                                         <option value="udara">✈️ Udara</option>
@@ -227,10 +260,7 @@
                                 </div>
                             </div>
                         </div>
-
-                        <button type="submit" class="w-full py-3.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 rounded-lg font-semibold text-white transition-all">
-                            💾 Simpan ke Database Cloud
-                        </button>
+                        <button type="submit" class="w-full py-3.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 rounded-lg font-semibold text-white transition-all">💾 Simpan ke Database Cloud</button>
                     </form>
                 </div>
             </div>
@@ -240,315 +270,403 @@
         <main id="page-tracking" class="page-content hidden p-4 lg:p-8 fade-in">
             <div class="glass rounded-xl p-6">
                 <h3 class="text-lg font-semibold text-white mb-6">Tracking Status</h3>
-                <div id="tracking-list" class="space-y-4">
-                    <p class="text-gray-500 text-center py-8">Memuat data...</p>
+                <div id="tracking-list" class="space-y-4"><p class="text-gray-500 text-center py-8">Memuat data...</p></div>
+            </div>
+        </main>
+
+        <!-- PAGE: SHIPPING -->
+        <main id="page-shipping" class="page-content hidden p-4 lg:p-8 fade-in">
+            <div class="glass rounded-xl p-6">
+                <h3 class="text-lg font-semibold text-white mb-6">Informasi Pengiriman</h3>
+                <div id="shipping-list" class="space-y-4"><p class="text-gray-500 text-center py-8">Memuat data...</p></div>
+            </div>
+        </main>
+
+        <!-- PAGE: PAYMENT -->
+        <main id="page-payment" class="page-content hidden p-4 lg:p-8 fade-in">
+            <div class="glass rounded-xl p-6">
+                <h3 class="text-lg font-semibold text-white mb-6">Status Pembayaran</h3>
+                <div id="payment-list" class="space-y-4"><p class="text-gray-500 text-center py-8">Memuat data...</p></div>
+            </div>
+        </main>
+
+        <!-- PAGE: DOKUMEN -->
+        <main id="page-documents" class="page-content hidden p-4 lg:p-8 fade-in">
+            <div class="glass rounded-xl p-6">
+                <h3 class="text-lg font-semibold text-white mb-6">Dokumen</h3>
+                <div id="doc-list" class="space-y-4"><p class="text-gray-500 text-center py-8">Memuat data...</p></div>
+            </div>
+        </main>
+
+        <!-- PAGE: LABEL & PROGRES -->
+        <main id="page-labels" class="page-content hidden p-4 lg:p-8 fade-in">
+            <div class="glass rounded-xl p-6 mb-6">
+                <h3 class="text-lg font-semibold text-white mb-2">🏷️ Label Progres & CS</h3>
+                <p class="text-sm text-gray-400 mb-4">Monitoring progres setiap tender dan penanggung jawab (CS)</p>
+            </div>
+            <div id="labels-list" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4"><p class="text-gray-500 text-center py-8 col-span-full">Memuat data...</p></div>
+        </main>
+
+        <!-- PAGE: GRAFIK -->
+        <main id="page-grafik" class="page-content hidden p-4 lg:p-8 fade-in">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                <div class="glass rounded-xl p-6">
+                    <h3 class="text-lg font-semibold text-white mb-4">Grafik Status Tender</h3>
+                    <div class="chart-container"><canvas id="chart-status"></canvas></div>
+                </div>
+                <div class="glass rounded-xl p-6">
+                    <h3 class="text-lg font-semibold text-white mb-4">Grafik Jenis Barang</h3>
+                    <div class="chart-container"><canvas id="chart-jenis"></canvas></div>
                 </div>
             </div>
         </main>
     </div>
 
-    <!-- TOAST NOTIFICATION -->
+    <!-- TOAST -->
     <div id="toast" class="hidden fixed bottom-6 right-6 z-50 glass rounded-lg px-5 py-3 flex items-center gap-3 shadow-2xl">
         <span id="toast-icon" class="text-green-400">✅</span>
         <span id="toast-message" class="text-sm text-white">Berhasil!</span>
     </div>
 
     <!-- ==================== JAVASCRIPT ==================== -->
-<script>
-// ⚠️ GANTI DENGAN DATA SUPABASE ANDA ⚠️
-const SUPABASE_URL = 'https://ixgwxbehsmgmczzfvjse.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_xIL19QNKrG2iBzQyiO6EYw_LV0sda5-';
-
-// ✅ Safe initialization: cek dulu apakah sudah ada
-let supabaseClient;
-if (!window.supabaseClient) {
-    window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-}
-supabaseClient = window.supabaseClient;
-
-// Navigation
-const pages = ['dashboard', 'input', 'tracking'];
-const pageTitles = {
-    'dashboard': ['Dashboard', 'Logistics Tracking System'],
-    'input': ['Rencana Tender', 'Input data tender baru'],
-    'tracking': ['Tracking', 'Pantau status pengiriman']
-};
-
-function showPage(page) {
-    pages.forEach(p => {
-        document.getElementById(`page-${p}`).classList.add('hidden');
-        document.getElementById(`nav-${p}`).classList.remove('active');
-    });
-    document.getElementById(`page-${page}`).classList.remove('hidden');
-    document.getElementById(`nav-${page}`).classList.add('active');
-    document.getElementById('page-title').textContent = pageTitles[page][0];
-    document.getElementById('page-subtitle').textContent = pageTitles[page][1];
-
-    if (page === 'dashboard') renderDashboard();
-    if (page === 'tracking') renderTracking();
-
-    if (window.innerWidth < 1024) {
-        document.getElementById('sidebar').classList.add('-translate-x-full');
-    }
-}
-
-function toggleSidebar() {
-    document.getElementById('sidebar').classList.toggle('-translate-x-full');
-}
-
-// ==================== DATABASE FUNCTIONS ====================
-
-async function getTenders() {
-    try {
-        const { data, error } = await supabaseClient
-            .from('tenders')
-            .select('*')
-            .order('created_at', { ascending: false });
-        
-        if (error) {
-            console.error('Error fetching data:', error);
-            return [];
-        }
-        return data || [];
-    } catch (err) {
-        console.error('Connection error:', err);
-        showToast('⚠️ Tidak bisa koneksi ke database.', 'error');
-        return [];
-    }
-}
-
-async function saveTender(item) {
-    const { data, error } = await supabaseClient
-        .from('tenders')
-        .insert([item])
-        .select();
-    if (error) throw error;
-    return data[0];
-}
-
-async function updateTender(id, updates) {
-    const { error } = await supabaseClient
-        .from('tenders')
-        .update(updates)
-        .eq('id', id);
-    if (error) throw error;
-}
-
-async function deleteTender(id) {
-    const { error } = await supabaseClient
-        .from('tenders')
-        .delete()
-        .eq('id', id);
-    if (error) throw error;
-}
-
-// ==================== RENDER FUNCTIONS ====================
-
-async function renderDashboard() {
-    const data = await getTenders();
+    <script>
+    // ⚠️ GANTI DENGAN DATA SUPABASE ANDA ⚠️
+    const SUPABASE_URL = 'https://ixgwxbehsmgmczzfvjse.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_xIL19QNKrG2iBzQyiO6EYw_LV0sda5-';
     
-    document.getElementById('stat-total').textContent = data.length;
-    document.getElementById('stat-process').textContent = data.filter(d => d.status === 'ok' && !d.shipping_method).length;
-    document.getElementById('stat-shipped').textContent = data.filter(d => d.shipping_method).length;
-    document.getElementById('stat-paid').textContent = data.filter(d => d.payment_status === 'lunas').length;
-
-    const recentDiv = document.getElementById('recent-activities');
-    if (!data || data.length === 0) {
-        recentDiv.innerHTML = '<p class="text-gray-500 text-center py-8">Belum ada data. Silakan input tender pertama Anda!</p>';
-        return;
+    let supabaseClient;
+    if (!window.supabaseClient) {
+        window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     }
-    
-    recentDiv.innerHTML = data.slice(0, 8).map(item => `
-        <div class="glass-light rounded-lg p-4 card-hover">
-            <div class="flex justify-between items-start mb-2">
-                <div>
-                    <p class="font-semibold text-white">${item.nama_tender}</p>
-                    <p class="text-sm text-gray-400">${item.pt_cust} - ${item.nama_cust}</p>
-                </div>
-                <span class="status-badge status-${getStatusClass(item.status)}">${getStatusText(item.status)}</span>
-            </div>
-            <div class="flex flex-wrap gap-2 text-xs mt-2">
-                <span class="jenis-badge jenis-${item.jenis}">${getJenisLabel(item.jenis)}</span>
-                <span class="text-gray-400">CS: ${item.karyawan}</span>
-                <span class="text-gray-400">📍 ${item.lokasi_asal} → ${item.lokasi_tujuan}</span>
-            </div>
-        </div>
-    `).join('');
-}
+    supabaseClient = window.supabaseClient;
 
-async function renderTracking() {
-    const data = await getTenders();
-    const trackingDiv = document.getElementById('tracking-list');
-
-    if (!data || data.length === 0) {
-        trackingDiv.innerHTML = '<p class="text-gray-500 text-center py-8">Belum ada data</p>';
-        return;
-    }
-
-    trackingDiv.innerHTML = data.map(item => {
-        const progress = calculateProgress(item);
-        return `
-        <div class="glass-light rounded-lg p-5 card-hover">
-            <div class="flex justify-between items-start mb-3">
-                <div>
-                    <h4 class="font-semibold text-white text-lg">${item.nama_tender}</h4>
-                    <p class="text-sm text-blue-400">${item.pt_cust} • ${item.nama_cust}</p>
-                </div>
-                <div class="flex gap-1">
-                    <span class="jenis-badge jenis-${item.jenis}">${getJenisLabel(item.jenis)}</span>
-                    <span class="status-badge status-${getStatusClass(item.status)}">${getStatusText(item.status)}</span>
-                </div>
-            </div>
-
-            <div class="mb-4">
-                <div class="flex justify-between text-xs mb-1">
-                    <span class="text-gray-400">Progres</span>
-                    <span class="text-blue-400 font-bold">${progress}%</span>
-                </div>
-                <div class="w-full bg-dark-700 rounded-full h-2">
-                    <div class="bg-gradient-to-r from-blue-500 to-blue-400 h-2 rounded-full" style="width:${progress}%"></div>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-2 gap-3 text-sm mb-4">
-                <div><p class="text-xs text-gray-500">Barang</p><p class="text-white">${item.nama_barang}</p></div>
-                <div><p class="text-xs text-gray-500">Rute</p><p class="text-white text-xs">${item.lokasi_asal} → ${item.lokasi_tujuan}</p></div>
-                <div><p class="text-xs text-gray-500">Pengiriman</p><p class="text-white">${item.shipping_method ? getShippingMethodText(item.shipping_method) : 'Belum ada'}</p></div>
-                <div><p class="text-xs text-gray-500">Pembayaran</p><p class="text-white">${getPaymentStatusText(item.payment_status)}</p></div>
-            </div>
-
-            <div class="flex gap-2">
-                ${!item.shipping_method ? `<button onclick="updateShipping(${item.id})" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 rounded text-xs">Update Pengiriman</button>` : ''}
-                ${item.shipping_method && !item.shipping_delivered ? `<button onclick="markDelivered(${item.id})" class="px-3 py-1.5 bg-green-600 hover:bg-green-700 rounded text-xs">Tandai Sampai</button>` : ''}
-                <button onclick="deleteItem(${item.id})" class="px-3 py-1.5 bg-red-600/50 hover:bg-red-600 rounded text-xs">Hapus</button>
-            </div>
-        </div>`;
-    }).join('');
-}
-
-// ==================== FORM SUBMIT ====================
-
-async function submitTender(e) {
-    e.preventDefault();
-    
-    const newItem = {
-        karyawan: document.getElementById('input-karyawan').value.trim(),
-        nama_tender: document.getElementById('input-nama-tender').value.trim(),
-        nama_cust: document.getElementById('input-nama-cust').value.trim(),
-        pt_cust: document.getElementById('input-pt-cust').value.trim(),
-        nama_barang: document.getElementById('input-nama-barang').value.trim(),
-        jenis: document.getElementById('input-jenis').value,
-        lokasi_asal: document.getElementById('input-lokasi-asal').value.trim(),
-        lokasi_tujuan: document.getElementById('input-lokasi-tujuan').value.trim(),
-        status: document.getElementById('input-status').value,
-        shipping_method: document.getElementById('input-metode').value,
-        payment_status: 'pending',
-        payment_amount: 0,
-        progress: 0
+    const pages = ['dashboard', 'input', 'tracking', 'shipping', 'payment', 'documents', 'labels', 'grafik'];
+    const pageTitles = {
+        'dashboard': ['Dashboard', 'Logistics Tracking System'],
+        'input': ['Rencana Tender', 'Input data tender baru'],
+        'tracking': ['Tracking', 'Pantau status pengiriman'],
+        'shipping': ['Pengiriman', 'Informasi pengiriman'],
+        'payment': ['Pembayaran', 'Status pembayaran'],
+        'documents': ['Dokumen', 'Penyimpanan dokumen'],
+        'labels': ['Label & Progres', 'Monitoring progres dan CS'],
+        'grafik': ['Grafik', 'Visualisasi data']
     };
 
-    try {
-        await saveTender(newItem);
-        showToast('✅ Data berhasil disimpan ke cloud!');
-        document.getElementById('tender-form').reset();
+    let charts = {};
+
+    function showPage(page) {
+        pages.forEach(p => {
+            document.getElementById(`page-${p}`).classList.add('hidden');
+            document.getElementById(`nav-${p}`).classList.remove('active');
+        });
+        document.getElementById(`page-${page}`).classList.remove('hidden');
+        document.getElementById(`nav-${page}`).classList.add('active');
+        document.getElementById('page-title').textContent = pageTitles[page][0];
+        document.getElementById('page-subtitle').textContent = pageTitles[page][1];
+
+        if (page === 'dashboard') renderDashboard();
+        if (page === 'tracking') renderTracking();
+        if (page === 'shipping') renderShipping();
+        if (page === 'payment') renderPayment();
+        if (page === 'labels') renderLabels();
+        if (page === 'grafik') renderGrafik();
+
+        if (window.innerWidth < 1024) {
+            document.getElementById('sidebar').classList.add('-translate-x-full');
+        }
+    }
+
+    function toggleSidebar() {
+        document.getElementById('sidebar').classList.toggle('-translate-x-full');
+    }
+
+    async function getTenders() {
+        try {
+            const { data, error } = await supabaseClient.from('tenders').select('*').order('created_at', { ascending: false });
+            if (error) { console.error('Error:', error); return []; }
+            return data || [];
+        } catch (err) {
+            console.error('Connection error:', err);
+            return [];
+        }
+    }
+
+    async function saveTender(item) {
+        const { data, error } = await supabaseClient.from('tenders').insert([item]).select();
+        if (error) throw error;
+        return data[0];
+    }
+
+    async function updateTender(id, updates) {
+        const { error } = await supabaseClient.from('tenders').update(updates).eq('id', id);
+        if (error) throw error;
+    }
+
+    async function deleteTender(id) {
+        const { error } = await supabaseClient.from('tenders').delete().eq('id', id);
+        if (error) throw error;
+    }
+
+    async function renderDashboard() {
+        const data = await getTenders();
+        document.getElementById('stat-total').textContent = data.length;
+        document.getElementById('stat-process').textContent = data.filter(d => d.status === 'ok' && !d.shipping_method).length;
+        document.getElementById('stat-shipped').textContent = data.filter(d => d.shipping_method).length;
+        document.getElementById('stat-paid').textContent = data.filter(d => d.payment_status === 'lunas').length;
+        document.getElementById('stat-docs').textContent = '0';
+
+        document.getElementById('count-berbahaya').textContent = data.filter(d => d.jenis === 'berbahaya').length;
+        document.getElementById('count-aman').textContent = data.filter(d => d.jenis === 'aman').length;
+        document.getElementById('count-kimia').textContent = data.filter(d => d.jenis === 'kimia').length;
+        document.getElementById('count-hewan').textContent = data.filter(d => d.jenis === 'hewan').length;
+
+        const recentDiv = document.getElementById('recent-activities');
+        if (!data || data.length === 0) {
+            recentDiv.innerHTML = '<p class="text-gray-500 text-center py-8">Belum ada data. Silakan input tender pertama Anda!</p>';
+            return;
+        }
+        recentDiv.innerHTML = data.slice(0, 8).map(item => `
+            <div class="glass-light rounded-lg p-4 card-hover">
+                <div class="flex justify-between items-start mb-2">
+                    <div>
+                        <p class="font-semibold text-white">${item.nama_tender}</p>
+                        <p class="text-sm text-gray-400">${item.pt_cust} - ${item.nama_cust}</p>
+                    </div>
+                    <span class="status-badge status-${getStatusClass(item.status)}">${getStatusText(item.status)}</span>
+                </div>
+                <div class="flex flex-wrap gap-2 text-xs mt-2">
+                    <span class="jenis-badge jenis-${item.jenis}">${getJenisLabel(item.jenis)}</span>
+                    <span class="text-gray-400">CS: ${item.karyawan}</span>
+                    <span class="text-gray-400">Barang: ${item.nama_barang}</span>
+                    <span class="text-gray-400">📍 ${item.lokasi_asal} → ${item.lokasi_tujuan}</span>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    async function renderTracking() {
+        const data = await getTenders();
+        const trackingDiv = document.getElementById('tracking-list');
+        if (!data || data.length === 0) {
+            trackingDiv.innerHTML = '<p class="text-gray-500 text-center py-8">Belum ada data</p>';
+            return;
+        }
+        trackingDiv.innerHTML = data.map(item => {
+            const progress = calculateProgress(item);
+            return `
+            <div class="glass-light rounded-lg p-5 card-hover">
+                <div class="flex justify-between items-start mb-3">
+                    <div>
+                        <h4 class="font-semibold text-white text-lg">${item.nama_tender}</h4>
+                        <p class="text-sm text-blue-400">${item.pt_cust} • ${item.nama_cust}</p>
+                    </div>
+                    <div class="flex gap-1">
+                        <span class="jenis-badge jenis-${item.jenis}">${getJenisLabel(item.jenis)}</span>
+                        <span class="status-badge status-${getStatusClass(item.status)}">${getStatusText(item.status)}</span>
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <div class="flex justify-between text-xs mb-1"><span class="text-gray-400">Progres</span><span class="text-blue-400 font-bold">${progress}%</span></div>
+                    <div class="w-full bg-dark-700 rounded-full h-2"><div class="bg-gradient-to-r from-blue-500 to-blue-400 h-2 rounded-full" style="width:${progress}%"></div></div>
+                </div>
+                <div class="grid grid-cols-2 gap-3 text-sm mb-4">
+                    <div><p class="text-xs text-gray-500">Barang</p><p class="text-white">${item.nama_barang}</p></div>
+                    <div><p class="text-xs text-gray-500">Rute</p><p class="text-white text-xs">${item.lokasi_asal} → ${item.lokasi_tujuan}</p></div>
+                    <div><p class="text-xs text-gray-500">Pengiriman</p><p class="text-white">${item.shipping_method ? getShippingMethodText(item.shipping_method) : 'Belum ada'}</p></div>
+                    <div><p class="text-xs text-gray-500">Pembayaran</p><p class="text-white">${getPaymentStatusText(item.payment_status)}</p></div>
+                </div>
+                <div class="flex gap-2">
+                    ${!item.shipping_method ? `<button onclick="updateShipping(${item.id})" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 rounded text-xs">Update Pengiriman</button>` : ''}
+                    ${item.shipping_method && !item.shipping_delivered ? `<button onclick="markDelivered(${item.id})" class="px-3 py-1.5 bg-green-600 hover:bg-green-700 rounded text-xs">Tandai Sampai</button>` : ''}
+                    <button onclick="deleteItem(${item.id})" class="px-3 py-1.5 bg-red-600/50 hover:bg-red-600 rounded text-xs">Hapus</button>
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    async function renderShipping() {
+        const data = await getTenders();
+        const div = document.getElementById('shipping-list');
+        const shipped = data.filter(d => d.shipping_method);
+        if (shipped.length === 0) { div.innerHTML = '<p class="text-gray-500 text-center py-8">Belum ada data pengiriman</p>'; return; }
+        div.innerHTML = shipped.map(item => `
+            <div class="glass-light rounded-lg p-5">
+                <div class="flex justify-between items-start mb-3">
+                    <div><h4 class="font-semibold text-white">${item.nama_tender}</h4><p class="text-sm text-gray-400">${item.pt_cust} - ${item.nama_cust}</p></div>
+                    <div><span class="jenis-badge jenis-${item.jenis}">${getJenisLabel(item.jenis)}</span><span class="status-badge status-ok ml-1">${getShippingMethodText(item.shipping_method)}</span></div>
+                </div>
+                <div class="space-y-2 text-sm">
+                    <p class="text-gray-400">Rute: <span class="text-white">${item.lokasi_asal} → ${item.lokasi_tujuan}</span></p>
+                    <p class="text-gray-400">Resi: <span class="text-white">${item.shipping_resi || '-'}</span></p>
+                    <p class="text-gray-400">Status: <span class="text-${item.shipping_delivered ? 'green' : 'amber'}-400">${item.shipping_delivered ? '✅ Sudah sampai' : '⏳ Dalam perjalanan'}</span></p>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    async function renderPayment() {
+        const data = await getTenders();
+        const div = document.getElementById('payment-list');
+        if (data.length === 0) { div.innerHTML = '<p class="text-gray-500 text-center py-8">Belum ada data</p>'; return; }
+        div.innerHTML = data.map(item => `
+            <div class="glass-light rounded-lg p-5">
+                <div class="flex justify-between items-start mb-3">
+                    <div><h4 class="font-semibold text-white">${item.nama_tender}</h4><p class="text-sm text-gray-400">${item.pt_cust} - ${item.nama_cust}</p></div>
+                    <span class="status-badge status-${item.payment_status === 'lunas' ? 'ok' : item.payment_status === 'dp' ? 'tender' : 'planning'}">${getPaymentStatusText(item.payment_status)}</span>
+                </div>
+                <p class="text-sm text-gray-400">Total: <span class="text-white font-semibold">Rp ${item.payment_amount ? item.payment_amount.toLocaleString('id-ID') : '0'}</span></p>
+            </div>
+        `).join('');
+    }
+
+    async function renderLabels() {
+        const data = await getTenders();
+        const div = document.getElementById('labels-list');
+        if (!data || data.length === 0) { div.innerHTML = '<p class="text-gray-500 text-center py-8 col-span-full">Belum ada data</p>'; return; }
+        div.innerHTML = data.map(item => {
+            const progress = calculateProgress(item);
+            const progressClass = progress === 100 ? 'progress-100' : progress >= 75 ? 'progress-75' : progress >= 50 ? 'progress-50' : progress >= 25 ? 'progress-25' : 'progress-0';
+            return `
+            <div class="label-card ${progressClass} card-hover">
+                <div class="flex items-center gap-3 mb-3">
+                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold text-sm">${item.karyawan.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}</div>
+                    <div class="flex-1"><p class="font-semibold text-white text-sm">${item.karyawan}</p><p class="text-xs text-gray-400">CS / Karyawan</p></div>
+                    <span class="jenis-badge jenis-${item.jenis}">${getJenisLabel(item.jenis)}</span>
+                </div>
+                <h4 class="font-medium text-white mb-1">${item.nama_tender}</h4>
+                <p class="text-xs text-blue-400 mb-1">${item.pt_cust} - ${item.nama_cust}</p>
+                <p class="text-xs text-gray-400 mb-3">Barang: ${item.nama_barang}</p>
+                <div class="flex items-center gap-2 mb-2">
+                    <div class="flex-1 bg-dark-700 rounded-full h-2"><div class="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full" style="width:${progress}%"></div></div>
+                    <span class="text-xs font-bold text-blue-400">${progress}%</span>
+                </div>
+                <div class="grid grid-cols-2 gap-2 text-xs mt-3">
+                    <div class="flex items-center gap-1"><span>${item.shipping_method ? '🚛' : '⏳'}</span><span class="text-gray-400">${item.shipping_method ? 'Sudah kirim' : 'Belum kirim'}</span></div>
+                    <div class="flex items-center gap-1"><span>${item.shipping_delivered ? '✅' : '📍'}</span><span class="text-gray-400">${item.shipping_delivered ? 'Sampai' : 'Dalam perjalanan'}</span></div>
+                    <div class="flex items-center gap-1"><span>${item.payment_status === 'lunas' ? '💰' : '⏰'}</span><span class="text-gray-400">${getPaymentStatusText(item.payment_status)}</span></div>
+                    <div class="flex items-center gap-1"><span>📍</span><span class="text-gray-400">${item.lokasi_tujuan}</span></div>
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    async function renderGrafik() {
+        const data = await getTenders();
+        Object.values(charts).forEach(c => c.destroy());
+        charts = {};
+
+        const statusCounts = { planning: 0, tender: 0, ok: 0, 'not-ok': 0 };
+        data.forEach(d => { statusCounts[d.status] = (statusCounts[d.status] || 0) + 1; });
+        charts.status = new Chart(document.getElementById('chart-status'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Planning', 'Proses Tender', 'OK - Deal', 'Tidak OK'],
+                datasets: [{ data: [statusCounts.planning, statusCounts.tender, statusCounts.ok, statusCounts['not-ok']], backgroundColor: ['#6b7280', '#3b82f6', '#22c55e', '#ef4444'], borderWidth: 0 }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#9ca3af' } } } }
+        });
+
+        const jenisCounts = { berbahaya: 0, aman: 0, kimia: 0, hewan: 0 };
+        data.forEach(d => { jenisCounts[d.jenis] = (jenisCounts[d.jenis] || 0) + 1; });
+        charts.jenis = new Chart(document.getElementById('chart-jenis'), {
+            type: 'bar',
+            data: {
+                labels: ['🔴 Berbahaya', '🟢 Aman', '🟡 Kimia', '🟣 Hewan Hidup'],
+                datasets: [{ label: 'Jumlah', data: [jenisCounts.berbahaya, jenisCounts.aman, jenisCounts.kimia, jenisCounts.hewan], backgroundColor: ['rgba(239,68,68,0.6)', 'rgba(34,197,94,0.6)', 'rgba(245,158,11,0.6)', 'rgba(168,85,247,0.6)'], borderRadius: 6 }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { color: '#9ca3af' }, grid: { color: 'rgba(59,130,246,0.1)' } }, x: { ticks: { color: '#9ca3af' }, grid: { color: 'rgba(59,130,246,0.1)' } } } }
+        });
+    }
+
+    async function submitTender(e) {
+        e.preventDefault();
+        const newItem = {
+            karyawan: document.getElementById('input-karyawan').value.trim(),
+            nama_tender: document.getElementById('input-nama-tender').value.trim(),
+            nama_cust: document.getElementById('input-nama-cust').value.trim(),
+            pt_cust: document.getElementById('input-pt-cust').value.trim(),
+            nama_barang: document.getElementById('input-nama-barang').value.trim(),
+            jenis: document.getElementById('input-jenis').value,
+            lokasi_asal: document.getElementById('input-lokasi-asal').value.trim(),
+            lokasi_tujuan: document.getElementById('input-lokasi-tujuan').value.trim(),
+            status: document.getElementById('input-status').value,
+            shipping_method: document.getElementById('input-metode').value,
+            payment_status: 'pending',
+            payment_amount: 0,
+            progress: 0
+        };
+        try {
+            await saveTender(newItem);
+            showToast('✅ Data berhasil disimpan ke cloud!');
+            document.getElementById('tender-form').reset();
+            showPage('dashboard');
+        } catch (err) {
+            showToast('❌ Gagal: ' + err.message, 'error');
+        }
+    }
+
+    async function updateShipping(id) {
+        const method = prompt('Metode pengiriman (udara/laut/darat):');
+        if (!method) return;
+        const resi = prompt('Nomor resi/BL:');
+        try {
+            await updateTender(id, { shipping_method: method, shipping_resi: resi || '' });
+            showToast('Pengiriman diupdate!');
+            renderTracking();
+        } catch (err) { showToast('Gagal: ' + err.message, 'error'); }
+    }
+
+    async function markDelivered(id) {
+        if (!confirm('Tandai barang sudah sampai?')) return;
+        try {
+            await updateTender(id, { shipping_delivered: true });
+            showToast('✅ Barang sudah sampai!');
+            renderTracking();
+        } catch (err) { showToast('Gagal: ' + err.message, 'error'); }
+    }
+
+    async function deleteItem(id) {
+        if (!confirm('Yakin hapus data ini?')) return;
+        try {
+            await deleteTender(id);
+            showToast('Data dihapus');
+            renderTracking();
+        } catch (err) { showToast('Gagal: ' + err.message, 'error'); }
+    }
+
+    function calculateProgress(item) {
+        let p = 0;
+        if (item.status === 'ok') p += 20;
+        if (item.shipping_method) p += 30;
+        if (item.shipping_delivered) p += 30;
+        if (item.payment_status === 'lunas') p += 20;
+        return Math.min(p, 100);
+    }
+
+    function getStatusClass(status) { const map = { 'planning': 'planning', 'tender': 'tender', 'ok': 'ok', 'not-ok': 'revisi' }; return map[status] || 'planning'; }
+    function getStatusText(status) { const map = { 'planning': 'Planning', 'tender': 'Proses Tender', 'ok': 'OK - Deal', 'not-ok': 'Tidak OK' }; return map[status] || status; }
+    function getJenisLabel(jenis) { const map = { 'berbahaya': '🔴 Berbahaya', 'aman': '🟢 Aman', 'kimia': '🟡 Kimia', 'hewan': '🟣 Hewan' }; return map[jenis] || jenis; }
+    function getShippingMethodText(method) { const map = { 'udara': '✈️ Udara', 'laut': '🚢 Laut', 'darat': '🚛 Darat' }; return map[method] || method; }
+    function getPaymentStatusText(status) { const map = { 'pending': '⏰ Pending', 'dp': '💳 DP', 'lunas': '✅ Lunas' }; return map[status] || status; }
+
+    function showToast(message, type = 'success') {
+        const toast = document.getElementById('toast');
+        document.getElementById('toast-message').textContent = message;
+        document.getElementById('toast-icon').textContent = type === 'error' ? '❌' : '✅';
+        toast.classList.remove('hidden');
+        setTimeout(() => toast.classList.add('hidden'), 3000);
+    }
+
+    function updateClock() {
+        const now = new Date();
+        document.getElementById('live-clock').textContent = now.toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }) + ' • ' + now.toLocaleTimeString('id-ID');
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        updateClock();
+        setInterval(updateClock, 1000);
         showPage('dashboard');
-    } catch (err) {
-        showToast('❌ Gagal: ' + err.message, 'error');
-    }
-}
-
-async function updateShipping(id) {
-    const method = prompt('Metode pengiriman (udara/laut/darat):');
-    if (!method) return;
-    const resi = prompt('Nomor resi/BL:');
-    
-    try {
-        await updateTender(id, { shipping_method: method, shipping_resi: resi || '' });
-        showToast('Pengiriman diupdate!');
-        renderTracking();
-    } catch (err) {
-        showToast('Gagal: ' + err.message, 'error');
-    }
-}
-
-async function markDelivered(id) {
-    if (!confirm('Tandai barang sudah sampai?')) return;
-    try {
-        await updateTender(id, { shipping_delivered: true });
-        showToast('✅ Barang sudah sampai!');
-        renderTracking();
-    } catch (err) {
-        showToast('Gagal: ' + err.message, 'error');
-    }
-}
-
-async function deleteItem(id) {
-    if (!confirm('Yakin hapus data ini?')) return;
-    try {
-        await deleteTender(id);
-        showToast('Data dihapus');
-        renderTracking();
-    } catch (err) {
-        showToast('Gagal: ' + err.message, 'error');
-    }
-}
-
-// ==================== HELPERS ====================
-
-function calculateProgress(item) {
-    let p = 0;
-    if (item.status === 'ok') p += 20;
-    if (item.shipping_method) p += 30;
-    if (item.shipping_delivered) p += 30;
-    if (item.payment_status === 'lunas') p += 20;
-    return Math.min(p, 100);
-}
-
-function getStatusClass(status) {
-    const map = { 'planning': 'planning', 'tender': 'tender', 'ok': 'ok', 'not-ok': 'revisi' };
-    return map[status] || 'planning';
-}
-
-function getStatusText(status) {
-    const map = { 'planning': 'Planning', 'tender': 'Proses Tender', 'ok': 'OK - Deal', 'not-ok': 'Tidak OK' };
-    return map[status] || status;
-}
-
-function getJenisLabel(jenis) {
-    const map = { 'berbahaya': '🔴 Berbahaya', 'aman': '🟢 Aman', 'kimia': '🟡 Kimia', 'hewan': '🟣 Hewan' };
-    return map[jenis] || jenis;
-}
-
-function getShippingMethodText(method) {
-    const map = { 'udara': '✈️ Udara', 'laut': '🚢 Laut', 'darat': '🚛 Darat' };
-    return map[method] || method;
-}
-
-function getPaymentStatusText(status) {
-    const map = { 'pending': '⏰ Pending', 'dp': '💳 DP', 'lunas': '✅ Lunas' };
-    return map[status] || status;
-}
-
-function showToast(message, type = 'success') {
-    const toast = document.getElementById('toast');
-    document.getElementById('toast-message').textContent = message;
-    document.getElementById('toast-icon').textContent = type === 'error' ? '❌' : '✅';
-    toast.classList.remove('hidden');
-    setTimeout(() => toast.classList.add('hidden'), 3000);
-}
-
-function updateClock() {
-    const now = new Date();
-    document.getElementById('live-clock').textContent = now.toLocaleDateString('id-ID', { 
-        weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' 
-    }) + ' • ' + now.toLocaleTimeString('id-ID');
-}
-
-// Initialize
-document.addEventListener('DOMContentLoaded', () => {
-    updateClock();
-    setInterval(updateClock, 1000);
-    showPage('dashboard');
-});
-</script>
-Fix: supabase redeclaration error
+    });
+    </script>
+</body>
+</html>
