@@ -79,9 +79,7 @@
                     <div><h1 class="font-bold text-white text-sm">Cahaya Sejati</h1><p class="text-xs text-gray-500">Logistics Tracker</p></div>
                 </div>
             </div>
-            <nav class="mt-4" id="sidebar-menu">
-                <!-- Menu akan di-render dinamis berdasarkan role -->
-            </nav>
+            <nav class="mt-4" id="sidebar-menu"></nav>
             <div class="absolute bottom-0 w-full p-4 border-t border-primary-800">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center gap-3">
@@ -110,9 +108,7 @@
         </header>
 
         <!-- PAGES CONTAINER -->
-        <div id="pages-container" class="p-4 lg:p-8">
-            <!-- Content will be injected here -->
-        </div>
+        <div id="pages-container" class="p-4 lg:p-8"></div>
     </div>
 
     <!-- TOAST -->
@@ -126,7 +122,11 @@
     const SUPABASE_URL = 'https://ixgwxbehsmgmczzfvjse.supabase.co';
     const SUPABASE_ANON_KEY = 'sb_publishable_xIL19QNKrG2iBzQyiO6EYw_LV0sda5-';
     
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    // Initialize Supabase (hanya sekali)
+    if (!window.supabaseClient) {
+        window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    }
+    const supabase = window.supabaseClient;
     
     let currentUser = null;
     let currentRole = 'pengguna';
@@ -155,10 +155,14 @@
         const password = document.getElementById('login-password').value;
         const errEl = document.getElementById('auth-error');
         
-        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) { errEl.textContent = error.message; errEl.classList.remove('hidden'); return; }
-        
-        await initSession(data.session);
+        try {
+            const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+            if (error) throw error;
+            await initSession(data.session);
+        } catch (err) {
+            errEl.textContent = err.message;
+            errEl.classList.remove('hidden');
+        }
     }
 
     async function handleRegister() {
@@ -167,15 +171,24 @@
         const password = document.getElementById('reg-password').value;
         const errEl = document.getElementById('auth-error');
 
-        if(password.length < 6) { errEl.textContent = 'Password minimal 6 karakter'; errEl.classList.remove('hidden'); return; }
+        if(password.length < 6) { 
+            errEl.textContent = 'Password minimal 6 karakter'; 
+            errEl.classList.remove('hidden'); 
+            return; 
+        }
 
-        const { data, error } = await supabase.auth.signUp({ 
-            email, password, options: { data: { name } } 
-        });
-        if (error) { errEl.textContent = error.message; errEl.classList.remove('hidden'); return; }
-        
-        showToast('✅ Registrasi berhasil! Cek email untuk verifikasi (jika diaktifkan), lalu login.');
-        toggleAuthMode();
+        try {
+            const { data, error } = await supabase.auth.signUp({ 
+                email, password, options: {  { name } } 
+            });
+            if (error) throw error;
+            
+            showToast('✅ Registrasi berhasil! Cek email untuk verifikasi (jika diaktifkan), lalu login.');
+            toggleAuthMode();
+        } catch (err) {
+            errEl.textContent = err.message;
+            errEl.classList.remove('hidden');
+        }
     }
 
     async function handleLogout() {
@@ -184,7 +197,11 @@
     }
 
     async function initSession(session) {
-        if(!session) { document.getElementById('login-view').classList.remove('hidden'); document.getElementById('app-view').classList.add('hidden'); return; }
+        if(!session) { 
+            document.getElementById('login-view').classList.remove('hidden'); 
+            document.getElementById('app-view').classList.add('hidden'); 
+            return; 
+        }
         
         currentUser = session.user;
         document.getElementById('login-view').classList.add('hidden');
@@ -244,7 +261,9 @@
         if(window.innerWidth < 1024) document.getElementById('sidebar').classList.add('-translate-x-full');
     }
 
-    function toggleSidebar() { document.getElementById('sidebar').classList.toggle('-translate-x-full'); }
+    function toggleSidebar() { 
+        document.getElementById('sidebar').classList.toggle('-translate-x-full'); 
+    }
 
     // ==================== DATABASE FUNCTIONS ====================
     async function getTenders() {
@@ -365,8 +384,14 @@
             shipping_method: document.getElementById('f-metode').value,
             payment_status: 'pending', payment_amount: 0, progress: 0
         };
-        try { await saveTender(item); showToast('✅ Tersimpan!'); document.getElementById('tender-form').reset(); showPage('dashboard'); }
-        catch(err) { showToast('❌ Gagal: '+err.message, 'error'); }
+        try { 
+            await saveTender(item); 
+            showToast('✅ Tersimpan!'); 
+            document.getElementById('tender-form').reset(); 
+            showPage('dashboard'); 
+        } catch(err) { 
+            showToast('❌ Gagal: '+err.message, 'error'); 
+        }
     }
 
     function renderTracking(el) {
@@ -393,7 +418,11 @@
         if(!resi) return;
         const { data } = await supabase.from('tenders').select('*').ilike('shipping_resi', `%${resi}%`).limit(1).single();
         const res = document.getElementById('resi-result');
-        if(!data) { res.classList.remove('hidden'); res.innerHTML = '<p class="text-red-400">❌ Resi tidak ditemukan.</p>'; return; }
+        if(!data) { 
+            res.classList.remove('hidden'); 
+            res.innerHTML = '<p class="text-red-400">❌ Resi tidak ditemukan.</p>'; 
+            return; 
+        }
         res.classList.remove('hidden');
         res.innerHTML = `
             <h4 class="font-bold text-white mb-2">${data.nama_tender}</h4>
@@ -495,7 +524,7 @@
 
         const jc = {berbahaya:0,aman:0,kimia:0,hewan:0}; d.forEach(i => jc[i.jenis]=(jc[i.jenis]||0)+1);
         charts.jenis = new Chart(document.getElementById('chart-jenis'), {
-            type:'bar', data:{labels:['🔴 Berbahaya','🟢 Aman','🟡 Kimia','🟣 Hewan'],datasets:[{data:[jc.berbahaya,jc.aman,jc.kimia,jc.hewan],backgroundColor:['rgba(239,68,68,0.6)','rgba(34,197,94,0.6)','rgba(245,158,11,0.6)','rgba(168,85,247,0.6)'],borderRadius:6}]},
+            type:'bar', data:{labels:['🔴 Berbahaya','🟢 Aman',' Kimia','🟣 Hewan'],datasets:[{data:[jc.berbahaya,jc.aman,jc.kimia,jc.hewan],backgroundColor:['rgba(239,68,68,0.6)','rgba(34,197,94,0.6)','rgba(245,158,11,0.6)','rgba(168,85,247,0.6)'],borderRadius:6}]},
             options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{color:'#9ca3af'},grid:{color:'rgba(59,130,246,0.1)'}},x:{ticks:{color:'#9ca3af'},grid:{color:'rgba(59,130,246,0.1)'}}}}
         });
     }
@@ -552,7 +581,8 @@
 
     // INIT
     document.addEventListener('DOMContentLoaded', async () => {
-        updateClock(); setInterval(updateClock, 1000);
+        updateClock(); 
+        setInterval(updateClock, 1000);
         const { data: { session } } = await supabase.auth.getSession();
         initSession(session);
         supabase.auth.onAuthStateChange((_, session) => initSession(session));
@@ -560,3 +590,4 @@
     </script>
 </body>
 </html>
+fix: duplicate supabase declaration
