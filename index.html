@@ -3,135 +3,104 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Logistics Tracking System - PT. Cahaya Sejati Teknologi</title>
+    <title>Logistics Tracking - PT. Cahaya Sejati Teknologi</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        primary: { 50:'#eff6ff',100:'#dbeafe',200:'#bfdbfe',300:'#93c5fd',400:'#60a5fa',500:'#3b82f6',600:'#2563eb',700:'#1d4ed8',800:'#1e3a5f',900:'#0f1f3d' },
-                        dark: { 700:'#1a2332',800:'#111827',900:'#0a0f1a' }
-                    }
-                }
-            }
+            theme: { extend: { colors: { primary: { 50:'#eff6ff',100:'#dbeafe',200:'#bfdbfe',300:'#93c5fd',400:'#60a5fa',500:'#3b82f6',600:'#2563eb',700:'#1d4ed8',800:'#1e3a5f',900:'#0f1f3d' }, dark: { 700:'#1a2332',800:'#111827',900:'#0a0f1a' } } } }
         }
     </script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         * { font-family: 'Inter', sans-serif; }
         body { background-color: #0a0f1a; }
-        .glass { background: rgba(30, 58, 95, 0.15); backdrop-filter: blur(12px); border: 1px solid rgba(59,130,246,0.15); }
-        .glass-light { background: rgba(30, 58, 95, 0.08); backdrop-filter: blur(8px); border: 1px solid rgba(59,130,246,0.1); }
-        .card-hover:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(59,130,246,0.15); }
-        .card-hover { transition: all 0.3s ease; }
+        .glass { background: rgba(30,58,95,0.15); backdrop-filter: blur(12px); border: 1px solid rgba(59,130,246,0.15); }
+        .glass-light { background: rgba(30,58,95,0.08); backdrop-filter: blur(8px); border: 1px solid rgba(59,130,246,0.1); }
+        .card-hover:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(59,130,246,0.15); transition: all 0.3s; }
         .sidebar-link.active { background: linear-gradient(90deg, rgba(59,130,246,0.2), transparent); border-left: 3px solid #3b82f6; }
         .fade-in { animation: fadeIn 0.4s ease-out; }
         @keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
         .pulse-dot { animation: pulse 2s infinite; }
         @keyframes pulse { 0%,100%{ opacity:1; } 50%{ opacity:0.4; } }
-        ::-webkit-scrollbar { width:6px; }
-        ::-webkit-scrollbar-track { background:#111827; }
-        ::-webkit-scrollbar-thumb { background:#1e3a5f; border-radius:3px; }
-        ::-webkit-scrollbar-thumb:hover { background:#2563eb; }
         select, input, textarea { background-color: rgba(15,31,61,0.8) !important; color: #e2e8f0 !important; border: 1px solid rgba(59,130,246,0.2) !important; }
         select:focus, input:focus, textarea:focus { border-color: #3b82f6 !important; box-shadow: 0 0 0 3px rgba(59,130,246,0.15) !important; outline: none !important; }
         .status-badge { padding: 4px 12px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; display: inline-block; }
-        .status-planning { background: rgba(107, 114, 128, 0.2); color: #9ca3af; }
-        .status-tender { background: rgba(59, 130, 246, 0.2); color: #60a5fa; }
-        .status-ok { background: rgba(34, 197, 94, 0.2); color: #4ade80; }
-        .status-revisi { background: rgba(239, 68, 68, 0.2); color: #f87171; }
+        .status-planning { background: rgba(107,114,128,0.2); color: #9ca3af; }
+        .status-tender { background: rgba(59,130,246,0.2); color: #60a5fa; }
+        .status-ok { background: rgba(34,197,94,0.2); color: #4ade80; }
+        .status-revisi { background: rgba(239,68,68,0.2); color: #f87171; }
         .jenis-badge { padding: 3px 10px; border-radius: 8px; font-size: 0.7rem; font-weight: 600; display: inline-block; }
-        .jenis-berbahaya { background: rgba(239, 68, 68, 0.2); color: #f87171; }
-        .jenis-aman { background: rgba(34, 197, 94, 0.2); color: #4ade80; }
-        .jenis-kimia { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
-        .jenis-hewan { background: rgba(168, 85, 247, 0.2); color: #c084fc; }
-        .chart-container { position: relative; height: 300px; }
+        .jenis-berbahaya { background: rgba(239,68,68,0.2); color: #f87171; }
+        .jenis-aman { background: rgba(34,197,94,0.2); color: #4ade80; }
+        .jenis-kimia { background: rgba(245,158,11,0.2); color: #fbbf24; }
+        .jenis-hewan { background: rgba(168,85,247,0.2); color: #c084fc; }
         .form-section { border: 1px solid rgba(59,130,246,0.15); border-radius: 12px; padding: 20px; margin-bottom: 16px; background: rgba(15,31,61,0.3); }
         .form-section-title { font-size: 0.85rem; font-weight: 600; color: #60a5fa; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
-        .label-card { background: linear-gradient(135deg, rgba(59,130,246,0.1), rgba(168,85,247,0.1)); border: 1px solid rgba(59,130,246,0.2); border-radius: 12px; padding: 16px; position: relative; overflow: hidden; }
-        .label-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
-        .label-card.progress-0::before { background: linear-gradient(90deg, #ef4444, #f97316); }
-        .label-card.progress-25::before { background: linear-gradient(90deg, #f97316, #eab308); }
-        .label-card.progress-50::before { background: linear-gradient(90deg, #eab308, #22c55e); }
-        .label-card.progress-75::before { background: linear-gradient(90deg, #22c55e, #3b82f6); }
-        .label-card.progress-100::before { background: linear-gradient(90deg, #3b82f6, #a855f7); }
-        .doc-card { transition: all 0.3s ease; }
-        .doc-card:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(59,130,246,0.1); }
     </style>
 </head>
 <body class="text-gray-200 min-h-screen">
 
-    <!-- SIDEBAR LENGKAP -->
-    <div id="sidebar" class="fixed top-0 left-0 h-full w-64 bg-dark-900 border-r border-primary-800 z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-300">
-        <div class="p-6 border-b border-primary-800">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center text-white font-bold text-lg">CS</div>
-                <div>
-                    <h1 class="font-bold text-white text-sm">Cahaya Sejati</h1>
-                    <p class="text-xs text-gray-500">Logistics Tracker</p>
-                </div>
+    <!-- LOGIN VIEW -->
+    <div id="login-view" class="fixed inset-0 z-50 bg-dark-900 flex items-center justify-center p-4">
+        <div class="glass rounded-xl p-8 w-full max-w-md">
+            <div class="text-center mb-6">
+                <div class="w-16 h-16 rounded-xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white font-bold text-2xl mx-auto mb-3">CS</div>
+                <h2 class="text-2xl font-bold text-white">Logistics Tracker</h2>
+                <p class="text-sm text-gray-400">PT. Cahaya Sejati Teknologi</p>
             </div>
-        </div>
-        <nav class="mt-4">
-            <a href="#" onclick="showPage('dashboard')" id="nav-dashboard" class="sidebar-link active flex items-center gap-3 px-6 py-3 text-sm hover:bg-primary-900/30 transition-all">
-                <svg class="w-5 h-5 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6z"/></svg>
-                Dashboard
-            </a>
-            <a href="#" onclick="showPage('input')" id="nav-input" class="sidebar-link flex items-center gap-3 px-6 py-3 text-sm hover:bg-primary-900/30 transition-all">
-                <svg class="w-5 h-5 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                Rencana Tender
-            </a>
-            <a href="#" onclick="showPage('tracking')" id="nav-tracking" class="sidebar-link flex items-center gap-3 px-6 py-3 text-sm hover:bg-primary-900/30 transition-all">
-                <svg class="w-5 h-5 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7"/></svg>
-                Tracking
-            </a>
-            <a href="#" onclick="showPage('shipping')" id="nav-shipping" class="sidebar-link flex items-center gap-3 px-6 py-3 text-sm hover:bg-primary-900/30 transition-all">
-                <svg class="w-5 h-5 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"/></svg>
-                Pengiriman
-            </a>
-            <a href="#" onclick="showPage('payment')" id="nav-payment" class="sidebar-link flex items-center gap-3 px-6 py-3 text-sm hover:bg-primary-900/30 transition-all">
-                <svg class="w-5 h-5 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                Pembayaran
-            </a>
-            <a href="#" onclick="showPage('documents')" id="nav-documents" class="sidebar-link flex items-center gap-3 px-6 py-3 text-sm hover:bg-primary-900/30 transition-all">
-                <svg class="w-5 h-5 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                Dokumen
-            </a>
-            <a href="#" onclick="showPage('labels')" id="nav-labels" class="sidebar-link flex items-center gap-3 px-6 py-3 text-sm hover:bg-primary-900/30 transition-all">
-                <svg class="w-5 h-5 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
-                Label & Progres
-            </a>
-            <a href="#" onclick="showPage('grafik')" id="nav-grafik" class="sidebar-link flex items-center gap-3 px-6 py-3 text-sm hover:bg-primary-900/30 transition-all">
-                <svg class="w-5 h-5 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
-                Grafik
-            </a>
-        </nav>
-        <div class="absolute bottom-0 w-full p-4 border-t border-primary-800">
-            <div class="flex items-center gap-3">
-                <div class="w-8 h-8 rounded-full bg-primary-600 flex items-center justify-center text-xs font-bold">CST</div>
-                <div>
-                    <p class="text-sm font-medium text-white">Logistics Department</p>
-                    <p class="text-xs text-gray-500">PT. Cahaya Sejati</p>
-                </div>
+            
+            <div id="login-form">
+                <input type="email" id="login-email" placeholder="Email" class="w-full rounded-lg px-4 py-3 mb-3 text-sm">
+                <input type="password" id="login-password" placeholder="Password" class="w-full rounded-lg px-4 py-3 mb-4 text-sm">
+                <button onclick="handleLogin()" class="w-full py-3 bg-blue-600 hover:bg-blue-700 rounded-lg font-semibold text-white mb-3">Masuk</button>
+                <p class="text-center text-sm text-gray-500">Belum punya akun? <button onclick="toggleAuthMode()" class="text-blue-400 hover:underline">Daftar</button></p>
             </div>
+
+            <div id="register-form" class="hidden">
+                <input type="text" id="reg-name" placeholder="Nama Lengkap" class="w-full rounded-lg px-4 py-3 mb-3 text-sm">
+                <input type="email" id="reg-email" placeholder="Email" class="w-full rounded-lg px-4 py-3 mb-3 text-sm">
+                <input type="password" id="reg-password" placeholder="Password (min 6 karakter)" class="w-full rounded-lg px-4 py-3 mb-4 text-sm">
+                <button onclick="handleRegister()" class="w-full py-3 bg-green-600 hover:bg-green-700 rounded-lg font-semibold text-white mb-3">Daftar Akun</button>
+                <p class="text-center text-sm text-gray-500">Sudah punya akun? <button onclick="toggleAuthMode()" class="text-blue-400 hover:underline">Masuk</button></p>
+            </div>
+            <p id="auth-error" class="text-red-400 text-xs text-center mt-3 hidden"></p>
         </div>
     </div>
 
-    <!-- MAIN CONTENT -->
-    <div class="lg:ml-64 min-h-screen">
+    <!-- MAIN APP VIEW -->
+    <div id="app-view" class="hidden lg:ml-64 min-h-screen">
+        <!-- SIDEBAR -->
+        <div id="sidebar" class="fixed top-0 left-0 h-full w-64 bg-dark-900 border-r border-primary-800 z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-300">
+            <div class="p-6 border-b border-primary-800">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center text-white font-bold text-lg">CS</div>
+                    <div><h1 class="font-bold text-white text-sm">Cahaya Sejati</h1><p class="text-xs text-gray-500">Logistics Tracker</p></div>
+                </div>
+            </div>
+            <nav class="mt-4" id="sidebar-menu">
+                <!-- Menu akan di-render dinamis berdasarkan role -->
+            </nav>
+            <div class="absolute bottom-0 w-full p-4 border-t border-primary-800">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-full bg-primary-600 flex items-center justify-center text-xs font-bold" id="user-avatar">U</div>
+                        <div><p class="text-sm font-medium text-white" id="user-name">User</p><p class="text-xs text-gray-500 capitalize" id="user-role">role</p></div>
+                    </div>
+                    <button onclick="handleLogout()" class="text-xs text-red-400 hover:text-red-300">Keluar</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- HEADER -->
         <header class="sticky top-0 z-40 glass-light border-b border-primary-800/50">
             <div class="flex items-center justify-between px-4 lg:px-8 py-4">
                 <div class="flex items-center gap-4">
                     <button onclick="toggleSidebar()" class="lg:hidden p-2 rounded-lg hover:bg-primary-900/30">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
                     </button>
-                    <div>
-                        <h2 id="page-title" class="text-xl font-bold text-white">Dashboard</h2>
-                        <p id="page-subtitle" class="text-sm text-gray-400">Logistics Tracking System</p>
-                    </div>
+                    <div><h2 id="page-title" class="text-xl font-bold text-white">Dashboard</h2><p id="page-subtitle" class="text-sm text-gray-400">System</p></div>
                 </div>
                 <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary-900/30">
                     <span class="pulse-dot w-2 h-2 rounded-full bg-green-400"></span>
@@ -140,186 +109,10 @@
             </div>
         </header>
 
-        <!-- PAGE: DASHBOARD -->
-        <main id="page-dashboard" class="page-content p-4 lg:p-8 fade-in">
-            <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
-                <div class="glass rounded-xl p-5 card-hover">
-                    <p class="text-xs text-gray-400 uppercase">Total Tender</p>
-                    <p class="text-2xl font-bold text-white mt-2" id="stat-total">0</p>
-                </div>
-                <div class="glass rounded-xl p-5 card-hover">
-                    <p class="text-xs text-gray-400 uppercase">Dalam Proses</p>
-                    <p class="text-2xl font-bold text-amber-400 mt-2" id="stat-process">0</p>
-                </div>
-                <div class="glass rounded-xl p-5 card-hover">
-                    <p class="text-xs text-gray-400 uppercase">Selesai</p>
-                    <p class="text-2xl font-bold text-green-400 mt-2" id="stat-shipped">0</p>
-                </div>
-                <div class="glass rounded-xl p-5 card-hover">
-                    <p class="text-xs text-gray-400 uppercase">Lunas</p>
-                    <p class="text-2xl font-bold text-purple-400 mt-2" id="stat-paid">0</p>
-                </div>
-                <div class="glass rounded-xl p-5 card-hover">
-                    <p class="text-xs text-gray-400 uppercase">Dokumen</p>
-                    <p class="text-2xl font-bold text-cyan-400 mt-2" id="stat-docs">0</p>
-                </div>
-            </div>
-
-            <!-- Ringkasan per Jenis Barang -->
-            <div class="glass rounded-xl p-6 mb-6">
-                <h3 class="text-lg font-semibold text-white mb-4">Ringkasan per Jenis Barang</h3>
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div class="glass-light rounded-lg p-4 text-center">
-                        <p class="text-2xl font-bold text-red-400" id="count-berbahaya">0</p>
-                        <p class="text-xs text-gray-400 mt-1">🔴 Berbahaya</p>
-                    </div>
-                    <div class="glass-light rounded-lg p-4 text-center">
-                        <p class="text-2xl font-bold text-green-400" id="count-aman">0</p>
-                        <p class="text-xs text-gray-400 mt-1">🟢 Aman</p>
-                    </div>
-                    <div class="glass-light rounded-lg p-4 text-center">
-                        <p class="text-2xl font-bold text-amber-400" id="count-kimia">0</p>
-                        <p class="text-xs text-gray-400 mt-1">🟡 Kimia</p>
-                    </div>
-                    <div class="glass-light rounded-lg p-4 text-center">
-                        <p class="text-2xl font-bold text-purple-400" id="count-hewan">0</p>
-                        <p class="text-xs text-gray-400 mt-1">🟣 Hewan Hidup</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="glass rounded-xl p-6">
-                <h3 class="text-lg font-semibold text-white mb-4">Tender Terbaru</h3>
-                <div id="recent-activities" class="space-y-3">
-                    <p class="text-gray-500 text-center py-8">Memuat data...</p>
-                </div>
-            </div>
-        </main>
-
-        <!-- PAGE: INPUT -->
-        <main id="page-input" class="page-content hidden p-4 lg:p-8 fade-in">
-            <div class="max-w-3xl mx-auto">
-                <div class="glass rounded-xl p-6 lg:p-8">
-                    <h3 class="text-lg font-semibold text-white mb-6">📋 Rencana Pekerjaan / Tender</h3>
-                    <form id="tender-form" onsubmit="submitTender(event)">
-                        <div class="form-section">
-                            <div class="form-section-title">Data Karyawan & Tender</div>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div><label class="block text-xs text-gray-400 mb-1">Nama Karyawan / CS *</label><input type="text" id="input-karyawan" required class="w-full rounded-lg px-4 py-3 text-sm"></div>
-                                <div><label class="block text-xs text-gray-400 mb-1">Nama Tender *</label><input type="text" id="input-nama-tender" required class="w-full rounded-lg px-4 py-3 text-sm"></div>
-                            </div>
-                        </div>
-                        <div class="form-section">
-                            <div class="form-section-title">Data Customer</div>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div><label class="block text-xs text-gray-400 mb-1">Nama Customer *</label><input type="text" id="input-nama-cust" required class="w-full rounded-lg px-4 py-3 text-sm"></div>
-                                <div><label class="block text-xs text-gray-400 mb-1">Nama PT Customer *</label><input type="text" id="input-pt-cust" required class="w-full rounded-lg px-4 py-3 text-sm"></div>
-                            </div>
-                        </div>
-                        <div class="form-section">
-                            <div class="form-section-title">Data Barang</div>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div><label class="block text-xs text-gray-400 mb-1">Nama Barang *</label><input type="text" id="input-nama-barang" required class="w-full rounded-lg px-4 py-3 text-sm"></div>
-                                <div><label class="block text-xs text-gray-400 mb-1">Jenis Barang *</label>
-                                    <select id="input-jenis" required class="w-full rounded-lg px-4 py-3 text-sm">
-                                        <option value="">-- Pilih --</option>
-                                        <option value="berbahaya">🔴 Berbahaya</option>
-                                        <option value="aman">🟢 Aman</option>
-                                        <option value="kimia">🟡 Kimia</option>
-                                        <option value="hewan">🟣 Hewan Hidup</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="form-section">
-                            <div class="form-section-title">Lokasi</div>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div><label class="block text-xs text-gray-400 mb-1">Lokasi Asal *</label><input type="text" id="input-lokasi-asal" required class="w-full rounded-lg px-4 py-3 text-sm"></div>
-                                <div><label class="block text-xs text-gray-400 mb-1">Lokasi Tujuan *</label><input type="text" id="input-lokasi-tujuan" required class="w-full rounded-lg px-4 py-3 text-sm"></div>
-                            </div>
-                        </div>
-                        <div class="form-section">
-                            <div class="form-section-title">Status</div>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div><label class="block text-xs text-gray-400 mb-1">Status Tender *</label>
-                                    <select id="input-status" required class="w-full rounded-lg px-4 py-3 text-sm">
-                                        <option value="">-- Pilih --</option>
-                                        <option value="planning">📝 Planning</option>
-                                        <option value="tender">📋 Proses Tender</option>
-                                        <option value="ok">✅ OK - Deal</option>
-                                        <option value="not-ok">❌ Tidak OK</option>
-                                    </select>
-                                </div>
-                                <div><label class="block text-xs text-gray-400 mb-1">Metode Pengiriman</label>
-                                    <select id="input-metode" class="w-full rounded-lg px-4 py-3 text-sm">
-                                        <option value="">-- Pilih --</option>
-                                        <option value="udara">✈️ Udara</option>
-                                        <option value="laut">🚢 Laut</option>
-                                        <option value="darat">🚛 Darat</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                        <button type="submit" class="w-full py-3.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 rounded-lg font-semibold text-white transition-all">💾 Simpan ke Database Cloud</button>
-                    </form>
-                </div>
-            </div>
-        </main>
-
-        <!-- PAGE: TRACKING -->
-        <main id="page-tracking" class="page-content hidden p-4 lg:p-8 fade-in">
-            <div class="glass rounded-xl p-6">
-                <h3 class="text-lg font-semibold text-white mb-6">Tracking Status</h3>
-                <div id="tracking-list" class="space-y-4"><p class="text-gray-500 text-center py-8">Memuat data...</p></div>
-            </div>
-        </main>
-
-        <!-- PAGE: SHIPPING -->
-        <main id="page-shipping" class="page-content hidden p-4 lg:p-8 fade-in">
-            <div class="glass rounded-xl p-6">
-                <h3 class="text-lg font-semibold text-white mb-6">Informasi Pengiriman</h3>
-                <div id="shipping-list" class="space-y-4"><p class="text-gray-500 text-center py-8">Memuat data...</p></div>
-            </div>
-        </main>
-
-        <!-- PAGE: PAYMENT -->
-        <main id="page-payment" class="page-content hidden p-4 lg:p-8 fade-in">
-            <div class="glass rounded-xl p-6">
-                <h3 class="text-lg font-semibold text-white mb-6">Status Pembayaran</h3>
-                <div id="payment-list" class="space-y-4"><p class="text-gray-500 text-center py-8">Memuat data...</p></div>
-            </div>
-        </main>
-
-        <!-- PAGE: DOKUMEN -->
-        <main id="page-documents" class="page-content hidden p-4 lg:p-8 fade-in">
-            <div class="glass rounded-xl p-6">
-                <h3 class="text-lg font-semibold text-white mb-6">Dokumen</h3>
-                <div id="doc-list" class="space-y-4"><p class="text-gray-500 text-center py-8">Memuat data...</p></div>
-            </div>
-        </main>
-
-        <!-- PAGE: LABEL & PROGRES -->
-        <main id="page-labels" class="page-content hidden p-4 lg:p-8 fade-in">
-            <div class="glass rounded-xl p-6 mb-6">
-                <h3 class="text-lg font-semibold text-white mb-2">🏷️ Label Progres & CS</h3>
-                <p class="text-sm text-gray-400 mb-4">Monitoring progres setiap tender dan penanggung jawab (CS)</p>
-            </div>
-            <div id="labels-list" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4"><p class="text-gray-500 text-center py-8 col-span-full">Memuat data...</p></div>
-        </main>
-
-        <!-- PAGE: GRAFIK -->
-        <main id="page-grafik" class="page-content hidden p-4 lg:p-8 fade-in">
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                <div class="glass rounded-xl p-6">
-                    <h3 class="text-lg font-semibold text-white mb-4">Grafik Status Tender</h3>
-                    <div class="chart-container"><canvas id="chart-status"></canvas></div>
-                </div>
-                <div class="glass rounded-xl p-6">
-                    <h3 class="text-lg font-semibold text-white mb-4">Grafik Jenis Barang</h3>
-                    <div class="chart-container"><canvas id="chart-jenis"></canvas></div>
-                </div>
-            </div>
-        </main>
+        <!-- PAGES CONTAINER -->
+        <div id="pages-container" class="p-4 lg:p-8">
+            <!-- Content will be injected here -->
+        </div>
     </div>
 
     <!-- TOAST -->
@@ -328,344 +121,441 @@
         <span id="toast-message" class="text-sm text-white">Berhasil!</span>
     </div>
 
-    <!-- ==================== JAVASCRIPT ==================== -->
     <script>
     // ⚠️ GANTI DENGAN DATA SUPABASE ANDA ⚠️
     const SUPABASE_URL = 'https://ixgwxbehsmgmczzfvjse.supabase.co';
     const SUPABASE_ANON_KEY = 'sb_publishable_xIL19QNKrG2iBzQyiO6EYw_LV0sda5-';
     
-    let supabaseClient;
-    if (!window.supabaseClient) {
-        window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    }
-    supabaseClient = window.supabaseClient;
-
-    const pages = ['dashboard', 'input', 'tracking', 'shipping', 'payment', 'documents', 'labels', 'grafik'];
-    const pageTitles = {
-        'dashboard': ['Dashboard', 'Logistics Tracking System'],
-        'input': ['Rencana Tender', 'Input data tender baru'],
-        'tracking': ['Tracking', 'Pantau status pengiriman'],
-        'shipping': ['Pengiriman', 'Informasi pengiriman'],
-        'payment': ['Pembayaran', 'Status pembayaran'],
-        'documents': ['Dokumen', 'Penyimpanan dokumen'],
-        'labels': ['Label & Progres', 'Monitoring progres dan CS'],
-        'grafik': ['Grafik', 'Visualisasi data']
-    };
-
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    
+    let currentUser = null;
+    let currentRole = 'pengguna';
     let charts = {};
 
-    function showPage(page) {
-        pages.forEach(p => {
-            document.getElementById(`page-${p}`).classList.add('hidden');
-            document.getElementById(`nav-${p}`).classList.remove('active');
+    const pages = {
+        'dashboard': { title: 'Dashboard', subtitle: 'Overview Logistik', access: ['user','admin'] },
+        'input': { title: 'Rencana Tender', subtitle: 'Input data baru', access: ['user','admin'] },
+        'tracking': { title: 'Tracking Pengiriman', subtitle: 'Pantau status & resi', access: ['user','admin','pengguna'] },
+        'shipping': { title: 'Pengiriman', subtitle: 'Info pengiriman aktif', access: ['user','admin'] },
+        'payment': { title: 'Pembayaran', subtitle: 'Status pembayaran', access: ['user','admin'] },
+        'labels': { title: 'Label & Progres', subtitle: 'Monitoring CS', access: ['user','admin'] },
+        'grafik': { title: 'Grafik', subtitle: 'Visualisasi data', access: ['user','admin'] },
+        'admin-panel': { title: 'Admin Panel', subtitle: 'Kelola sistem & user', access: ['admin'] }
+    };
+
+    // ==================== AUTH FUNCTIONS ====================
+    function toggleAuthMode() {
+        document.getElementById('login-form').classList.toggle('hidden');
+        document.getElementById('register-form').classList.toggle('hidden');
+        document.getElementById('auth-error').classList.add('hidden');
+    }
+
+    async function handleLogin() {
+        const email = document.getElementById('login-email').value;
+        const password = document.getElementById('login-password').value;
+        const errEl = document.getElementById('auth-error');
+        
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) { errEl.textContent = error.message; errEl.classList.remove('hidden'); return; }
+        
+        await initSession(data.session);
+    }
+
+    async function handleRegister() {
+        const name = document.getElementById('reg-name').value;
+        const email = document.getElementById('reg-email').value;
+        const password = document.getElementById('reg-password').value;
+        const errEl = document.getElementById('auth-error');
+
+        if(password.length < 6) { errEl.textContent = 'Password minimal 6 karakter'; errEl.classList.remove('hidden'); return; }
+
+        const { data, error } = await supabase.auth.signUp({ 
+            email, password, options: { data: { name } } 
         });
-        document.getElementById(`page-${page}`).classList.remove('hidden');
-        document.getElementById(`nav-${page}`).classList.add('active');
-        document.getElementById('page-title').textContent = pageTitles[page][0];
-        document.getElementById('page-subtitle').textContent = pageTitles[page][1];
+        if (error) { errEl.textContent = error.message; errEl.classList.remove('hidden'); return; }
+        
+        showToast('✅ Registrasi berhasil! Cek email untuk verifikasi (jika diaktifkan), lalu login.');
+        toggleAuthMode();
+    }
 
-        if (page === 'dashboard') renderDashboard();
-        if (page === 'tracking') renderTracking();
-        if (page === 'shipping') renderShipping();
-        if (page === 'payment') renderPayment();
-        if (page === 'labels') renderLabels();
-        if (page === 'grafik') renderGrafik();
+    async function handleLogout() {
+        await supabase.auth.signOut();
+        location.reload();
+    }
 
-        if (window.innerWidth < 1024) {
-            document.getElementById('sidebar').classList.add('-translate-x-full');
+    async function initSession(session) {
+        if(!session) { document.getElementById('login-view').classList.remove('hidden'); document.getElementById('app-view').classList.add('hidden'); return; }
+        
+        currentUser = session.user;
+        document.getElementById('login-view').classList.add('hidden');
+        document.getElementById('app-view').classList.remove('hidden');
+        document.getElementById('app-view').classList.add('fade-in');
+        
+        // Fetch role
+        const { data } = await supabase.from('profiles').select('role, name').eq('id', currentUser.id).single();
+        currentRole = data?.role || 'pengguna';
+        
+        document.getElementById('user-name').textContent = data?.name || 'User';
+        document.getElementById('user-role').textContent = currentRole;
+        document.getElementById('user-avatar').textContent = (data?.name || 'U')[0].toUpperCase();
+        
+        renderSidebar();
+        showPage(currentRole === 'pengguna' ? 'tracking' : 'dashboard');
+    }
+
+    function renderSidebar() {
+        const menu = document.getElementById('sidebar-menu');
+        let html = '';
+        for(const [key, page] of Object.entries(pages)) {
+            if(page.access.includes(currentRole)) {
+                html += `<a href="#" onclick="showPage('${key}')" id="nav-${key}" class="sidebar-link flex items-center gap-3 px-6 py-3 text-sm hover:bg-primary-900/30 transition-all">
+                    <span class="w-5 h-5 text-primary-400">●</span> ${page.title}
+                </a>`;
+            }
         }
+        menu.innerHTML = html;
     }
 
-    function toggleSidebar() {
-        document.getElementById('sidebar').classList.toggle('-translate-x-full');
+    function showPage(pageKey) {
+        if(!pages[pageKey] || !pages[pageKey].access.includes(currentRole)) return;
+        
+        document.querySelectorAll('.page-content').forEach(el => el.classList.add('hidden'));
+        document.querySelectorAll('.sidebar-link').forEach(el => el.classList.remove('active'));
+        
+        const navEl = document.getElementById(`nav-${pageKey}`);
+        if(navEl) navEl.classList.add('active');
+        
+        document.getElementById('page-title').textContent = pages[pageKey].title;
+        document.getElementById('page-subtitle').textContent = pages[pageKey].subtitle;
+        
+        const container = document.getElementById('pages-container');
+        container.innerHTML = `<div id="page-${pageKey}" class="page-content fade-in"></div>`;
+        const pageEl = document.getElementById(`page-${pageKey}`);
+        
+        if(pageKey === 'dashboard') renderDashboard(pageEl);
+        else if(pageKey === 'input') renderInput(pageEl);
+        else if(pageKey === 'tracking') renderTracking(pageEl);
+        else if(pageKey === 'shipping') renderShipping(pageEl);
+        else if(pageKey === 'payment') renderPayment(pageEl);
+        else if(pageKey === 'labels') renderLabels(pageEl);
+        else if(pageKey === 'grafik') renderGrafik(pageEl);
+        else if(pageKey === 'admin-panel') renderAdmin(pageEl);
+
+        if(window.innerWidth < 1024) document.getElementById('sidebar').classList.add('-translate-x-full');
     }
 
+    function toggleSidebar() { document.getElementById('sidebar').classList.toggle('-translate-x-full'); }
+
+    // ==================== DATABASE FUNCTIONS ====================
     async function getTenders() {
-        try {
-            const { data, error } = await supabaseClient.from('tenders').select('*').order('created_at', { ascending: false });
-            if (error) { console.error('Error:', error); return []; }
-            return data || [];
-        } catch (err) {
-            console.error('Connection error:', err);
-            return [];
-        }
+        const { data, error } = await supabase.from('tenders').select('*').order('created_at', { ascending: false });
+        return error ? [] : (data || []);
     }
-
     async function saveTender(item) {
-        const { data, error } = await supabaseClient.from('tenders').insert([item]).select();
-        if (error) throw error;
-        return data[0];
+        const { error } = await supabase.from('tenders').insert([item]);
+        if(error) throw error;
     }
-
     async function updateTender(id, updates) {
-        const { error } = await supabaseClient.from('tenders').update(updates).eq('id', id);
-        if (error) throw error;
+        const { error } = await supabase.from('tenders').update(updates).eq('id', id);
+        if(error) throw error;
     }
-
     async function deleteTender(id) {
-        const { error } = await supabaseClient.from('tenders').delete().eq('id', id);
-        if (error) throw error;
+        const { error } = await supabase.from('tenders').delete().eq('id', id);
+        if(error) throw error;
     }
 
-    async function renderDashboard() {
+    // ==================== PAGE RENDERERS ====================
+    function renderDashboard(el) {
+        el.innerHTML = `
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                <div class="glass rounded-xl p-5 card-hover"><p class="text-xs text-gray-400 uppercase">Total Tender</p><p class="text-2xl font-bold text-white mt-2" id="d-total">0</p></div>
+                <div class="glass rounded-xl p-5 card-hover"><p class="text-xs text-gray-400 uppercase">Dalam Proses</p><p class="text-2xl font-bold text-amber-400 mt-2" id="d-proses">0</p></div>
+                <div class="glass rounded-xl p-5 card-hover"><p class="text-xs text-gray-400 uppercase">Selesai</p><p class="text-2xl font-bold text-green-400 mt-2" id="d-selesai">0</p></div>
+                <div class="glass rounded-xl p-5 card-hover"><p class="text-xs text-gray-400 uppercase">Lunas</p><p class="text-2xl font-bold text-purple-400 mt-2" id="d-lunas">0</p></div>
+            </div>
+            <div class="glass rounded-xl p-6 mb-6">
+                <h3 class="text-lg font-semibold text-white mb-4">Ringkasan Jenis Barang</h3>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="glass-light rounded-lg p-4 text-center"><p class="text-2xl font-bold text-red-400" id="c-berbahaya">0</p><p class="text-xs text-gray-400 mt-1">🔴 Berbahaya</p></div>
+                    <div class="glass-light rounded-lg p-4 text-center"><p class="text-2xl font-bold text-green-400" id="c-aman">0</p><p class="text-xs text-gray-400 mt-1">🟢 Aman</p></div>
+                    <div class="glass-light rounded-lg p-4 text-center"><p class="text-2xl font-bold text-amber-400" id="c-kimia">0</p><p class="text-xs text-gray-400 mt-1">🟡 Kimia</p></div>
+                    <div class="glass-light rounded-lg p-4 text-center"><p class="text-2xl font-bold text-purple-400" id="c-hewan">0</p><p class="text-xs text-gray-400 mt-1">🟣 Hewan</p></div>
+                </div>
+            </div>
+            <div class="glass rounded-xl p-6"><h3 class="text-lg font-semibold text-white mb-4">Tender Terbaru</h3><div id="recent-list" class="space-y-3"><p class="text-gray-500 text-center py-8">Memuat...</p></div></div>
+        `;
+        loadDashboard();
+    }
+
+    async function loadDashboard() {
         const data = await getTenders();
-        document.getElementById('stat-total').textContent = data.length;
-        document.getElementById('stat-process').textContent = data.filter(d => d.status === 'ok' && !d.shipping_method).length;
-        document.getElementById('stat-shipped').textContent = data.filter(d => d.shipping_method).length;
-        document.getElementById('stat-paid').textContent = data.filter(d => d.payment_status === 'lunas').length;
-        document.getElementById('stat-docs').textContent = '0';
+        document.getElementById('d-total').textContent = data.length;
+        document.getElementById('d-proses').textContent = data.filter(d => d.status === 'ok' && !d.shipping_method).length;
+        document.getElementById('d-selesai').textContent = data.filter(d => d.shipping_method).length;
+        document.getElementById('d-lunas').textContent = data.filter(d => d.payment_status === 'lunas').length;
+        document.getElementById('c-berbahaya').textContent = data.filter(d => d.jenis === 'berbahaya').length;
+        document.getElementById('c-aman').textContent = data.filter(d => d.jenis === 'aman').length;
+        document.getElementById('c-kimia').textContent = data.filter(d => d.jenis === 'kimia').length;
+        document.getElementById('c-hewan').textContent = data.filter(d => d.jenis === 'hewan').length;
 
-        document.getElementById('count-berbahaya').textContent = data.filter(d => d.jenis === 'berbahaya').length;
-        document.getElementById('count-aman').textContent = data.filter(d => d.jenis === 'aman').length;
-        document.getElementById('count-kimia').textContent = data.filter(d => d.jenis === 'kimia').length;
-        document.getElementById('count-hewan').textContent = data.filter(d => d.jenis === 'hewan').length;
-
-        const recentDiv = document.getElementById('recent-activities');
-        if (!data || data.length === 0) {
-            recentDiv.innerHTML = '<p class="text-gray-500 text-center py-8">Belum ada data. Silakan input tender pertama Anda!</p>';
-            return;
-        }
-        recentDiv.innerHTML = data.slice(0, 8).map(item => `
+        const list = document.getElementById('recent-list');
+        if(data.length === 0) { list.innerHTML = '<p class="text-gray-500 text-center py-8">Belum ada data</p>'; return; }
+        list.innerHTML = data.slice(0,6).map(i => `
             <div class="glass-light rounded-lg p-4 card-hover">
-                <div class="flex justify-between items-start mb-2">
-                    <div>
-                        <p class="font-semibold text-white">${item.nama_tender}</p>
-                        <p class="text-sm text-gray-400">${item.pt_cust} - ${item.nama_cust}</p>
-                    </div>
-                    <span class="status-badge status-${getStatusClass(item.status)}">${getStatusText(item.status)}</span>
-                </div>
+                <div class="flex justify-between items-start"><div><p class="font-semibold text-white">${i.nama_tender}</p><p class="text-sm text-gray-400">${i.pt_cust} - ${i.nama_cust}</p></div>
+                <span class="status-badge status-${i.status === 'ok' ? 'ok' : i.status === 'not-ok' ? 'revisi' : 'tender'}">${i.status}</span></div>
                 <div class="flex flex-wrap gap-2 text-xs mt-2">
-                    <span class="jenis-badge jenis-${item.jenis}">${getJenisLabel(item.jenis)}</span>
-                    <span class="text-gray-400">CS: ${item.karyawan}</span>
-                    <span class="text-gray-400">Barang: ${item.nama_barang}</span>
-                    <span class="text-gray-400">📍 ${item.lokasi_asal} → ${item.lokasi_tujuan}</span>
+                    <span class="jenis-badge jenis-${i.jenis}">${i.jenis}</span><span class="text-gray-400">CS: ${i.karyawan}</span><span class="text-gray-400">📍 ${i.lokasi_asal} → ${i.lokasi_tujuan}</span>
                 </div>
-            </div>
-        `).join('');
+            </div>`).join('');
     }
 
-    async function renderTracking() {
-        const data = await getTenders();
-        const trackingDiv = document.getElementById('tracking-list');
-        if (!data || data.length === 0) {
-            trackingDiv.innerHTML = '<p class="text-gray-500 text-center py-8">Belum ada data</p>';
-            return;
-        }
-        trackingDiv.innerHTML = data.map(item => {
-            const progress = calculateProgress(item);
-            return `
-            <div class="glass-light rounded-lg p-5 card-hover">
-                <div class="flex justify-between items-start mb-3">
-                    <div>
-                        <h4 class="font-semibold text-white text-lg">${item.nama_tender}</h4>
-                        <p class="text-sm text-blue-400">${item.pt_cust} • ${item.nama_cust}</p>
-                    </div>
-                    <div class="flex gap-1">
-                        <span class="jenis-badge jenis-${item.jenis}">${getJenisLabel(item.jenis)}</span>
-                        <span class="status-badge status-${getStatusClass(item.status)}">${getStatusText(item.status)}</span>
+    function renderInput(el) {
+        el.innerHTML = `
+        <div class="max-w-3xl mx-auto glass rounded-xl p-6 lg:p-8">
+            <h3 class="text-lg font-semibold text-white mb-6">📋 Input Rencana Tender</h3>
+            <form id="tender-form" onsubmit="submitTender(event)">
+                <div class="form-section"><div class="form-section-title">Data Karyawan & Tender</div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div><label class="block text-xs text-gray-400 mb-1">Nama Karyawan/CS *</label><input type="text" id="f-karyawan" required class="w-full rounded-lg px-4 py-3 text-sm"></div>
+                        <div><label class="block text-xs text-gray-400 mb-1">Nama Tender *</label><input type="text" id="f-tender" required class="w-full rounded-lg px-4 py-3 text-sm"></div>
                     </div>
                 </div>
-                <div class="mb-4">
-                    <div class="flex justify-between text-xs mb-1"><span class="text-gray-400">Progres</span><span class="text-blue-400 font-bold">${progress}%</span></div>
-                    <div class="w-full bg-dark-700 rounded-full h-2"><div class="bg-gradient-to-r from-blue-500 to-blue-400 h-2 rounded-full" style="width:${progress}%"></div></div>
+                <div class="form-section"><div class="form-section-title">Data Customer</div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div><label class="block text-xs text-gray-400 mb-1">Nama Customer *</label><input type="text" id="f-cust" required class="w-full rounded-lg px-4 py-3 text-sm"></div>
+                        <div><label class="block text-xs text-gray-400 mb-1">PT Customer *</label><input type="text" id="f-pt" required class="w-full rounded-lg px-4 py-3 text-sm"></div>
+                    </div>
                 </div>
-                <div class="grid grid-cols-2 gap-3 text-sm mb-4">
-                    <div><p class="text-xs text-gray-500">Barang</p><p class="text-white">${item.nama_barang}</p></div>
-                    <div><p class="text-xs text-gray-500">Rute</p><p class="text-white text-xs">${item.lokasi_asal} → ${item.lokasi_tujuan}</p></div>
-                    <div><p class="text-xs text-gray-500">Pengiriman</p><p class="text-white">${item.shipping_method ? getShippingMethodText(item.shipping_method) : 'Belum ada'}</p></div>
-                    <div><p class="text-xs text-gray-500">Pembayaran</p><p class="text-white">${getPaymentStatusText(item.payment_status)}</p></div>
+                <div class="form-section"><div class="form-section-title">Data Barang</div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div><label class="block text-xs text-gray-400 mb-1">Nama Barang *</label><input type="text" id="f-barang" required class="w-full rounded-lg px-4 py-3 text-sm"></div>
+                        <div><label class="block text-xs text-gray-400 mb-1">Jenis *</label><select id="f-jenis" required class="w-full rounded-lg px-4 py-3 text-sm"><option value="">--</option><option value="berbahaya">🔴 Berbahaya</option><option value="aman">🟢 Aman</option><option value="kimia">🟡 Kimia</option><option value="hewan">🟣 Hewan</option></select></div>
+                    </div>
                 </div>
-                <div class="flex gap-2">
-                    ${!item.shipping_method ? `<button onclick="updateShipping(${item.id})" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 rounded text-xs">Update Pengiriman</button>` : ''}
-                    ${item.shipping_method && !item.shipping_delivered ? `<button onclick="markDelivered(${item.id})" class="px-3 py-1.5 bg-green-600 hover:bg-green-700 rounded text-xs">Tandai Sampai</button>` : ''}
-                    <button onclick="deleteItem(${item.id})" class="px-3 py-1.5 bg-red-600/50 hover:bg-red-600 rounded text-xs">Hapus</button>
+                <div class="form-section"><div class="form-section-title">Lokasi</div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div><label class="block text-xs text-gray-400 mb-1">Asal *</label><input type="text" id="f-asal" required class="w-full rounded-lg px-4 py-3 text-sm"></div>
+                        <div><label class="block text-xs text-gray-400 mb-1">Tujuan *</label><input type="text" id="f-tujuan" required class="w-full rounded-lg px-4 py-3 text-sm"></div>
+                    </div>
                 </div>
-            </div>`;
-        }).join('');
-    }
-
-    async function renderShipping() {
-        const data = await getTenders();
-        const div = document.getElementById('shipping-list');
-        const shipped = data.filter(d => d.shipping_method);
-        if (shipped.length === 0) { div.innerHTML = '<p class="text-gray-500 text-center py-8">Belum ada data pengiriman</p>'; return; }
-        div.innerHTML = shipped.map(item => `
-            <div class="glass-light rounded-lg p-5">
-                <div class="flex justify-between items-start mb-3">
-                    <div><h4 class="font-semibold text-white">${item.nama_tender}</h4><p class="text-sm text-gray-400">${item.pt_cust} - ${item.nama_cust}</p></div>
-                    <div><span class="jenis-badge jenis-${item.jenis}">${getJenisLabel(item.jenis)}</span><span class="status-badge status-ok ml-1">${getShippingMethodText(item.shipping_method)}</span></div>
+                <div class="form-section"><div class="form-section-title">Status</div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div><label class="block text-xs text-gray-400 mb-1">Status Tender *</label><select id="f-status" required class="w-full rounded-lg px-4 py-3 text-sm"><option value="">--</option><option value="planning">📝 Planning</option><option value="tender">📋 Proses</option><option value="ok">✅ Deal</option><option value="not-ok">❌ Gagal</option></select></div>
+                        <div><label class="block text-xs text-gray-400 mb-1">Metode Kirim</label><select id="f-metode" class="w-full rounded-lg px-4 py-3 text-sm"><option value="">--</option><option value="udara">✈️ Udara</option><option value="laut">🚢 Laut</option><option value="darat">🚛 Darat</option></select></div>
+                    </div>
                 </div>
-                <div class="space-y-2 text-sm">
-                    <p class="text-gray-400">Rute: <span class="text-white">${item.lokasi_asal} → ${item.lokasi_tujuan}</span></p>
-                    <p class="text-gray-400">Resi: <span class="text-white">${item.shipping_resi || '-'}</span></p>
-                    <p class="text-gray-400">Status: <span class="text-${item.shipping_delivered ? 'green' : 'amber'}-400">${item.shipping_delivered ? '✅ Sudah sampai' : '⏳ Dalam perjalanan'}</span></p>
-                </div>
-            </div>
-        `).join('');
-    }
-
-    async function renderPayment() {
-        const data = await getTenders();
-        const div = document.getElementById('payment-list');
-        if (data.length === 0) { div.innerHTML = '<p class="text-gray-500 text-center py-8">Belum ada data</p>'; return; }
-        div.innerHTML = data.map(item => `
-            <div class="glass-light rounded-lg p-5">
-                <div class="flex justify-between items-start mb-3">
-                    <div><h4 class="font-semibold text-white">${item.nama_tender}</h4><p class="text-sm text-gray-400">${item.pt_cust} - ${item.nama_cust}</p></div>
-                    <span class="status-badge status-${item.payment_status === 'lunas' ? 'ok' : item.payment_status === 'dp' ? 'tender' : 'planning'}">${getPaymentStatusText(item.payment_status)}</span>
-                </div>
-                <p class="text-sm text-gray-400">Total: <span class="text-white font-semibold">Rp ${item.payment_amount ? item.payment_amount.toLocaleString('id-ID') : '0'}</span></p>
-            </div>
-        `).join('');
-    }
-
-    async function renderLabels() {
-        const data = await getTenders();
-        const div = document.getElementById('labels-list');
-        if (!data || data.length === 0) { div.innerHTML = '<p class="text-gray-500 text-center py-8 col-span-full">Belum ada data</p>'; return; }
-        div.innerHTML = data.map(item => {
-            const progress = calculateProgress(item);
-            const progressClass = progress === 100 ? 'progress-100' : progress >= 75 ? 'progress-75' : progress >= 50 ? 'progress-50' : progress >= 25 ? 'progress-25' : 'progress-0';
-            return `
-            <div class="label-card ${progressClass} card-hover">
-                <div class="flex items-center gap-3 mb-3">
-                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold text-sm">${item.karyawan.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}</div>
-                    <div class="flex-1"><p class="font-semibold text-white text-sm">${item.karyawan}</p><p class="text-xs text-gray-400">CS / Karyawan</p></div>
-                    <span class="jenis-badge jenis-${item.jenis}">${getJenisLabel(item.jenis)}</span>
-                </div>
-                <h4 class="font-medium text-white mb-1">${item.nama_tender}</h4>
-                <p class="text-xs text-blue-400 mb-1">${item.pt_cust} - ${item.nama_cust}</p>
-                <p class="text-xs text-gray-400 mb-3">Barang: ${item.nama_barang}</p>
-                <div class="flex items-center gap-2 mb-2">
-                    <div class="flex-1 bg-dark-700 rounded-full h-2"><div class="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full" style="width:${progress}%"></div></div>
-                    <span class="text-xs font-bold text-blue-400">${progress}%</span>
-                </div>
-                <div class="grid grid-cols-2 gap-2 text-xs mt-3">
-                    <div class="flex items-center gap-1"><span>${item.shipping_method ? '🚛' : '⏳'}</span><span class="text-gray-400">${item.shipping_method ? 'Sudah kirim' : 'Belum kirim'}</span></div>
-                    <div class="flex items-center gap-1"><span>${item.shipping_delivered ? '✅' : '📍'}</span><span class="text-gray-400">${item.shipping_delivered ? 'Sampai' : 'Dalam perjalanan'}</span></div>
-                    <div class="flex items-center gap-1"><span>${item.payment_status === 'lunas' ? '💰' : '⏰'}</span><span class="text-gray-400">${getPaymentStatusText(item.payment_status)}</span></div>
-                    <div class="flex items-center gap-1"><span>📍</span><span class="text-gray-400">${item.lokasi_tujuan}</span></div>
-                </div>
-            </div>`;
-        }).join('');
-    }
-
-    async function renderGrafik() {
-        const data = await getTenders();
-        Object.values(charts).forEach(c => c.destroy());
-        charts = {};
-
-        const statusCounts = { planning: 0, tender: 0, ok: 0, 'not-ok': 0 };
-        data.forEach(d => { statusCounts[d.status] = (statusCounts[d.status] || 0) + 1; });
-        charts.status = new Chart(document.getElementById('chart-status'), {
-            type: 'doughnut',
-            data: {
-                labels: ['Planning', 'Proses Tender', 'OK - Deal', 'Tidak OK'],
-                datasets: [{ data: [statusCounts.planning, statusCounts.tender, statusCounts.ok, statusCounts['not-ok']], backgroundColor: ['#6b7280', '#3b82f6', '#22c55e', '#ef4444'], borderWidth: 0 }]
-            },
-            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#9ca3af' } } } }
-        });
-
-        const jenisCounts = { berbahaya: 0, aman: 0, kimia: 0, hewan: 0 };
-        data.forEach(d => { jenisCounts[d.jenis] = (jenisCounts[d.jenis] || 0) + 1; });
-        charts.jenis = new Chart(document.getElementById('chart-jenis'), {
-            type: 'bar',
-            data: {
-                labels: ['🔴 Berbahaya', '🟢 Aman', '🟡 Kimia', '🟣 Hewan Hidup'],
-                datasets: [{ label: 'Jumlah', data: [jenisCounts.berbahaya, jenisCounts.aman, jenisCounts.kimia, jenisCounts.hewan], backgroundColor: ['rgba(239,68,68,0.6)', 'rgba(34,197,94,0.6)', 'rgba(245,158,11,0.6)', 'rgba(168,85,247,0.6)'], borderRadius: 6 }]
-            },
-            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { color: '#9ca3af' }, grid: { color: 'rgba(59,130,246,0.1)' } }, x: { ticks: { color: '#9ca3af' }, grid: { color: 'rgba(59,130,246,0.1)' } } } }
-        });
+                <button type="submit" class="w-full py-3.5 bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg font-semibold text-white">💾 Simpan</button>
+            </form>
+        </div>`;
     }
 
     async function submitTender(e) {
         e.preventDefault();
-        const newItem = {
-            karyawan: document.getElementById('input-karyawan').value.trim(),
-            nama_tender: document.getElementById('input-nama-tender').value.trim(),
-            nama_cust: document.getElementById('input-nama-cust').value.trim(),
-            pt_cust: document.getElementById('input-pt-cust').value.trim(),
-            nama_barang: document.getElementById('input-nama-barang').value.trim(),
-            jenis: document.getElementById('input-jenis').value,
-            lokasi_asal: document.getElementById('input-lokasi-asal').value.trim(),
-            lokasi_tujuan: document.getElementById('input-lokasi-tujuan').value.trim(),
-            status: document.getElementById('input-status').value,
-            shipping_method: document.getElementById('input-metode').value,
-            payment_status: 'pending',
-            payment_amount: 0,
-            progress: 0
+        const item = {
+            karyawan: document.getElementById('f-karyawan').value.trim(),
+            nama_tender: document.getElementById('f-tender').value.trim(),
+            nama_cust: document.getElementById('f-cust').value.trim(),
+            pt_cust: document.getElementById('f-pt').value.trim(),
+            nama_barang: document.getElementById('f-barang').value.trim(),
+            jenis: document.getElementById('f-jenis').value,
+            lokasi_asal: document.getElementById('f-asal').value.trim(),
+            lokasi_tujuan: document.getElementById('f-tujuan').value.trim(),
+            status: document.getElementById('f-status').value,
+            shipping_method: document.getElementById('f-metode').value,
+            payment_status: 'pending', payment_amount: 0, progress: 0
         };
-        try {
-            await saveTender(newItem);
-            showToast('✅ Data berhasil disimpan ke cloud!');
-            document.getElementById('tender-form').reset();
-            showPage('dashboard');
-        } catch (err) {
-            showToast('❌ Gagal: ' + err.message, 'error');
-        }
+        try { await saveTender(item); showToast('✅ Tersimpan!'); document.getElementById('tender-form').reset(); showPage('dashboard'); }
+        catch(err) { showToast('❌ Gagal: '+err.message, 'error'); }
     }
 
-    async function updateShipping(id) {
-        const method = prompt('Metode pengiriman (udara/laut/darat):');
-        if (!method) return;
-        const resi = prompt('Nomor resi/BL:');
-        try {
-            await updateTender(id, { shipping_method: method, shipping_resi: resi || '' });
-            showToast('Pengiriman diupdate!');
-            renderTracking();
-        } catch (err) { showToast('Gagal: ' + err.message, 'error'); }
+    function renderTracking(el) {
+        const isGuest = currentRole === 'pengguna';
+        el.innerHTML = `
+        <div class="glass rounded-xl p-6">
+            ${isGuest ? `
+            <h3 class="text-lg font-semibold text-white mb-4">🔍 Lacak Pengiriman (Khusus Customer)</h3>
+            <div class="flex gap-3 mb-6">
+                <input type="text" id="resi-input" placeholder="Masukkan Nomor Resi / BL / AWB..." class="flex-1 rounded-lg px-4 py-3 text-sm">
+                <button onclick="trackResi()" class="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg font-medium">Lacak</button>
+            </div>
+            <div id="resi-result" class="hidden glass-light rounded-lg p-5 border border-blue-500/30"></div>
+            ` : `
+            <h3 class="text-lg font-semibold text-white mb-6">Tracking Status</h3>
+            <div id="tracking-list" class="space-y-4"><p class="text-gray-500 text-center py-8">Memuat...</p></div>
+            `}
+        </div>`;
+        if(!isGuest) loadTracking();
     }
 
-    async function markDelivered(id) {
-        if (!confirm('Tandai barang sudah sampai?')) return;
-        try {
-            await updateTender(id, { shipping_delivered: true });
-            showToast('✅ Barang sudah sampai!');
-            renderTracking();
-        } catch (err) { showToast('Gagal: ' + err.message, 'error'); }
+    async function trackResi() {
+        const resi = document.getElementById('resi-input').value.trim();
+        if(!resi) return;
+        const { data } = await supabase.from('tenders').select('*').ilike('shipping_resi', `%${resi}%`).limit(1).single();
+        const res = document.getElementById('resi-result');
+        if(!data) { res.classList.remove('hidden'); res.innerHTML = '<p class="text-red-400">❌ Resi tidak ditemukan.</p>'; return; }
+        res.classList.remove('hidden');
+        res.innerHTML = `
+            <h4 class="font-bold text-white mb-2">${data.nama_tender}</h4>
+            <div class="grid grid-cols-2 gap-2 text-sm text-gray-300 mb-3">
+                <p>Customer: ${data.pt_cust}</p><p>Barang: ${data.nama_barang}</p>
+                <p>Rute: ${data.lokasi_asal} → ${data.lokasi_tujuan}</p><p>Status: ${data.status}</p>
+                <p>Pengiriman: ${data.shipping_method || 'Belum ada'}</p><p>Sampai: ${data.shipping_delivered ? '✅ Ya' : '⏳ Perjalanan'}</p>
+            </div>
+            <div class="w-full bg-dark-700 rounded-full h-2"><div class="bg-blue-500 h-2 rounded-full" style="width:${calculateProgress(data)}%"></div></div>
+        `;
+    }
+
+    async function loadTracking() {
+        const data = await getTenders();
+        const list = document.getElementById('tracking-list');
+        if(data.length === 0) { list.innerHTML = '<p class="text-gray-500 text-center py-8">Belum ada data</p>'; return; }
+        list.innerHTML = data.map(i => `
+            <div class="glass-light rounded-lg p-5 card-hover">
+                <div class="flex justify-between mb-3"><div><h4 class="font-semibold text-white">${i.nama_tender}</h4><p class="text-sm text-blue-400">${i.pt_cust}</p></div>
+                <span class="jenis-badge jenis-${i.jenis}">${i.jenis}</span></div>
+                <div class="mb-3"><div class="flex justify-between text-xs mb-1"><span class="text-gray-400">Progres</span><span class="text-blue-400">${calculateProgress(i)}%</span></div>
+                <div class="w-full bg-dark-700 rounded-full h-2"><div class="bg-gradient-to-r from-blue-500 to-blue-400 h-2 rounded-full" style="width:${calculateProgress(i)}%"></div></div></div>
+                <div class="grid grid-cols-2 gap-3 text-sm mb-3">
+                    <div><p class="text-xs text-gray-500">Rute</p><p class="text-white text-xs">${i.lokasi_asal} → ${i.lokasi_tujuan}</p></div>
+                    <div><p class="text-xs text-gray-500">Resi</p><p class="text-white text-xs">${i.shipping_resi || '-'}</p></div>
+                    <div><p class="text-xs text-gray-500">Kirim</p><p class="text-white">${i.shipping_method || '-'}</p></div>
+                    <div><p class="text-xs text-gray-500">Bayar</p><p class="text-white">${i.payment_status}</p></div>
+                </div>
+                <div class="flex gap-2">
+                    ${!i.shipping_method ? `<button onclick="updateField(${i.id},'shipping_method',prompt('Metode:'))" class="px-3 py-1.5 bg-blue-600 rounded text-xs">Update Kirim</button>` : ''}
+                    ${i.shipping_method && !i.shipping_delivered ? `<button onclick="updateField(${i.id},'shipping_delivered',true)" class="px-3 py-1.5 bg-green-600 rounded text-xs">Tandai Sampai</button>` : ''}
+                    ${currentRole === 'admin' ? `<button onclick="deleteItem(${i.id})" class="px-3 py-1.5 bg-red-600/50 rounded text-xs">Hapus</button>` : ''}
+                </div>
+            </div>`).join('');
+    }
+
+    async function updateField(id, field, val) {
+        if(!val) return;
+        await updateTender(id, { [field]: val });
+        showToast('✅ Updated');
+        if(document.getElementById('page-tracking')) loadTracking();
     }
 
     async function deleteItem(id) {
-        if (!confirm('Yakin hapus data ini?')) return;
-        try {
-            await deleteTender(id);
-            showToast('Data dihapus');
-            renderTracking();
-        } catch (err) { showToast('Gagal: ' + err.message, 'error'); }
+        if(!confirm('Hapus data ini?')) return;
+        await deleteTender(id);
+        showToast('🗑️ Dihapus');
+        loadTracking();
     }
 
-    function calculateProgress(item) {
-        let p = 0;
-        if (item.status === 'ok') p += 20;
-        if (item.shipping_method) p += 30;
-        if (item.shipping_delivered) p += 30;
-        if (item.payment_status === 'lunas') p += 20;
-        return Math.min(p, 100);
+    function renderShipping(el) {
+        el.innerHTML = `<div class="glass rounded-xl p-6"><h3 class="text-lg font-semibold text-white mb-6">Pengiriman Aktif</h3><div id="ship-list" class="space-y-4"><p class="text-gray-500 text-center py-8">Memuat...</p></div></div>`;
+        loadPageData('ship-list', d => d.filter(i => i.shipping_method).map(i => `
+            <div class="glass-light rounded-lg p-5"><div class="flex justify-between mb-2"><h4 class="font-semibold text-white">${i.nama_tender}</h4><span class="status-badge status-ok">${i.shipping_method}</span></div>
+            <p class="text-sm text-gray-400">Rute: ${i.lokasi_asal} → ${i.lokasi_tujuan} | Resi: ${i.shipping_resi||'-'} | Sampai: ${i.shipping_delivered?'✅':'⏳'}</p></div>`));
     }
 
-    function getStatusClass(status) { const map = { 'planning': 'planning', 'tender': 'tender', 'ok': 'ok', 'not-ok': 'revisi' }; return map[status] || 'planning'; }
-    function getStatusText(status) { const map = { 'planning': 'Planning', 'tender': 'Proses Tender', 'ok': 'OK - Deal', 'not-ok': 'Tidak OK' }; return map[status] || status; }
-    function getJenisLabel(jenis) { const map = { 'berbahaya': '🔴 Berbahaya', 'aman': '🟢 Aman', 'kimia': '🟡 Kimia', 'hewan': '🟣 Hewan' }; return map[jenis] || jenis; }
-    function getShippingMethodText(method) { const map = { 'udara': '✈️ Udara', 'laut': '🚢 Laut', 'darat': '🚛 Darat' }; return map[method] || method; }
-    function getPaymentStatusText(status) { const map = { 'pending': '⏰ Pending', 'dp': '💳 DP', 'lunas': '✅ Lunas' }; return map[status] || status; }
+    function renderPayment(el) {
+        el.innerHTML = `<div class="glass rounded-xl p-6"><h3 class="text-lg font-semibold text-white mb-6">Pembayaran</h3><div id="pay-list" class="space-y-4"><p class="text-gray-500 text-center py-8">Memuat...</p></div></div>`;
+        loadPageData('pay-list', d => d.map(i => `
+            <div class="glass-light rounded-lg p-5 flex justify-between items-center">
+                <div><h4 class="font-semibold text-white">${i.nama_tender}</h4><p class="text-sm text-gray-400">${i.pt_cust}</p></div>
+                <span class="status-badge ${i.payment_status==='lunas'?'status-ok':'status-planning'}">${i.payment_status} ${i.payment_amount ? '(Rp '+i.payment_amount.toLocaleString('id-ID')+')' : ''}</span>
+            </div>`));
+    }
 
-    function showToast(message, type = 'success') {
-        const toast = document.getElementById('toast');
-        document.getElementById('toast-message').textContent = message;
-        document.getElementById('toast-icon').textContent = type === 'error' ? '❌' : '✅';
-        toast.classList.remove('hidden');
-        setTimeout(() => toast.classList.add('hidden'), 3000);
+    function renderLabels(el) {
+        el.innerHTML = `<div class="glass rounded-xl p-6 mb-6"><h3 class="text-lg font-semibold text-white">🏷️ Label Progres & CS</h3></div><div id="label-list" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4"><p class="text-gray-500 text-center py-8 col-span-full">Memuat...</p></div>`;
+        loadPageData('label-list', d => d.map(i => {
+            const p = calculateProgress(i);
+            return `<div class="glass-light rounded-lg p-4 card-hover">
+                <div class="flex items-center gap-3 mb-3"><div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-xs font-bold">${i.karyawan[0]}</div>
+                <div class="flex-1"><p class="text-sm font-semibold text-white">${i.karyawan}</p><p class="text-xs text-gray-500">${i.pt_cust}</p></div></div>
+                <p class="text-sm font-medium text-white mb-1">${i.nama_tender}</p>
+                <div class="w-full bg-dark-700 rounded-full h-2 mb-2"><div class="bg-blue-500 h-2 rounded-full" style="width:${p}%"></div></div>
+                <div class="flex justify-between text-xs text-gray-400"><span>📍 ${i.lokasi_tujuan}</span><span>${p}%</span></div>
+            </div>`;
+        }));
+    }
+
+    function renderGrafik(el) {
+        el.innerHTML = `
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="glass rounded-xl p-6"><h3 class="text-lg font-semibold text-white mb-4">Status Tender</h3><div class="chart-container"><canvas id="chart-status"></canvas></div></div>
+            <div class="glass rounded-xl p-6"><h3 class="text-lg font-semibold text-white mb-4">Jenis Barang</h3><div class="chart-container"><canvas id="chart-jenis"></canvas></div></div>
+        </div>`;
+        loadGrafik();
+    }
+
+    async function loadGrafik() {
+        const d = await getTenders();
+        Object.values(charts).forEach(c => c.destroy()); charts = {};
+        
+        const sc = {planning:0,tender:0,ok:0,'not-ok':0}; d.forEach(i => sc[i.status]=(sc[i.status]||0)+1);
+        charts.status = new Chart(document.getElementById('chart-status'), {
+            type:'doughnut', data:{labels:['Planning','Proses','Deal','Gagal'],datasets:[{data:[sc.planning,sc.tender,sc.ok,sc['not-ok']],backgroundColor:['#6b7280','#3b82f6','#22c55e','#ef4444'],borderWidth:0}]},
+            options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#9ca3af'}}}}
+        });
+
+        const jc = {berbahaya:0,aman:0,kimia:0,hewan:0}; d.forEach(i => jc[i.jenis]=(jc[i.jenis]||0)+1);
+        charts.jenis = new Chart(document.getElementById('chart-jenis'), {
+            type:'bar', data:{labels:['🔴 Berbahaya','🟢 Aman','🟡 Kimia','🟣 Hewan'],datasets:[{data:[jc.berbahaya,jc.aman,jc.kimia,jc.hewan],backgroundColor:['rgba(239,68,68,0.6)','rgba(34,197,94,0.6)','rgba(245,158,11,0.6)','rgba(168,85,247,0.6)'],borderRadius:6}]},
+            options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{color:'#9ca3af'},grid:{color:'rgba(59,130,246,0.1)'}},x:{ticks:{color:'#9ca3af'},grid:{color:'rgba(59,130,246,0.1)'}}}}
+        });
+    }
+
+    function renderAdmin(el) {
+        el.innerHTML = `
+        <div class="glass rounded-xl p-6 mb-6">
+            <h3 class="text-lg font-semibold text-white mb-4">🛡️ Admin Panel</h3>
+            <p class="text-sm text-gray-400 mb-4">Hanya admin yang bisa melihat halaman ini.</p>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="glass-light rounded-lg p-4 text-center cursor-pointer hover:bg-primary-900/20 transition" onclick="window.open('https://supabase.com/dashboard/project/${SUPABASE_URL.split('//')[1].split('.')[0]}/auth/users','_blank')">
+                    <p class="text-2xl font-bold text-blue-400">👥</p><p class="text-sm text-gray-300 mt-1">Kelola User (Supabase)</p>
+                </div>
+                <div class="glass-light rounded-lg p-4 text-center cursor-pointer hover:bg-primary-900/20 transition" onclick="window.open('https://supabase.com/dashboard/project/${SUPABASE_URL.split('//')[1].split('.')[0]}/editor','_blank')">
+                    <p class="text-2xl font-bold text-green-400">🗄️</p><p class="text-sm text-gray-300 mt-1">Database Editor</p>
+                </div>
+                <div class="glass-light rounded-lg p-4 text-center cursor-pointer hover:bg-primary-900/20 transition" onclick="exportData()">
+                    <p class="text-2xl font-bold text-purple-400">📥</p><p class="text-sm text-gray-300 mt-1">Export Data JSON</p>
+                </div>
+            </div>
+        </div>`;
+    }
+
+    async function loadPageData(containerId, mapper) {
+        const d = await getTenders();
+        document.getElementById(containerId).innerHTML = d.length ? mapper(d).join('') : '<p class="text-gray-500 text-center py-8">Belum ada data</p>';
+    }
+
+    function calculateProgress(i) {
+        let p = 0; if(i.status==='ok') p+=20; if(i.shipping_method) p+=30; if(i.shipping_delivered) p+=30; if(i.payment_status==='lunas') p+=20; return Math.min(p,100);
+    }
+
+    function exportData() {
+        getTenders().then(d => {
+            const blob = new Blob([JSON.stringify(d,null,2)], {type:'application/json'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a'); a.href=url; a.download='logistics_export.json'; a.click();
+            showToast('📥 Data terexport');
+        });
+    }
+
+    function showToast(msg, type='success') {
+        const t = document.getElementById('toast');
+        document.getElementById('toast-message').textContent = msg;
+        document.getElementById('toast-icon').textContent = type==='error'?'❌':'✅';
+        t.classList.remove('hidden');
+        setTimeout(()=>t.classList.add('hidden'), 3000);
     }
 
     function updateClock() {
-        const now = new Date();
-        document.getElementById('live-clock').textContent = now.toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }) + ' • ' + now.toLocaleTimeString('id-ID');
+        const n = new Date();
+        document.getElementById('live-clock').textContent = n.toLocaleDateString('id-ID',{weekday:'short',day:'numeric',month:'short',year:'numeric'}) + ' • ' + n.toLocaleTimeString('id-ID');
     }
 
-    document.addEventListener('DOMContentLoaded', () => {
-        updateClock();
-        setInterval(updateClock, 1000);
-        showPage('dashboard');
+    // INIT
+    document.addEventListener('DOMContentLoaded', async () => {
+        updateClock(); setInterval(updateClock, 1000);
+        const { data: { session } } = await supabase.auth.getSession();
+        initSession(session);
+        supabase.auth.onAuthStateChange((_, session) => initSession(session));
     });
     </script>
 </body>
