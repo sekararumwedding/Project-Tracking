@@ -4,218 +4,255 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Logistics Tracker</title>
-    <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
-        * { font-family: 'Inter', sans-serif; }
-        body { 
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body {
+            background: linear-gradient(135deg, #1e3a5f 0%, #0f1f3d 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
+            padding: 20px;
         }
-        .glass { 
-            background: rgba(30, 58, 95, 0.5); 
-            backdrop-filter: blur(16px);
-            border: 1px solid rgba(148, 163, 184, 0.1);
+        .container {
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 20px;
+            padding: 40px;
+            width: 100%;
+            max-width: 400px;
         }
-        .input-field {
-            background: rgba(15, 23, 42, 0.6);
-            border: 1px solid rgba(148, 163, 184, 0.2);
+        .logo {
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             color: white;
-            transition: all 0.2s;
+            font-size: 28px;
+            font-weight: bold;
+            margin: 0 auto 20px;
         }
-        .input-field:focus {
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        h1 { color: white; text-align: center; margin-bottom: 5px; font-size: 26px; }
+        .subtitle { color: #94a3b8; text-align: center; margin-bottom: 30px; font-size: 14px; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; color: #cbd5e1; margin-bottom: 8px; font-size: 14px; }
+        input {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(15,31,61,0.6);
+            border: 1px solid rgba(148,163,184,0.2);
+            border-radius: 10px;
+            color: white;
+            font-size: 14px;
+        }
+        input:focus {
             outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
         }
+        button {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        button:hover {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+        }
+        .toggle {
+            text-align: center;
+            margin-top: 20px;
+            color: #94a3b8;
+            font-size: 14px;
+        }
+        .toggle a {
+            color: #60a5fa;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+        .error {
+            background: rgba(239,68,68,0.2);
+            border: 1px solid rgba(239,68,68,0.5);
+            color: #fca5a5;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            display: none;
+        }
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
-<div class="w-full max-w-md p-6">
-    <div class="glass rounded-2xl p-8 shadow-2xl">
-        <!-- Logo -->
-        <div class="text-center mb-8">
-            <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl flex items-center justify-center text-white font-bold text-2xl mx-auto mb-4">
-                CS
-            </div>
-            <h1 class="text-3xl font-bold text-white mb-2">Logistics Tracker</h1>
-            <p class="text-slate-400 text-sm">PT. Cahaya Sejati Teknologi</p>
+<div class="container">
+    <div class="logo">CS</div>
+    <h1>Logistics Tracker</h1>
+    <p class="subtitle">PT. Cahaya Sejati Teknologi</p>
+
+    <div id="errorBox" class="error"></div>
+
+    <!-- LOGIN FORM -->
+    <div id="loginForm">
+        <div class="form-group">
+            <label>Email</label>
+            <input type="email" id="loginEmail" placeholder="nama@email.com">
         </div>
-
-        <!-- Form Login -->
-        <div id="loginForm">
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-slate-300 text-sm font-medium mb-2">Email</label>
-                    <input type="email" id="email" class="input-field w-full px-4 py-3 rounded-lg" placeholder="nama@email.com">
-                </div>
-                <div>
-                    <label class="block text-slate-300 text-sm font-medium mb-2">Password</label>
-                    <input type="password" id="password" class="input-field w-full px-4 py-3 rounded-lg" placeholder="••••••••">
-                </div>
-            </div>
-
-            <button onclick="doLogin()" class="w-full mt-6 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold py-3 rounded-lg transition-all transform hover:scale-[1.02]">
-                Masuk
-            </button>
-
-            <p class="text-center text-slate-400 mt-6 text-sm">
-                Belum punya akun? 
-                <button onclick="toggleForm()" class="text-blue-400 hover:text-blue-300 font-medium underline">Daftar</button>
-            </p>
+        <div class="form-group">
+            <label>Password</label>
+            <input type="password" id="loginPassword" placeholder="••••••••">
         </div>
-
-        <!-- Form Register -->
-        <div id="registerForm" class="hidden">
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-slate-300 text-sm font-medium mb-2">Nama Lengkap</label>
-                    <input type="text" id="regName" class="input-field w-full px-4 py-3 rounded-lg" placeholder="Nama Lengkap">
-                </div>
-                <div>
-                    <label class="block text-slate-300 text-sm font-medium mb-2">Email</label>
-                    <input type="email" id="regEmail" class="input-field w-full px-4 py-3 rounded-lg" placeholder="nama@email.com">
-                </div>
-                <div>
-                    <label class="block text-slate-300 text-sm font-medium mb-2">Password</label>
-                    <input type="password" id="regPassword" class="input-field w-full px-4 py-3 rounded-lg" placeholder="Minimal 6 karakter">
-                </div>
-            </div>
-
-            <button onclick="doRegister()" class="w-full mt-6 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold py-3 rounded-lg transition-all transform hover:scale-[1.02]">
-                Daftar Akun
-            </button>
-
-            <p class="text-center text-slate-400 mt-6 text-sm">
-                Sudah punya akun? 
-                <button onclick="toggleForm()" class="text-blue-400 hover:text-blue-300 font-medium underline">Masuk</button>
-            </p>
+        <button onclick="handleLogin()">Masuk</button>
+        <div class="toggle">
+            Belum punya akun? <a onclick="showRegister()">Daftar</a>
         </div>
+    </div>
 
-        <!-- Error Message -->
-        <div id="errorMsg" class="hidden mt-4 p-3 bg-red-500/20 border border-red-500/50 rounded-lg text-red-300 text-sm text-center"></div>
+    <!-- REGISTER FORM -->
+    <div id="registerForm" class="hidden">
+        <div class="form-group">
+            <label>Nama Lengkap</label>
+            <input type="text" id="regName" placeholder="Nama Lengkap">
+        </div>
+        <div class="form-group">
+            <label>Email</label>
+            <input type="email" id="regEmail" placeholder="nama@email.com">
+        </div>
+        <div class="form-group">
+            <label>Password</label>
+            <input type="password" id="regPassword" placeholder="Minimal 6 karakter">
+        </div>
+        <button onclick="handleRegister()">Daftar Akun</button>
+        <div class="toggle">
+            Sudah punya akun? <a onclick="showLogin()">Masuk</a>
+        </div>
     </div>
 </div>
 
 <script>
-// ========================================
-// KONFIGURASI SUPABASE - GANTI DISINI!
-// ========================================
-const SUPABASE_URL = 'https://ixgwxbehsmgmczzfvjse.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_xIL19QNKrG2iBzQyiO6EYw_LV0sda5-';
+// ============================================
+// GANTI DENGAN DATA SUPABASE ANDA
+// ============================================
+var SUPABASE_URL = 'https://ixgwxbehsmgmczzfvjse.supabase.co';
+var SUPABASE_ANON_KEY = 'https://ixgwxbehsmgmczzfvjse.supabase.co';
 
-// Inisialisasi Supabase Client
-const _supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+// Initialize Supabase
+var supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// Toggle Form Login/Register
-function toggleForm() {
-    const loginForm = document.getElementById('loginForm');
-    const registerForm = document.getElementById('registerForm');
-    const errorMsg = document.getElementById('errorMsg');
-    
-    loginForm.classList.toggle('hidden');
-    registerForm.classList.toggle('hidden');
-    errorMsg.classList.add('hidden');
-    
-    // Clear inputs
-    document.getElementById('email').value = '';
-    document.getElementById('password').value = '';
-    document.getElementById('regName').value = '';
-    document.getElementById('regEmail').value = '';
-    document.getElementById('regPassword').value = '';
+// Show error message
+function showError(message) {
+    var errorBox = document.getElementById('errorBox');
+    errorBox.textContent = message;
+    errorBox.style.display = 'block';
+    setTimeout(function() {
+        errorBox.style.display = 'none';
+    }, 5000);
 }
 
-// Fungsi Login
-async function doLogin() {
-    const email = document.getElementById('email').value.trim();
-    const password = document.getElementById('password').value;
-    const errorMsg = document.getElementById('errorMsg');
-    
+// Toggle forms
+function showRegister() {
+    document.getElementById('loginForm').classList.add('hidden');
+    document.getElementById('registerForm').classList.remove('hidden');
+    document.getElementById('errorBox').style.display = 'none';
+}
+
+function showLogin() {
+    document.getElementById('registerForm').classList.add('hidden');
+    document.getElementById('loginForm').classList.remove('hidden');
+    document.getElementById('errorBox').style.display = 'none';
+}
+
+// Handle Login
+function handleLogin() {
+    var email = document.getElementById('loginEmail').value.trim();
+    var password = document.getElementById('loginPassword').value;
+
     if (!email || !password) {
-        errorMsg.textContent = '⚠️ Email dan password wajib diisi';
-        errorMsg.classList.remove('hidden');
+        showError('⚠️ Email dan password wajib diisi');
         return;
     }
-    
-    try {
-        const { data, error } = await _supabaseClient.auth.signInWithPassword({
-            email: email,
-            password: password
-        });
-        
-        if (error) throw error;
-        
-        alert('✅ Login berhasil!');
-        // window.location.href = 'dashboard.html'; // Redirect ke dashboard
-        
-    } catch (err) {
-        errorMsg.textContent = '❌ ' + err.message;
-        errorMsg.classList.remove('hidden');
-        console.error('Login error:', err);
-    }
-}
 
-// Fungsi Register
-async function doRegister() {
-    const name = document.getElementById('regName').value.trim();
-    const email = document.getElementById('regEmail').value.trim();
-    const password = document.getElementById('regPassword').value;
-    const errorMsg = document.getElementById('errorMsg');
-    
-    if (!name || !email || !password) {
-        errorMsg.textContent = '⚠️ Semua field wajib diisi';
-        errorMsg.classList.remove('hidden');
-        return;
-    }
-    
-    if (password.length < 6) {
-        errorMsg.textContent = '⚠️ Password minimal 6 karakter';
-        errorMsg.classList.remove('hidden');
-        return;
-    }
-    
-    try {
-        const { data, error } = await _supabaseClient.auth.signUp({
-            email: email,
-            password: password,
-            options: {
-                 { name: name }
-            }
-        });
-        
-        if (error) throw error;
-        
-        // Simpan ke tabel profiles
-        if (data.user) {
-            await _supabaseClient.from('profiles').insert([{
-                id: data.user.id,
-                name: name,
-                role: 'pengguna'
-            }]);
+    supabaseClient.auth.signInWithPassword({
+        email: email,
+        password: password
+    }).then(function(response) {
+        if (response.error) {
+            showError('❌ ' + response.error.message);
+        } else {
+            alert('✅ Login berhasil!');
+            // window.location.href = 'dashboard.html';
         }
-        
-        alert('✅ Registrasi berhasil! Silakan login.');
-        toggleForm();
-        
-    } catch (err) {
-        errorMsg.textContent = '❌ ' + err.message;
-        errorMsg.classList.remove('hidden');
-        console.error('Register error:', err);
-    }
+    }).catch(function(err) {
+        showError('❌ ' + err.message);
+    });
 }
 
-// Enter key handler
+// Handle Register
+function handleRegister() {
+    var name = document.getElementById('regName').value.trim();
+    var email = document.getElementById('regEmail').value.trim();
+    var password = document.getElementById('regPassword').value;
+
+    if (!name || !email || !password) {
+        showError('⚠️ Semua field wajib diisi');
+        return;
+    }
+
+    if (password.length < 6) {
+        showError('⚠️ Password minimal 6 karakter');
+        return;
+    }
+
+    supabaseClient.auth.signUp({
+        email: email,
+        password: password,
+        options: {
+            data: {
+                name: name
+            }
+        }
+    }).then(function(response) {
+        if (response.error) {
+            showError('❌ ' + response.error.message);
+        } else {
+            // Save to profiles table
+            if (response.data && response.data.user) {
+                supabaseClient.from('profiles').insert([{
+                    id: response.data.user.id,
+                    name: name,
+                    role: 'pengguna'
+                }]).then(function() {
+                    alert('✅ Registrasi berhasil! Silakan login.');
+                    showLogin();
+                });
+            } else {
+                alert('✅ Registrasi berhasil! Silakan login.');
+                showLogin();
+            }
+        }
+    }).catch(function(err) {
+        showError('❌ ' + err.message);
+    });
+}
+
+// Enter key support
 document.addEventListener('keypress', function(e) {
     if (e.key === 'Enter') {
         if (!document.getElementById('loginForm').classList.contains('hidden')) {
-            doLogin();
+            handleLogin();
         } else {
-            doRegister();
+            handleRegister();
         }
     }
 });
