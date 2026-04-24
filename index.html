@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Logistics Tracking - PT. Cahaya Sejati Teknologi</title>
+    <title>Logistics Tracker - PT. Cahaya Sejati Teknologi</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
@@ -25,7 +25,10 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         * { font-family: 'Inter', sans-serif; }
-        body { background: linear-gradient(135deg, #0a0f1a 0%, #1a2332 100%); }
+        body { 
+            background: linear-gradient(135deg, #0a0f1a 0%, #1a2332 100%);
+            min-height: 100vh;
+        }
         .glass { 
             background: rgba(30, 58, 95, 0.4); 
             backdrop-filter: blur(12px); 
@@ -45,10 +48,10 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
-<body class="text-gray-200 min-h-screen flex items-center justify-center p-4">
+<body class="text-gray-200 flex items-center justify-center p-4">
 
     <!-- LOGIN VIEW -->
-    <div id="login-view" class="w-full max-w-md">
+    <div id="login-view" class="w-full max-w-md fade-in">
         <div class="glass rounded-2xl p-8 shadow-2xl">
             <div class="text-center mb-8">
                 <div class="w-16 h-16 rounded-xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white font-bold text-2xl mx-auto mb-4 shadow-lg">
@@ -59,7 +62,7 @@
             </div>
             
             <!-- Login Form -->
-            <div id="login-form" class="fade-in">
+            <div id="login-form">
                 <div class="space-y-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-300 mb-2">Email</label>
@@ -88,7 +91,7 @@
             </div>
 
             <!-- Register Form -->
-            <div id="register-form" class="hidden fade-in">
+            <div id="register-form" class="hidden">
                 <div class="space-y-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-300 mb-2">Nama Lengkap</label>
@@ -126,15 +129,14 @@
     </div>
 
     <script>
+    // ==========================================
     // ⚠️ GANTI DENGAN DATA SUPABASE ANDA ⚠️
+    // ==========================================
     const SUPABASE_URL = 'https://ixgwxbehsmgmczzfvjse.supabase.co';
-    const SUPABASE_ANON_KEY = 'https://ixgwxbehsmgmczzfvjse.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_xIL19QNKrG2iBzQyiO6EYw_LV0sda5-';
     
-    // Initialize Supabase - HANYA SEKALI
-    if (!window.supabaseClient) {
-        window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    }
-    const supabase = window.supabaseClient;
+    // Initialize Supabase - HANYA SEKALI (PENTING!)
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     // Toggle antara Login dan Register
     function toggleAuthMode() {
@@ -162,14 +164,13 @@
         
         try {
             const { data, error } = await supabase.auth.signInWithPassword({ 
-                email, 
-                password 
+                email: email, 
+                password: password 
             });
             
             if (error) throw error;
             
             alert('✅ Login berhasil!');
-            // Redirect ke dashboard atau reload
             location.reload();
             
         } catch (err) {
@@ -200,8 +201,8 @@
         
         try {
             const { data, error } = await supabase.auth.signUp({ 
-                email, 
-                password,
+                email: email, 
+                password: password,
                 options: {
                     data: { 
                         name: name 
@@ -223,7 +224,7 @@
                 ]);
             }
             
-            alert('✅ Registrasi berhasil! Silakan login dengan email dan password Anda.');
+            alert('✅ Registrasi berhasil! Silakan login.');
             toggleAuthMode();
             
         } catch (err) {
@@ -234,14 +235,14 @@
     }
 
     // Enter key support
-    document.addEventListener('DOMContentLoaded', () => {
-        document.getElementById('login-password').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') handleLogin();
-        });
-        
-        document.getElementById('reg-password').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') handleRegister();
-        });
+    document.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            if (!document.getElementById('login-form').classList.contains('hidden')) {
+                handleLogin();
+            } else {
+                handleRegister();
+            }
+        }
     });
     </script>
 </body>
