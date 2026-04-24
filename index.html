@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logistics Tracker</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { background-color: #0f172a; color: white; }
+        .hidden { display: none; }
+        .card { background: #1e293b; border-radius: 12px; padding: 24px; border: 1px solid #334155; }
+        input { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #475569; background: #0f172a; color: white; margin-bottom: 10px; }
+        button { width: 100%; padding: 10px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .btn-primary { background: #3b82f6; color: white; border: none; }
+        .btn-primary:hover { background: #2563eb; }
+        .btn-logout { background: #ef4444; color: white; border: none; width: auto; padding: 5px 15px; }
+        .alert { padding: 10px; border-radius: 8px; margin-bottom: 15px; text-align: center; font-size: 14px; }
+        .alert-error { background: #7f1d1d; color: #fca5a5; }
+        .alert-success { background: #14532d; color: #86efac; }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+
+    <!-- HALAMAN LOGIN & REGISTER -->
+    <div id="auth-page" class="w-full max-w-md">
+        <div class="card">
+            <div class="text-center mb-6">
+                <div class="w-12 h-12 bg-blue-600 rounded-lg mx-auto flex items-center justify-center text-xl font-bold mb-2">CS</div>
+                <h1 class="text-2xl font-bold">Logistics Tracker</h1>
+                <p class="text-slate-400 text-sm">PT. Cahaya Sejati Teknologi</p>
+            </div>
+
+            <div id="alert-box" class="alert hidden"></div>
+
+            <!-- Form Login -->
+            <div id="form-login">
+                <label class="text-sm text-slate-300">Email</label>
+                <input type="email" id="login-email" placeholder="email@contoh.com">
+                <label class="text-sm text-slate-300">Password</label>
+                <input type="password" id="login-password" placeholder="******">
+                <button onclick="doLogin()" class="btn-primary">Masuk</button>
+                <p class="text-center text-sm text-slate-400 mt-4">
+                    Belum punya akun? <a href="#" onclick="showRegister()" class="text-blue-400 underline">Daftar</a>
+                </p>
+            </div>
+
+            <!-- Form Register -->
+            <div id="form-register" class="hidden">
+                <label class="text-sm text-slate-300">Nama Lengkap</label>
+                <input type="text" id="reg-name" placeholder="Nama Anda">
+                <label class="text-sm text-slate-300">Email</label>
+                <input type="email" id="reg-email" placeholder="email@contoh.com">
+                <label class="text-sm text-slate-300">Password</label>
+                <input type="password" id="reg-password" placeholder="Minimal 6 karakter">
+                <button onclick="doRegister()" class="btn-primary bg-green-600 hover:bg-green-700">Daftar Akun</button>
+                <p class="text-center text-sm text-slate-400 mt-4">
+                    Sudah punya akun? <a href="#" onclick="showLogin()" class="text-blue-400 underline">Masuk</a>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- HALAMAN DASHBOARD (Awalnya Tersembunyi) -->
+    <div id="dashboard-page" class="hidden w-full max-w-6xl">
+        <!-- Navbar -->
+        <div class="flex justify-between items-center mb-8 bg-slate-800 p-4 rounded-lg">
+            <h1 class="text-xl font-bold">CS Logistics</h1>
+            <div class="flex items-center gap-3">
+                <span id="user-display-name" class="text-slate-300">User</span>
+                <span id="admin-badge" class="hidden bg-yellow-500 text-black text-xs font-bold px-2 py-1 rounded">ADMIN</span>
+                <button onclick="doLogout()" class="btn-logout">Logout</button>
+            </div>
+        </div>
+
+        <!-- Konten -->
+        <div class="bg-slate-800 p-8 rounded-lg text-center">
+            <h2 class="text-3xl font-bold mb-2">Selamat Datang! 👋</h2>
+            <p class="text-slate-400 mb-8">Anda berhasil login ke Logistics Tracker</p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-left">
+                <div class="bg-slate-700 p-6 rounded-lg">
+                    <h3 class="text-2xl font-bold text-blue-400">0</h3>
+                    <p class="text-sm text-slate-300">Total Tender</p>
+                </div>
+                <div class="bg-slate-700 p-6 rounded-lg">
+                    <h3 class="text-2xl font-bold text-yellow-400">0</h3>
+                    <p class="text-sm text-slate-300">Dalam Proses</p>
+                </div>
+                <div class="bg-slate-700 p-6 rounded-lg">
+                    <h3 class="text-2xl font-bold text-green-400">0</h3>
+                    <p class="text-sm text-slate-300">Selesai</p>
+                </div>
+                <div class="bg-slate-700 p-6 rounded-lg">
+                    <h3 class="text-2xl font-bold text-purple-400">0</h3>
+                    <p class="text-sm text-slate-300">Lunas</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // KONFIGURASI SUPABASE - GANTI INI!
+        // ==========================================
+        const SUPABASE_URL = 'https://ixgwxbehsmgmczzfvjse.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml4Z3d4YmVoc21nbWN6emZ2anNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5Njk3OTksImV4cCI6MjA5MjU0NTc5OX0.rnZYdHiqLzRz5xAb9DR3YmeWY91LsfJJYYoeWa7s7WA'; 
+
+        // Inisialisasi Supabase
+        const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // Fungsi Tampilkan Pesan
+        function showAlert(msg, type) {
+            const el = document.getElementById('alert-box');
+            el.textContent = msg;
+            el.className = `alert alert-${type}`;
+            el.style.display = 'block';
+            setTimeout(() => el.style.display = 'none', 3000);
+        }
+
+        // Fungsi Ganti Tampilan Login/Register
+        function showRegister() {
+            document.getElementById('form-login').classList.add('hidden');
+            document.getElementById('form-register').classList.remove('hidden');
+        }
+        function showLogin() {
+            document.getElementById('form-register').classList.add('hidden');
+            document.getElementById('form-login').classList.remove('hidden');
+        }
+
+        // --- FUNGSI LOGIN ---
+        async function doLogin() {
+            const email = document.getElementById('login-email').value.trim();
+            const pass = document.getElementById('login-password').value;
+
+            if (!email || !pass) return showAlert('Isi email dan password!', 'error');
+
+            const { data, error } = await client.auth.signInWithPassword({
+                email: email,
+                password: pass
+            });
+
+            if (error) return showAlert(error.message, 'error');
+
+            // Jika berhasil, masuk ke Dashboard
+            enterDashboard(data.session);
+        }
+
+        // --- FUNGSI REGISTER ---
+        async function doRegister() {
+            const name = document.getElementById('reg-name').value.trim();
+            const email = document.getElementById('reg-email').value.trim();
+            const pass = document.getElementById('reg-password').value;
+
+            if (!name || !email || !pass) return showAlert('Lengkapi semua data!', 'error');
+            if (pass.length < 6) return showAlert('Password minimal 6 karakter!', 'error');
+
+            const { data, error } = await client.auth.signUp({
+                email: email,
+                password: pass,
+                options: {
+                     { name: name }
+                }
+            });
+
+            if (error) return showAlert(error.message, 'error');
+            
+            // Simpan data profil ke tabel 'profiles'
+            if (data.user) {
+                await client.from('profiles').insert([
+                    { id: data.user.id, name: name, email: email, role: 'pengguna' }
+                ]);
+            }
+
+            showAlert('Registrasi berhasil! Silakan login.', 'success');
+            setTimeout(showLogin, 1500);
+        }
+
+        // --- FUNGSI MASUK DASHBOARD ---
+        async function enterDashboard(session) {
+            document.getElementById('auth-page').classList.add('hidden');
+            document.getElementById('dashboard-page').classList.remove('hidden');
+            
+            // Tampilkan Nama User
+            document.getElementById('user-display-name').textContent = session.user.email;
+
+            // CEK APAKAH ADMIN
+            // Kita cek di tabel 'profiles' apakah role = 'admin'
+            const {  profile, error } = await client
+                .from('profiles')
+                .select('role, name')
+                .eq('id', session.user.id)
+                .single();
+
+            if (profile) {
+                // Jika ada nama di database, pakai itu. Jika tidak, pakai email.
+                if(profile.name) document.getElementById('user-display-name').textContent = profile.name;
+                
+                // Jika role admin, tampilkan badge
+                if (profile.role === 'admin') {
+                    document.getElementById('admin-badge').classList.remove('hidden');
+                    console.log("Admin detected!");
+                }
+            }
+        }
+
+        // --- FUNGSI LOGOUT ---
+        async function doLogout() {
+            await client.auth.signOut();
+            location.reload(); // Refresh halaman
+        }
+
+        // CEK SESI SAAT HALAMAN DIBUKA
+        window.addEventListener('DOMContentLoaded', async () => {
+            const { data: { session } } = await client.auth.getSession();
+            if (session) {
+                enterDashboard(session);
+            }
+        });
+    </script>
+</body>
+</html>
