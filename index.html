@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logistics Tracker</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Segoe UI',sans-serif;background:#0a0f1a;color:#e2e8f0}
+        .hidden{display:none!important}
+        .login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:linear-gradient(135deg,#0a0f1a,#111827)}
+        .login-card{background:#1e293b;border-radius:20px;padding:40px;max-width:400px;width:100%;border:1px solid #1e293b}
+
+        .logo-icon{width:56px;height:56px;background:linear-gradient(135deg,#3b82f6,#2563eb);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;color:#fff;margin:0 auto 20px}
+        .login-card h2{color:#fff;text-align:center;font-size:24px;margin-bottom:4px}
+        .sub{color:#64748b;text-align:center;font-size:13px;margin-bottom:28px}
+        .login-card label{display:block;font-size:13px;color:#94a3b8;margin-bottom:6px}
+        .login-card input{width:100%;padding:12px 14px;border-radius:10px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;font-size:14px;margin-bottom:16px}
+        .login-card input:focus{outline:none;border-color:#3b82f6}
+        .btn-login{width:100%;padding:13px;background:linear-gradient(135deg,#3b82f6,#2563eb);border:none;border-radius:10px;color:#fff;font-size:15px;font-weight:600;cursor:pointer}
+        .toggle{text-align:center;margin-top:20px;font-size:13px;color:#64748b}
+        .toggle a{color:#60a5fa;cursor:pointer;text-decoration:underline}
+        .alert{padding:10px;border-radius:8px;margin-bottom:16px;text-align:center;display:none}
+        .alert-err{background:rgba(239,68,68,0.15);color:#fca5a5;border:1px solid rgba(239,68,68,0.3)}
+        .alert-ok{background:rgba(34,197,94,0.15);color:#86efac;border:1px solid rgba(34,197,94,0.3)}
+        .sidebar{width:260px;background:#0c1222;border-right:1px solid #1e293b;position:fixed;top:0;left:0;height:100vh;display:flex;flex-direction:column;z-index:100}
+        .sb-header{padding:20px;display:flex;align-items:center;gap:12px;border-bottom:1px solid #1e293b}
+        .sb-logo{width:40px;height:40px;background:linear-gradient(135deg,#3b82f6,#2563eb);border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;color:#fff}
+        .sb-brand h2{font-size:15px;color:#fff;font-weight:600}
+        .sb-brand p{font-size:11px;color:#64748b}
+        .sb-menu{flex:1;padding:16px 12px;overflow-y:auto}
+        .sb-item{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:8px;color:#94a3b8;font-size:14px;cursor:pointer;margin-bottom:2px}
+        .sb-item:hover{background:rgba(59,130,246,0.08);color:#e2e8f0}
+        .sb-item.active{background:rgba(59,130,246,0.12);color:#60a5fa}
+        .sb-item .icon{width:20px;text-align:center;font-size:16px}
+        .sb-footer{padding:16px 20px;border-top:1px solid #1e293b}
+        .sb-user{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+        .sb-avatar{width:36px;height:36px;background:#3b82f6;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#fff}
+        .sb-user-info h4{font-size:13px;color:#fff;font-weight:600;display:flex;align-items:center;gap:6px}
+        .sb-user-info p{font-size:11px;color:#64748b}
+        .sb-admin-badge{background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#000;font-size:9px;font-weight:700;padding:1px 6px;border-radius:99px}
+        .btn-logout{width:100%;padding:10px;background:#ef4444;border:none;border-radius:8px;color:#fff;font-size:13px;font-weight:600;cursor:pointer}
+        .main{margin-left:260px;padding:24px;min-height:100vh}
+        .top-bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:28px;flex-wrap:wrap;gap:12px}
+        .top-bar h1{font-size:26px;font-weight:700;color:#fff}
+        .subtitle{font-size:13px;color:#64748b;margin-top:2px}
+        .datetime-box{background:#111827;border:1px solid #1e293b;padding:8px 16px;border-radius:10px;font-size:13px;color:#94a3b8;display:flex;align-items:center;gap:8px}
+        .dot-live{width:8px;height:8px;background:#10b981;border-radius:50%}
+        .stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:24px}
+        .stat-card{background:#111827;border:1px solid #1e293b;border-radius:14px;padding:22px}
+        .sc-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+        .sc-label{font-size:11px;color:#64748b;text-transform:uppercase;font-weight:600}
+        .sc-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px}
+        .sc-icon.blue{background:rgba(59,130,246,0.15);color:#3b82f6}
+        .sc-icon.yellow{background:rgba(234,179,8,0.15);color:#eab308}
+        .sc-icon.green{background:rgba(34,197,94,0.15);color:#22c55e}
+        .sc-icon.purple{background:rgba(168,85,247,0.15);color:#a855f7}
+        .sc-icon.teal{background:rgba(20,184,166,0.15);color:#14b8a6}
+        .sc-value{font-size:30px;font-weight:700;color:#fff;margin-bottom:4px}
+        .sc-desc{font-size:12px;color:#64748b}
+        .section-card{background:#111827;border:1px solid #1e293b;border-radius:14px;padding:24px;margin-bottom:24px}
+        .section-card h3{font-size:17px;font-weight:600;color:#fff;margin-bottom:20px}
+        .summary-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
+        .summary-item{background:#0c1222;border:1px solid #1e293b;border-radius:12px;padding:20px;text-align:center}
+        .sv{font-size:26px;font-weight:700;margin-bottom:8px}
+        .sl{font-size:12px;color:#64748b;display:flex;align-items:center;justify-content:center;gap:6px}
+        .sdot{width:8px;height:8px;border-radius:50%}
+        .sdot.red{background:#ef4444}.sdot.green{background:#10b981}.sdot.yellow{background:#eab308}.sdot.purple{background:#a855f7}
+        .tender-card{background:#0c1222;border:1px solid #1e293b;border-radius:12px;padding:20px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
+        .tc-info h4{font-size:15px;color:#fff;font-weight:600;margin-bottom:4px}
+        .tc-cust{font-size:12px;color:#64748b;margin-bottom:8px}
+        .tc-meta{display:flex;gap:8px;flex-wrap:wrap}
+        .tc-tag{font-size:11px;padding:3px 10px;border-radius:6px;display:inline-flex;align-items:center;gap:4px}
+        .tc-tag.green{background:rgba(16,185,129,0.15);color:#10b981}
+        .tc-tag.gray{background:#1e293b;color:#94a3b8}
+        .tc-tag.amber{background:rgba(245,158,11,0.15);color:#f59e0b}
+        .tc-btn{padding:8px 18px;background:linear-gradient(135deg,#3b82f6,#2563eb);border:none;border-radius:20px;color:#fff;font-size:12px;font-weight:600;cursor:pointer}
+        .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+        .fg label{display:block;font-size:12px;color:#94a3b8;margin-bottom:6px}
+        .fg input,.fg select,.fg textarea{width:100%;padding:10px 14px;border-radius:8px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;font-size:13px}
+        .fg.full{grid-column:1/-1}
+        .form-btns{display:flex;gap:12px;margin-top:20px}
+        .form-btns button{flex:1;padding:12px;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;color:#fff}
+        .btn-save{background:linear-gradient(135deg,#10b981,#059669)}
+        .btn-cancel{background:#ef4444}
+        .tbl-wrap{overflow-x:auto}
+        table{width:100%;border-collapse:collapse}
+        table th{text-align:left;padding:12px 16px;font-size:11px;color:#64748b;text-transform:uppercase;font-weight:600;border-bottom:1px solid #1e293b}
+        table td{padding:14px 16px;font-size:14px;border-bottom:1px solid rgba(30,41,59,0.5)}
+        table td strong{color:#fff}
+        .status-badge{padding:4px 12px;border-radius:6px;font-size:12px;font-weight:600;display:inline-block}
+        .status-badge.pending{background:rgba(239,68,68,0.12);color:#f87171}
+        .status-badge.dp{background:rgba(245,158,11,0.12);color:#fbbf24}
+        .status-badge.lunas{background:rgba(34,197,94,0.12);color:#4ade80}
+        .btn-icon{padding:6px 14px;border:none;border-radius:8px;font-size:12px;cursor:pointer;color:#fff;margin-right:4px}
+        .btn-icon.edit{background:#3b82f6}
+        .btn-icon.del{background:#ef4444}
+        .empty{text-align:center;padding:50px 20px;color:#64748b}
+        .e-icon{font-size:48px;margin-bottom:12px}
+    </style>
+</head>
+<body>
+
+<div id="page-login" class="login-wrap">
+    <div class="login-card">
+        <div class="logo-icon">CS</div>
+        <h2>Logistics Tracker</h2>
+        <p class="sub">PT. Cahaya Sejati Teknologi</p>
+        <div id="alertBox" class="alert alert-err"></div>
+        <div id="formLogin">
+            <label>Email</label>
+            <input type="email" id="l-email" placeholder="nama@email.com">
+            <label>Password</label>
+            <input type="password" id="l-pass" placeholder="••••••••">
+            <button class="btn-login" onclick="doLogin()">Masuk</button>
+            <p class="toggle">Belum punya akun? <a onclick="showRegis()">Daftar</a></p>
+        </div>
+        <div id="formRegis" class="hidden">
+            <label>Nama Lengkap</label>
+            <input type="text" id="r-name" placeholder="Nama Anda">
+            <label>Email</label>
+            <input type="email" id="r-email" placeholder="nama@email.com">
+            <label>Password</label>
+            <input type="password" id="r-pass" placeholder="Minimal 6 karakter">
+            <button class="btn-login" onclick="doRegis()" style="background:linear-gradient(135deg,#10b981,#059669)">Daftar Akun</button>
+            <p class="toggle">Sudah punya akun? <a onclick="showLogin()">Masuk</a></p>
+        </div>
+    </div>
+</div>
+
+<div id="page-dash" class="hidden">
+    <div class="sidebar">
+        <div class="sb-header"><div class="sb-logo">CS</div><div class="sb-brand"><h2>Cahaya Sejati</h2><p>Logistics Tracker</p></div></div>
+        <div class="sb-menu">
+            <div class="sb-item active" onclick="goTo('dash')"><span class="icon">⊞</span> Dashboard</div>
+            <div class="sb-item" onclick="goTo('input')"><span class="icon">＋</span> Rencana Tender</div>
+            <div class="sb-item" onclick="goTo('tracking')"><span class="icon">≡</span> Tracking</div>
+            <div class="sb-item" onclick="goTo('shipping')"><span class="icon">🚚</span> Pengiriman</div>
+            <div class="sb-item" onclick="goTo('payment')"><span class="icon">💲</span> Pembayaran</div>
+            <div class="sb-item" onclick="goTo('docs')"><span class="icon">📄</span> Dokumen</div>
+            <div class="sb-item" onclick="goTo('labels')"><span class="icon">◈</span> Label & Progres</div>
+            <div class="sb-item" onclick="goTo('charts')"><span class="icon">📊</span> Grafik</div>
+        </div>
+        <div class="sb-footer">
+            <div class="sb-user"><div class="sb-avatar" id="sb-av">S</div><div class="sb-user-info"><h4 id="sb-nm">User</h4><p>Logistics Department</p></div></div>
+            <button class="btn-logout" onclick="doLogout()">Logout</button>
+        </div>
+    </div>
+
+    <div class="main">
+        <div class="top-bar">
+            <div><h1 id="pg-title">Dashboard</h1><p class="subtitle" id="pg-sub">Logistics Tracking System</p></div>
+            <div class="datetime-box"><span class="dot-live"></span><span id="dt-txt">Loading...</span></div>
+        </div>
+
+        <div id="sec-dash">
+            <div class="stats-row">
+                <div class="stat-card"><div class="sc-top"><span class="sc-label">Total Tender</span><div class="sc-icon blue">📋</div></div><div class="sc-value" id="s-total">0</div><div class="sc-desc">Semua tender</div></div>
+                <div class="stat-card"><div class="sc-top"><span class="sc-label">Dalam Proses</span><div class="sc-icon yellow">⏱</div></div><div class="sc-value" id="s-proses">0</div><div class="sc-desc">Sedang berjalan</div></div>
+                <div class="stat-card"><div class="sc-top"><span class="sc-label">Sudah Dikirim</span><div class="sc-icon green">✓</div></div><div class="sc-value" id="s-kirim">0</div><div class="sc-desc">Sudah dikirim</div></div>
+                <div class="stat-card"><div class="sc-top"><span class="sc-label">Lunas</span><div class="sc-icon purple">⊗</div></div><div class="sc-value" id="s-lunas">0</div><div class="sc-desc">Pembayaran lunas</div></div>
+                <div class="stat-card"><div class="sc-top"><span class="sc-label">Dokumen</span><div class="sc-icon teal">📄</div></div><div class="sc-value" id="s-dok">0</div><div class="sc-desc">File tersimpan</div></div>
+            </div>
+            <div class="section-card">
+                <h3>Ringkasan per Jenis Barang</h3>
+                <div class="summary-row">
+                    <div class="summary-item"><div class="sv" style="color:#ef4444" id="sm-bahaya">0</div><div class="sl"><span class="sdot red"></span> Berbahaya</div></div>
+                    <div class="summary-item"><div class="sv" style="color:#10b981" id="sm-aman">0</div><div class="sl"><span class="sdot green"></span> Aman</div></div>
+                    <div class="summary-item"><div class="sv" style="color:#eab308" id="sm-kimia">0</div><div class="sl"><span class="sdot yellow"></span> Kimia</div></div>
+                    <div class="summary-item"><div class="sv" style="color:#a855f7" id="sm-hewan">0</div><div class="sl"><span class="sdot purple"></span> Hewan Hidup</div></div>
+                </div>
+            </div>
+            <div class="section-card"><h3>Tender Terbaru</h3><div id="tender-list"></div></div>
+        </div>
+
+        <div id="sec-input" class="hidden">
+            <div class="section-card">
+                <h3>Input Rencana Tender</h3>
+                <form id="frm-tender" onsubmit="saveTender(event)">
+                    <input type="hidden" id="edit-id">
+                    <div class="form-grid">
+                        <div class="fg"><label>Nama Karyawan/CS *</label><input type="text" id="f-kar" required></div>
+                        <div class="fg"><label>Nama Tender *</label><input type="text" id="f-tender" required></div>
+                        <div class="fg"><label>Nama Customer *</label><input type="text" id="f-cust" required></div>
+                        <div class="fg"><label>PT Customer *</label><input type="text" id="f-pt" required></div>
+                        <div class="fg"><label>Nama Barang *</label><input type="text" id="f-brg" required></div>
+                        <div class="fg"><label>Jenis Barang *</label><select id="f-jenis" required><option value="">Pilih</option><option value="aman">🟢 Aman</option><option value="berbahaya">🔴 Berbahaya</option><option value="kimia">🟡 Kimia</option><option value="hewan">🟣 Hewan Hidup</option></select></div>
+                        <div class="fg"><label>Lokasi Asal *</label><input type="text" id="f-asal" required></div>
+                        <div class="fg"><label>Lokasi Tujuan *</label><input type="text" id="f-tujuan" required></div>
+                        <div class="fg"><label>Status Tender *</label><select id="f-status" required><option value="">Pilih</option><option value="planning">📝 Planning</option><option value="tender">📋 Proses Tender</option><option value="ok">✅ Deal/OK</option><option value="not-ok">❌ Gagal</option></select></div>
+                        <div class="fg"><label>Metode Pengiriman</label><select id="f-metode"><option value="">Belum ada</option><option value="udara">✈️ Udara</option><option value="laut">🚢 Laut</option><option value="darat">🚛 Darat</option></select></div>
+                        <div class="fg"><label>Nomor Resi/BL/AWB</label><input type="text" id="f-resi"></div>
+                        <div class="fg"><label>Status Pembayaran</label><select id="f-pay"><option value="pending">Pending</option><option value="dp">DP</option><option value="lunas">Lunas</option></select></div>
+                        <div class="fg full"><label>Catatan</label><textarea id="f-cat" rows="3"></textarea></div>
+                    </div>
+                    <div class="form-btns">
+                        <button type="submit" class="btn-save" id="btn-sub">💾 Simpan Tender</button>
+                        <button type="button" class="btn-cancel" onclick="resetForm()">Batal</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div id="sec-tracking" class="hidden">
+            <div class="section-card"><h3>Tracking Pengiriman</h3><div class="tbl-wrap"><table><thead><tr><th>Tender</th><th>Resi</th><th>Metode</th><th>Status</th><th>Aksi</th></tr></thead><tbody id="tb-track"></tbody></table></div></div>
+        </div>
+
+        <div id="sec-shipping" class="hidden">
+            <div class="section-card"><h3>Data Pengiriman</h3><div class="tbl-wrap"><table><thead><tr><th>Tender</th><th>Rute</th><th>Metode</th><th>Resi</th><th>Sampai</th><th>Aksi</th></tr></thead><tbody id="tb-ship"></tbody></table></div></div>
+        </div>
+
+        <div id="sec-payment" class="hidden">
+            <div class="section-card"><h3>Data Pembayaran</h3><div class="tbl-wrap"><table><thead><tr><th>Tender</th><th>Customer</th><th>Status</th><th>Aksi</th></tr></thead><tbody id="tb-pay"></tbody></table></div></div>
+        </div>
+
+        <div id="sec-docs" class="hidden"><div class="section-card"><h3>Dokumen</h3><div class="empty"><div class="e-icon">📄</div><h3>Belum ada dokumen</h3></div></div></div>
+        <div id="sec-labels" class="hidden"><div class="section-card"><h3>Label & Progres</h3><div class="empty"><div class="e-icon">◈</div><h3>Belum ada data</h3></div></div></div>
+        <div id="sec-charts" class="hidden"><div class="section-card"><h3>Grafik Statistik</h3><div class="empty"><div class="e-icon">📊</div><h3>Grafik akan segera hadir</h3></div></div></div>
+    </div>
+</div>
+
+<script>
+var SUPABASE_URL='https://ixgwxbehsmgmczzfvjse.supabase.co';
+var SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml4Z3d4YmVoc21nbWN6emZ2anNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5Njk3OTksImV4cCI6MjA5MjU0NTc5OX0.rnZYdHiqLzRz5xAb9DR3YmeWY91LsfJJYYoeWa7s7WA';
+var supabase=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+var isAdmin=false;
+var tenders=[];
+
+function showAlert(msg,type){
+    var el=document.getElementById('alertBox');
+    el.textContent=msg;
+    el.className='alert alert-'+type;
+    el.style.display='block';
+    setTimeout(function(){el.style.display='none'},4000);
+}
+
+function showRegis(){
+    document.getElementById('formLogin').classList.add('hidden');
+    document.getElementById('formRegis').classList.remove('hidden');
+    document.getElementById('alertBox').style.display='none';
+}
+
+function showLogin(){
+    document.getElementById('formRegis').classList.add('hidden');
+    document.getElementById('formLogin').classList.remove('hidden');
+    document.getElementById('alertBox').style.display='none';
+}
+
+function doLogin(){
+    var email=document.getElementById('l-email').value.trim();
+    var pass=document.getElementById('l-pass').value;
+    if(!email||!pass){showAlert('Isi email dan password!','err');return;}
+    supabase.auth.signInWithPassword({email:email,password:pass}).then(function(r){
+        if(r.error){showAlert(r.error.message,'err');}
+        else{initDash(r.data.session);}
+    });
+}
+
+function doRegis(){
+    var name=document.getElementById('r-name').value.trim();
+    var email=document.getElementById('r-email').value.trim();
+    var pass=document.getElementById('r-pass').value;
+    if(!name||!email||!pass){showAlert('Lengkapi semua data!','err');return;}
+    if(pass.length<6){showAlert('Password minimal 6 karakter!','err');return;}
+    supabase.auth.signUp({
+        email:email,
+        password:pass,
+        options:{
+            data:{
+                name:name
+            }
+        }
+    }).then(function(r){
+        if(r.error){showAlert(r.error.message,'err');}
+        else{
+            if(r.data&&r.data.user){
+                supabase.from('profiles').insert([{id:r.data.user.id,name:name,email:email,role:'pengguna'}]);
+            }
+            showAlert('Registrasi berhasil! Silakan login.','ok');
+            setTimeout(showLogin,1500);
+        }
+    });
+}
+
+function doLogout(){
+    supabase.auth.signOut().then(function(){location.reload();});
+}
+
+function initDash(session){
+    document.getElementById('page-login').classList.add('hidden');
+    document.getElementById('page-dash').classList.remove('hidden');
+    supabase.from('profiles').select('role,name').eq('id',session.user.id).single().then(function(r){
+        var nm=session.user.email.split('@')[0];
+        if(r.data){nm=r.data.name;isAdmin=r.data.role==='admin';document.getElementById('sb-nm').innerHTML=nm+(isAdmin?' <span class="sb-admin-badge">ADMIN</span>':'');}
+        document.getElementById('sb-av').textContent=nm.charAt(0).toUpperCase();
+    });
+    tickClock();setInterval(tickClock,1000);loadData();
+}
+
+function tickClock(){
+    var now=new Date();
+    var days=['Min','Sab','Sen','Sel','Rab','Kam','Jum'];
+    var months=['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+    var pad=function(n){return n<10?'0'+n:n;};
+    document.getElementById('dt-txt').textContent=days[now.getDay()]+', '+pad(now.getDate())+' '+months[now.getMonth()]+' '+now.getFullYear()+' • '+pad(now.getHours())+'.'+pad(now.getMinutes())+'.'+pad(now.getSeconds());
+}
+
+function goTo(sec){
+    var secs=document.querySelectorAll('[id^="sec-"]');
+    for(var i=0;i<secs.length;i++)secs[i].classList.add('hidden');
+    document.getElementById('sec-'+sec).classList.remove('hidden');
+    var items=document.querySelectorAll('.sb-item');
+    for(var i=0;i<items.length;i++)items[i].classList.remove('active');
+    var idx={dash:0,input:1,tracking:2,shipping:3,payment:4,docs:5,labels:6,charts:7};
+    items[idx[sec]].classList.add('active');
+    var t={dash:['Dashboard','Logistics Tracking System'],input:['Rencana Tender','Input data tender baru'],tracking:['Tracking','Pantau status pengiriman'],shipping:['Pengiriman','Data pengiriman aktif'],payment:['Pembayaran','Status pembayaran tender'],docs:['Dokumen','Kelola dokumen'],labels:['Label & Progres','Monitoring progres'],charts:['Grafik','Visualisasi data']};
+    document.getElementById('pg-title').textContent=t[sec][0];
+    document.getElementById('pg-sub').textContent=t[sec][1];
+    if(sec==='input')resetForm();
+}
+
+function loadData(){
+    supabase.from('tenders').select('*').order('created_at',{ascending:false}).then(function(r){
+        tenders=r.data||[];
+        renderDash();renderTrack();renderShip();renderPay();
+    });
+}
+
+function renderDash(){
+    document.getElementById('s-total').textContent=tenders.length;
+    document.getElementById('s-proses').textContent=tenders.filter(function(t){return t.status==='ok'&&!t.shipping_method;}).length;
+    document.getElementById('s-kirim').textContent=tenders.filter(function(t){return t.shipping_method;}).length;
+    document.getElementById('s-lunas').textContent=tenders.filter(function(t){return t.payment_status==='lunas';}).length;
+    document.getElementById('s-dok').textContent=tenders.filter(function(t){return t.dokumen;}).length;
+    document.getElementById('sm-bahaya').textContent=tenders.filter(function(t){return t.jenis==='berbahaya';}).length;
+    document.getElementById('sm-aman').textContent=tenders.filter(function(t){return t.jenis==='aman';}).length;
+    document.getElementById('sm-kimia').textContent=tenders.filter(function(t){return t.jenis==='kimia';}).length;
+    document.getElementById('sm-hewan').textContent=tenders.filter(function(t){return t.jenis==='hewan';}).length;
+    var list=document.getElementById('tender-list');
+    if(tenders.length===0){list.innerHTML='<div class="empty"><div class="e-icon">📋</div><h3>Belum ada data tender</h3></div>';return;}
+    var html='';
+    for(var i=0;i<Math.min(tenders.length,10);i++){
+        var t=tenders[i];
+        html+='<div class="tender-card"><div class="tc-info"><h4>'+(t.nama_tender||'-')+'</h4><div class="tc-cust">'+(t.pt_cust||'-')+' - '+(t.nama_cust||'')+'</div><div class="tc-meta"><span class="tc-tag green">● '+(t.jenis||'aman')+'</span><span class="tc-tag gray">CS: '+(t.karyawan||'-')+'</span><span class="tc-tag gray">Barang: '+(t.nama_barang||'-')+'</span><span class="tc-tag amber">📍 '+(t.lokasi_asal||'?')+' → '+(t.lokasi_tujuan||'?')+'</span></div></div><button class="tc-btn" onclick="editTender(\''+t.id+'\')">Proses Tender</button></div>';
+    }
+    list.innerHTML=html;
+}
+
+function renderTrack(){
+    var tb=document.getElementById('tb-track');
+    var shipped=tenders.filter(function(t){return t.shipping_method;});
+    if(shipped.length===0){tb.innerHTML='<tr><td colspan="5" style="text-align:center;color:#64748b;padding:40px;">Belum ada pengiriman</td></tr>';return;}
+    var html='';
+    for(var i=0;i<shipped.length;i++){
+        var t=shipped[i];
+        html+='<tr><td><strong>'+(t.nama_tender||'-')+'</strong></td><td>'+(t.shipping_resi||'-')+'</td><td>'+(t.shipping_method||'-')+'</td><td><span class="status-badge '+(t.shipping_delivered?'lunas':'pending')+'">'+(t.shipping_delivered?'Sampai':'Dalam Perjalanan')+'</span></td><td>'+(isAdmin?'<button class="btn-icon edit" onclick="editTender(\''+t.id+'\')">✏️</button>':'-')+'</td></tr>';
+    }
+    tb.innerHTML=html;
+}
+
+function renderShip(){
+    var tb=document.getElementById('tb-ship');
+    var shipped=tenders.filter(function(t){return t.shipping_method;});
+    if(shipped.length===0){tb.innerHTML='<tr><td colspan="6" style="text-align:center;color:#64748b;padding:40px;">Belum ada data</td></tr>';return;}
+    var html='';
+    for(var i=0;i<shipped.length;i++){
+        var t=shipped[i];
+        html+='<tr><td><strong>'+(t.nama_tender||'-')+'</strong></td><td>'+(t.lokasi_asal||'?')+' → '+(t.lokasi_tujuan||'?')+'</td><td>'+(t.shipping_method||'-')+'</td><td>'+(t.shipping_resi||'-')+'</td><td>'+(t.shipping_delivered?'✅ Ya':'⏳ Belum')+'</td><td>'+(isAdmin?'<button class="btn-icon edit" onclick="editTender(\''+t.id+'\')">✏️</button>':'-')+'</td></tr>';
+    }
+    tb.innerHTML=html;
+}
+
+function renderPay(){
+    var tb=document.getElementById('tb-pay');
+    if(tenders.length===0){tb.innerHTML='<tr><td colspan="4" style="text-align:center;color:#64748b;padding:40px;">Belum ada data</td></tr>';return;}
+    var html='';
+    for(var i=0;i<tenders.length;i++){
+        var t=tenders[i];
+        html+='<tr><td><strong>'+(t.nama_tender||'-')+'</strong></td><td>'+(t.pt_cust||'-')+'</td><td><span class="status-badge '+(t.payment_status==='lunas'?'lunas':t.payment_status==='dp'?'dp':'pending')+'">'+(t.payment_status||'pending')+'</span></td><td>'+(isAdmin?'<button class="btn-icon edit" onclick="editTender(\''+t.id+'\')">✏️</button>':'-')+'</td></tr>';
+    }
+    tb.innerHTML=html;
+}
+
+function resetForm(){
+    document.getElementById('frm-tender').reset();
+    document.getElementById('edit-id').value='';
+    document.getElementById('btn-sub').textContent='💾 Simpan Tender';
+}
+
+function saveTender(e){
+    e.preventDefault();
+    var eid=document.getElementById('edit-id').value;
+    var data={
+        karyawan:document.getElementById('f-kar').value.trim(),
+        nama_tender:document.getElementById('f-tender').value.trim(),
+        nama_cust:document.getElementById('f-cust').value.trim(),
+        pt_cust:document.getElementById('f-pt').value.trim(),
+        nama_barang:document.getElementById('f-brg').value.trim(),
+        jenis:document.getElementById('f-jenis').value,
+        lokasi_asal:document.getElementById('f-asal').value.trim(),
+        lokasi_tujuan:document.getElementById('f-tujuan').value.trim(),
+        status:document.getElementById('f-status').value,
+        shipping_method:document.getElementById('f-metode').value,
+        shipping_resi:document.getElementById('f-resi').value.trim(),
+        payment_status:document.getElementById('f-pay').value,
+        catatan:document.getElementById('f-cat').value.trim(),
+        updated_at:new Date().toISOString()
+    };
+    if(eid){
+        supabase.from('tenders').update(data).eq('id',eid).then(function(){
+            alert('✅ Tender berhasil diupdate!');resetForm();loadData();goTo('dash');
+        });
+    }else{
+        data.created_at=new Date().toISOString();
+        supabase.from('tenders').insert([data]).then(function(){
+            alert('✅ Tender berhasil disimpan!');resetForm();loadData();goTo('dash');
+        });
+    }
+}
+
+function editTender(id){
+    var t=null;
+    for(var i=0;i<tenders.length;i++){if(tenders[i].id===id){t=tenders[i];break;}}
+    if(!t)return;
+    document.getElementById('edit-id').value=id;
+    document.getElementById('f-kar').value=t.karyawan||'';
+    document.getElementById('f-tender').value=t.nama_tender||'';
+    document.getElementById('f-cust').value=t.nama_cust||'';
+    document.getElementById('f-pt').value=t.pt_cust||'';
+    document.getElementById('f-brg').value=t.nama_barang||'';
+    document.getElementById('f-jenis').value=t.jenis||'';
+    document.getElementById('f-asal').value=t.lokasi_asal||'';
+    document.getElementById('f-tujuan').value=t.lokasi_tujuan||'';
+    document.getElementById('f-status').value=t.status||'';
+    document.getElementById('f-metode').value=t.shipping_method||'';
+    document.getElementById('f-resi').value=t.shipping_resi||'';
+    document.getElementById('f-pay').value=t.payment_status||'pending';
+    document.getElementById('f-cat').value=t.catatan||'';
+    document.getElementById('btn-sub').textContent='💾 Update Tender';
+    goTo('input');
+}
+
+window.onload=function(){
+    supabase.auth.getSession().then(function(r){
+        if(r.data&&r.data.session){initDash(r.data.session);}
+    });
+};
+</script>
+
+</body>
+</html>
