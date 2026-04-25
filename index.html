@@ -1004,38 +1004,23 @@ function calculateCost() {
     var p = parseFloat(document.getElementById('calc-p').value) || 0;
     var l = parseFloat(document.getElementById('calc-l').value) || 0;
     var t = parseFloat(document.getElementById('calc-t').value) || 0;
-    var beratAsli = parseFloat(document.getElementById('calc-weight').value) || 0;
-    var jenisPengiriman = document.getElementById('calc-type').value;
-    var ruteHarga = document.getElementById('calc-route').value;
+    var berat = parseFloat(document.getElementById('calc-weight').value) || 0;
+    var jenis = document.getElementById('calc-type').value;
+    var rute = document.getElementById('calc-route').value;
     
-    if (p === 0 || l === 0 || t === 0 || beratAsli === 0 || ruteHarga === '') {
-        alert('Mohon lengkapi semua data!');
+    if (p === 0 || l === 0 || t === 0 || berat === 0 || rute === '') {
+        alert('Isi semua field!');
         return;
     }
     
     var volume = p * l * t;
-    var divisor = jenisPengiriman === 'udara' ? 6000 : 4000;
-    var beratVolume = volume / divisor;
-    var beratHitung = Math.max(beratAsli, beratVolume);
-    var hargaPerKg = parseFloat(ruteHarga);
-    var totalBiaya = beratHitung * hargaPerKg;
+    var divisor = (jenis === 'udara') ? 6000 : 4000;
+    var beratVol = volume / divisor;
+    var beratFinal = (berat > beratVol) ? berat : beratVol;
+    var harga = parseFloat(rute);
+    var total = beratFinal * harga;
     
-    var resultDiv = document.getElementById('calc-result');
-    if (!resultDiv) {
-        resultDiv = document.createElement('div');
-        resultDiv.id = 'calc-result';
-        resultDiv.className = 'calc-result';
-        document.querySelector('#sec-calculator .section-card').appendChild(resultDiv);
-    }
-    
-    resultDiv.innerHTML = '<h3 style="margin-bottom: 16px; color: #fff;">Hasil Perhitungan</h3>' +
-        '<div style="margin-bottom: 12px;"><span style="color: #94a3b8;">Volume:</span> <span style="color: #fff; font-weight: 600;">' + volume.toLocaleString('id-ID') + ' cm³</span></div>' +
-        '<div style="margin-bottom: 12px;"><span style="color: #94a3b8;">Berat Volume:</span> <span style="color: #fff; font-weight: 600;">' + beratVolume.toFixed(2) + ' kg</span></div>' +
-        '<div style="margin-bottom: 12px;"><span style="color: #94a3b8;">Berat Asli:</span> <span style="color: #fff; font-weight: 600;">' + beratAsli + ' kg</span></div>' +
-        '<div style="margin-bottom: 12px; padding-top: 12px; border-top: 2px solid #3b82f6;"><span style="color: #94a3b8;">Berat Hitung:</span> <span style="color: #fbbf24; font-weight: 700;">' + beratHitung.toFixed(2) + ' kg</span></div>' +
-        '<div style="margin-top: 16px; font-size: 18px; color: #10b981; font-weight: 700;">Total: Rp ' + totalBiaya.toLocaleString('id-ID') + '</div>';
-    
-    resultDiv.style.display = 'block';
+    alert('Volume: ' + volume + ' cm³\nBerat Volume: ' + beratVol.toFixed(2) + ' kg\nBerat Hitung: ' + beratFinal.toFixed(2) + ' kg\n\nTOTAL: Rp ' + total.toLocaleString('id-ID'));
 }
 function submitChinaOrder(e) {
     e.preventDefault();
