@@ -599,11 +599,13 @@
 // ============================================
 // KONFIGURASI SUPABASE
 // ============================================
-var SUPABASE_URL = 'https://ixgwxbehsmgmczzfvjse.supabase.co';
+var SUPABASE_URL = 'https://ixgwxbehsmgmzzfvjse.supabase.co';
 var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml4Z3d4YmVoc21nbWN6emZ2anNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5Njk3OTksImV4cCI6MjA5MjU0NTc5OX0.rnZYdHiqLzRz5xAb9DR3YmeWY91LsfJJYYoeWa7s7WA';
 var supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+var isAdmin = false;
 var tenders = [];
+var documents = [];
 
 // ============================================
 // FUNGSI ALERT
@@ -618,7 +620,7 @@ function showAlert(msg, type) {
 }
 
 // ============================================
-// FUNGSI NAVIGASI FORM
+// FUNGSI NAVIGASI FORM AUTH
 // ============================================
 function showRegis() {
     var loginForm = document.getElementById('formLogin');
@@ -639,7 +641,7 @@ function showLogin() {
 }
 
 // ============================================
-// FUNGSI LOGIN
+// FUNGSI AUTH
 // ============================================
 function doLogin() {
     var email = document.getElementById('l-email').value.trim();
@@ -665,9 +667,6 @@ function doLogin() {
     });
 }
 
-// ============================================
-// FUNGSI REGISTER
-// ============================================
 function doRegis() {
     var name = document.getElementById('r-name').value.trim();
     var email = document.getElementById('r-email').value.trim();
@@ -682,12 +681,11 @@ function doRegis() {
         return;
     }
 
-    // Daftar tanpa langsung insert ke profiles
     supabase.auth.signUp({
         email: email,
         password: pass,
         options: {
-            data: {
+             {
                 name: name
             }
         }
@@ -699,6 +697,66 @@ function doRegis() {
             setTimeout(showLogin, 2000);
         }
     });
+}
+
+function doLogout() {
+    supabase.auth.signOut().then(function() {
+        location.reload();
+    });
+}
+
+// ============================================
+// FUNGSI NAVIGASI MENU (goTo)
+// ============================================
+function goTo(section) {
+    // Hide all sections
+    var sections = document.querySelectorAll('[id^="sec-"]');
+    for (var i = 0; i < sections.length; i++) {
+        sections[i].classList.add('hidden');
+    }
+    
+    // Show target section
+    var targetSection = document.getElementById('sec-' + section);
+    if (targetSection) {
+        targetSection.classList.remove('hidden');
+    }
+    
+    // Update active menu
+    var menuItems = document.querySelectorAll('.menu-item');
+    for (var i = 0; i < menuItems.length; i++) {
+        menuItems[i].classList.remove('active');
+    }
+    
+    // Update page title
+    var titles = {
+        'dashboard': ['Dashboard', 'Sistem Manajemen Logistik Terpadu'],
+        'calculator': ['Kalkulator Biaya', 'Hitung estimasi biaya pengiriman'],
+        'china-service': ['Jasa Beli China', 'Request order produk dari China'],
+        'tender': ['Rencana Tender', 'Input data tender baru'],
+        'tracking': ['Tracking', 'Pantau posisi pengiriman'],
+        'shipping': ['Pengiriman', 'Data pengiriman aktif'],
+        'payment': ['Pembayaran', 'Status pembayaran'],
+        'documents': ['Dokumen', 'Kelola dokumen']
+    };
+    
+    var pgTitle = document.getElementById('pg-title');
+    var pgSub = document.getElementById('pg-sub');
+    if (pgTitle && titles[section]) pgTitle.textContent = titles[section][0];
+    if (pgSub && titles[section]) pgSub.textContent = titles[section][1];
+    
+    // Load data based on section
+    if (section === 'tender') {
+        resetForm();
+    } else if (section === 'tracking') {
+        setTimeout(initMap, 100);
+    }
+    
+    // Load data
+    if (section === 'dashboard' || section === 'tender') {
+        loadData();
+    } else if (section === 'documents') {
+        loadDocuments();
+    }
 }
 
 // ============================================
@@ -716,20 +774,39 @@ function initDash(session) {
         var nm = session.user.email.split('@')[0];
         if (r.data) {
             nm = r.data.name;
+            isAdmin = r.data.role === 'admin';
             var sbNm = document.getElementById('sb-nm');
-            if (sbNm) sbNm.textContent = nm;
+            if (sbNm) {
+                sbNm.textContent = nm;
+                if (isAdmin) {
+                    sbNm.innerHTML = nm + ' <span class="admin-badge">ADMIN</span>';
+                }
+            }
         }
         var sbAv = document.getElementById('sb-av');
         if (sbAv) sbAv.textContent = nm.charAt(0).toUpperCase();
     });
     
+    tickClock();
+    setInterval(tickClock, 1000);
     loadData();
+}
+
+function tickClock() {
+    var now = new Date();
+    var days = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
+    var months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+    var pad = function(n) { return n < 10 ? '0' + n : n; };
+    var dtTxt = document.getElementById('dt-txt');
+    if (dtTxt) {
+        dtTxt.textContent = days[now.getDay()] + ', ' + pad(now.getDate()) + ' ' + months[now.getMonth()] + ' ' + now.getFullYear() + ' • ' + pad(now.getHours()) + ':' + pad(now.getMinutes()) + ':' + pad(now.getSeconds());
+    }
 }
 
 function loadData() {
     supabase.from('tenders').select('*').order('created_at', { ascending: false }).then(function(r) {
         if (r.error) {
-            console.error('Error loading data:', r.error);
+            console.error('Error loading ', r.error);
             return;
         }
         tenders = r.data || [];
@@ -744,7 +821,7 @@ function renderDash() {
     var sLunas = document.getElementById('s-lunas');
     
     if (sTotal) sTotal.textContent = tenders.length;
-    if (sProses) sProses.textContent = tenders.filter(function(t) { return t.status === 'ok'; }).length;
+    if (sProses) sProses.textContent = tenders.filter(function(t) { return t.status === 'ok' && !t.shipping_method; }).length;
     if (sKirim) sKirim.textContent = tenders.filter(function(t) { return t.shipping_method; }).length;
     if (sLunas) sLunas.textContent = tenders.filter(function(t) { return t.payment_status === 'lunas'; }).length;
     
@@ -752,32 +829,154 @@ function renderDash() {
     if (!list) return;
     
     if (tenders.length === 0) {
-        list.innerHTML = '<div class="text-center py-12 text-gray-400"><p>Belum ada data tender</p></div>';
+        list.innerHTML = '<div class="text-center py-12 text-gray-400"><i class="fas fa-folder-open" style="font-size: 48px; margin-bottom: 12px; opacity: 0.5;"></i><p>Belum ada data tender</p></div>';
         return;
     }
     
-    var html = '<div class="table-container"><table><thead><tr><th>Tender</th><th>Customer</th><th>Status</th></tr></thead><tbody>';
+    var html = '<div class="table-container"><table><thead><tr><th>Tender</th><th>Customer</th><th>Rute</th><th>Status</th><th>Aksi</th></tr></thead><tbody>';
     for (var i = 0; i < Math.min(tenders.length, 10); i++) {
         var t = tenders[i];
-        html += '<tr><td><strong>' + (t.nama_tender || '-') + '</strong></td>';
+        html += '<tr>';
+        html += '<td><strong>' + (t.nama_tender || '-') + '</strong></td>';
         html += '<td>' + (t.pt_cust || '-') + '</td>';
-        html += '<td>' + (t.status || '-') + '</td></tr>';
+        html += '<td>' + (t.lokasi_asal || '?') + ' → ' + (t.lokasi_tujuan || '?') + '</td>';
+        html += '<td><span class="badge ' + (t.status === 'ok' ? 'badge-success' : t.status === 'not-ok' ? 'badge-danger' : 'badge-warning') + '">' + (t.status || '-') + '</span></td>';
+        html += '<td><button class="btn btn-primary btn-sm" onclick="editTender(\'' + t.id + '\')"><i class="fas fa-edit"></i> Edit</button></td>';
+        html += '</tr>';
     }
     html += '</tbody></table></div>';
     list.innerHTML = html;
 }
 
 // ============================================
+// FUNGSI CRUD TENDER
+// ============================================
+function resetForm() {
+    var form = document.getElementById('frm-tender');
+    if (form) form.reset();
+    var editId = document.getElementById('edit-id');
+    if (editId) editId.value = '';
+    var btnSub = document.getElementById('btn-sub');
+    if (btnSub) btnSub.innerHTML = '<i class="fas fa-save"></i> Simpan Tender';
+}
+
+function saveTender(e) {
+    e.preventDefault();
+    
+    var eid = document.getElementById('edit-id').value;
+    var data = {
+        karyawan: document.getElementById('f-kar').value.trim(),
+        nama_tender: document.getElementById('f-tender').value.trim(),
+        nama_cust: document.getElementById('f-cust').value.trim(),
+        pt_cust: document.getElementById('f-pt').value.trim(),
+        nama_barang: document.getElementById('f-brg').value.trim(),
+        jenis: document.getElementById('f-jenis').value,
+        lokasi_asal: document.getElementById('f-asal').value.trim(),
+        lokasi_tujuan: document.getElementById('f-tujuan').value.trim(),
+        status: document.getElementById('f-status').value,
+        shipping_method: document.getElementById('f-metode').value,
+        shipping_resi: document.getElementById('f-resi').value.trim(),
+        payment_status: document.getElementById('f-pay').value,
+        catatan: document.getElementById('f-cat').value.trim(),
+        updated_at: new Date().toISOString()
+    };
+
+    if (eid) {
+        supabase.from('tenders').update(data).eq('id', eid).then(function(response) {
+            if (response.error) { 
+                alert('❌ Gagal update: ' + response.error.message); 
+            } else { 
+                alert('✅ Tender berhasil diupdate!'); 
+                resetForm(); 
+                loadData(); 
+                goTo('dashboard'); 
+            }
+        });
+    } else {
+        data.created_at = new Date().toISOString();
+        supabase.from('tenders').insert([data]).then(function(response) {
+            if (response.error) { 
+                alert('❌ Gagal simpan: ' + response.error.message); 
+            } else { 
+                alert('✅ Tender berhasil disimpan!'); 
+                resetForm(); 
+                loadData(); 
+                goTo('dashboard'); 
+            }
+        });
+    }
+}
+
+function editTender(id) {
+    var t = null;
+    for (var i = 0; i < tenders.length; i++) { 
+        if (tenders[i].id === id) { 
+            t = tenders[i]; 
+            break; 
+        } 
+    }
+    if (!t) return;
+    
+    document.getElementById('edit-id').value = id;
+    document.getElementById('f-kar').value = t.karyawan || '';
+    document.getElementById('f-tender').value = t.nama_tender || '';
+    document.getElementById('f-cust').value = t.nama_cust || '';
+    document.getElementById('f-pt').value = t.pt_cust || '';
+    document.getElementById('f-brg').value = t.nama_barang || '';
+    document.getElementById('f-jenis').value = t.jenis || '';
+    document.getElementById('f-asal').value = t.lokasi_asal || '';
+    document.getElementById('f-tujuan').value = t.lokasi_tujuan || '';
+    document.getElementById('f-status').value = t.status || '';
+    document.getElementById('f-metode').value = t.shipping_method || '';
+    document.getElementById('f-resi').value = t.shipping_resi || '';
+    document.getElementById('f-pay').value = t.payment_status || 'pending';
+    document.getElementById('f-cat').value = t.catatan || '';
+    
+    var btnSub = document.getElementById('btn-sub');
+    if (btnSub) btnSub.innerHTML = '<i class="fas fa-sync"></i> Update Tender';
+    goTo('tender');
+}
+
+// ============================================
+// FUNGSI LAINNYA (Placeholder)
+// ============================================
+function loadDocuments() {
+    // Placeholder - implementasi sesuai kebutuhan
+}
+
+function initMap() {
+    // Placeholder - implementasi Leaflet.js
+    console.log('Map initialized');
+}
+
+function calculateCost() {
+    alert('Fitur kalkulator - silakan implementasi sesuai kebutuhan');
+}
+
+function submitChinaOrder(e) {
+    e.preventDefault();
+    alert('Request order China berhasil dikirim!');
+    e.target.reset();
+}
+
+function uploadDocument(e) {
+    alert('Upload dokumen - silakan implementasi sesuai kebutuhan');
+}
+
+function exportToExcel(tableId, filename) {
+    alert('Export Excel - silakan implementasi dengan library SheetJS');
+}
+
+// ============================================
 // INIT APP
 // ============================================
 window.onload = function() {
-    console.log('App started');
+    console.log('🚀 CST Logistic Tracker App started');
     supabase.auth.getSession().then(function(r) {
         if (r.data && r.data.session) {
             initDash(r.data.session);
         }
     });
 };
-</script>
-</body>
+</script></body>
 </html>
