@@ -477,9 +477,16 @@
                         <button type="submit" class="btn btn-success" id="btn-sub">
                             <i class="fas fa-save"></i> Simpan Tender
                         </button>
-                        <button type="button" class="btn btn-secondary" onclick="resetForm()">
-                            <i class="fas fa-undo"></i> Batal
-                        </button>
+                        <button type="button" class="btn btn-secondary" 
+                                onclick="document.getElementById('frm-tender').reset(); 
+                                         document.getElementById('edit-id').value=''; 
+                                         document.getElementById('btn-sub').innerHTML='<i class=\'fas fa-save\'></i> Simpan Tender'; 
+                                         var dashSection = document.getElementById('sec-dashboard');
+                                         var inputSection = document.getElementById('sec-input');
+                                         if(dashSection) dashSection.classList.remove('hidden');
+                                         if(inputSection) inputSection.classList.add('hidden');">
+                           <i class="fas fa-undo"></i> Batal
+                       </button>
                     </div>
                 </form>
             </div>
