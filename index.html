@@ -660,7 +660,7 @@ function doLogin() {
         showAlert('Error: ' + err.message, 'err');
     });
 }
-unction doRegis() {
+function doRegis() {
     var name = document.getElementById('r-name').value.trim();
     var email = document.getElementById('r-email').value.trim();
     var pass = document.getElementById('r-pass').value;
@@ -718,7 +718,8 @@ unction doRegis() {
         console.error('❌ Signup error:', err);
         showAlert('Error: ' + err.message, 'err');
     });
-}function doLogout() {
+}
+function doLogout() {
     supabase.auth.signOut().then(function() { location.reload(); });
 }
 
