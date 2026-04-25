@@ -646,25 +646,52 @@ function doRegis() {
     var name = document.getElementById('r-name').value.trim();
     var email = document.getElementById('r-email').value.trim();
     var pass = document.getElementById('r-pass').value;
-    if (!name || !email || !pass) { showAlert('Lengkapi semua data!', 'err'); return; }
-    if (pass.length < 6) { showAlert('Password minimal 6 karakter!', 'err'); return; }
     
+    if (!name || !email || !pass) { 
+        showAlert('Lengkapi semua data!', 'err'); 
+        return; 
+    }
+    if (pass.length < 6) { 
+        showAlert('Password minimal 6 karakter!', 'err'); 
+        return; 
+    }
+    
+    // Daftar di Supabase Auth
     supabase.auth.signUp({
         email: email,
         password: pass,
-        options: { data: { name: name } }
-    }).then(function(r) {
-        if (r.error) { showAlert(r.error.message, 'err'); }
-        else {
-            if (r.data && r.data.user) {
-                supabase.from('profiles').insert([{ id: r.data.user.id, name: name, email: email, role: 'pengguna' }]);
+        options: {
+            data: {
+                name: name
             }
-            showAlert('Registrasi berhasil! Silakan login.', 'ok');
-            setTimeout(showLogin, 1500);
+        }
+    }).then(function(r) {
+        if (r.error) { 
+            showAlert(r.error.message, 'err'); 
+        } else {
+            // Simpan ke tabel profiles
+            if (r.data && r.data.user) {
+                supabase.from('profiles').insert([{
+                    id: r.data.user.id,
+                    name: name,
+                    email: email,
+                    role: 'pengguna'
+                }]).then(function(profileResult) {
+                    if (profileResult.error) {
+                        console.error('Profile error:', profileResult.error);
+                        showAlert('Registrasi berhasil tapi gagal simpan profile. Error: ' + profileResult.error.message, 'err');
+                    } else {
+                        showAlert('Registrasi berhasil! Silakan login.', 'ok');
+                        setTimeout(showLogin, 1500);
+                    }
+                });
+            } else {
+                showAlert('Registrasi berhasil! Silakan login.', 'ok');
+                setTimeout(showLogin, 1500);
+            }
         }
     });
 }
-
 function doLogout() {
     supabase.auth.signOut().then(function() { location.reload(); });
 }
@@ -1056,11 +1083,25 @@ function exportToExcel(tableId, filename) {
 // INIT
 // ============================================
 window.onload = function() {
-    supabase.auth.getSession().then(function(r) {
-        if (r.data && r.data.session) { initDash(r.data.session); }
+    console.log('🚀 App started');
+    console.log('Supabase URL:', SUPABASE_URL);
+    console.log('Supabase Key:', SUPABASE_KEY.substring(0, 20) + '...');
+    
+    // Test koneksi
+    supabase.from('profiles').select('count').then(function(r) {
+        if (r.error) {
+            console.error('❌ Database connection error:', r.error);
+        } else {
+            console.log('✅ Database connected!');
+        }
     });
-};
-</script>
+    
+    supabase.auth.getSession().then(function(r) {
+        if (r.data && r.data.session) { 
+            initDash(r.data.session); 
+        }
+    });
+};</script>
 
 </body>
 </html>
