@@ -685,7 +685,7 @@ function doRegis() {
         email: email,
         password: pass,
         options: {
-            data: {
+             {
                 name: name
             }
         }
@@ -698,7 +698,6 @@ function doRegis() {
         }
     });
 }
-
 function doLogout() {
     supabase.auth.signOut().then(function() {
         location.reload();
@@ -769,10 +768,27 @@ function initDash(session) {
     if (loginPage) loginPage.classList.add('hidden');
     if (dashPage) dashPage.classList.remove('hidden');
     
-    // Load profile
+    // Load profile dengan error handling yang lebih baik
     supabase.from('profiles').select('role, name').eq('id', session.user.id).single().then(function(r) {
         var nm = session.user.email.split('@')[0];
-        if (r.data) {
+        
+        if (r.error) {
+            console.log('Profile not found, creating one...');
+            // Auto-create profile jika belum ada
+            supabase.from('profiles').insert([{
+                id: session.user.id,
+                name: nm,
+                email: session.user.email,
+                role: 'pengguna'
+            }]).then(function(insertResult) {
+                if (insertResult.error) {
+                    console.error('Failed to create profile:', insertResult.error);
+                }
+                // Set default values
+                document.getElementById('sb-nm').textContent = nm;
+                document.getElementById('sb-av').textContent = nm.charAt(0).toUpperCase();
+            });
+        } else if (r.data) {
             nm = r.data.name;
             isAdmin = r.data.role === 'admin';
             var sbNm = document.getElementById('sb-nm');
@@ -782,16 +798,19 @@ function initDash(session) {
                     sbNm.innerHTML = nm + ' <span class="admin-badge">ADMIN</span>';
                 }
             }
+            var sbAv = document.getElementById('sb-av');
+            if (sbAv) sbAv.textContent = nm.charAt(0).toUpperCase();
+        } else {
+            // Fallback
+            document.getElementById('sb-nm').textContent = nm;
+            document.getElementById('sb-av').textContent = nm.charAt(0).toUpperCase();
         }
-        var sbAv = document.getElementById('sb-av');
-        if (sbAv) sbAv.textContent = nm.charAt(0).toUpperCase();
     });
     
     tickClock();
     setInterval(tickClock, 1000);
     loadData();
 }
-
 function tickClock() {
     var now = new Date();
     var days = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
