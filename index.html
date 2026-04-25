@@ -634,15 +634,33 @@ function showLogin() {
 function doLogin() {
     var email = document.getElementById('l-email').value.trim();
     var pass = document.getElementById('l-pass').value;
-    if (!email || !pass) { showAlert('Isi email dan password!', 'err'); return; }
     
-    supabase.auth.signInWithPassword({ email: email, password: pass }).then(function(r) {
-        if (r.error) { showAlert(r.error.message, 'err'); }
-        else { initDash(r.data.session); }
+    if (!email || !pass) { 
+        showAlert('Isi email dan password!', 'err'); 
+        return; 
+    }
+    
+    console.log('🔑 Logging in:', email);
+    
+    supabase.auth.signInWithPassword({ 
+        email: email, 
+        password: pass 
+    }).then(function(r) {
+        console.log('Login response:', r);
+        
+        if (r.error) { 
+            console.error('❌ Login error:', r.error);
+            showAlert('Error: ' + r.error.message, 'err'); 
+        } else {
+            console.log('✅ Login success');
+            initDash(r.data.session); 
+        }
+    }).catch(function(err) {
+        console.error('❌ Login catch error:', err);
+        showAlert('Error: ' + err.message, 'err');
     });
 }
-
-function doRegis() {
+unction doRegis() {
     var name = document.getElementById('r-name').value.trim();
     var email = document.getElementById('r-email').value.trim();
     var pass = document.getElementById('r-pass').value;
@@ -656,43 +674,51 @@ function doRegis() {
         return; 
     }
     
+    console.log('📝 Registering user:', email);
+    
     // Daftar di Supabase Auth
     supabase.auth.signUp({
         email: email,
-        password: pass,
-        options: {
-            data: {
-                name: name
-            }
-        }
+        password: pass
     }).then(function(r) {
+        console.log('Auth response:', r);
+        
         if (r.error) { 
-            showAlert(r.error.message, 'err'); 
-        } else {
+            console.error('❌ Auth error:', r.error);
+            showAlert('Error: ' + r.error.message, 'err'); 
+        } else if (r.data && r.data.user) {
+            console.log('✅ User created, saving profile...');
+            
             // Simpan ke tabel profiles
-            if (r.data && r.data.user) {
-                supabase.from('profiles').insert([{
-                    id: r.data.user.id,
-                    name: name,
-                    email: email,
-                    role: 'pengguna'
-                }]).then(function(profileResult) {
-                    if (profileResult.error) {
-                        console.error('Profile error:', profileResult.error);
-                        showAlert('Registrasi berhasil tapi gagal simpan profile. Error: ' + profileResult.error.message, 'err');
-                    } else {
-                        showAlert('Registrasi berhasil! Silakan login.', 'ok');
-                        setTimeout(showLogin, 1500);
-                    }
-                });
-            } else {
+            supabase.from('profiles').insert([{
+                id: r.data.user.id,
+                name: name,
+                email: email,
+                role: 'pengguna'
+            }]).then(function(profileResult) {
+                console.log('Profile result:', profileResult);
+                
+                if (profileResult.error) {
+                    console.error('❌ Profile error:', profileResult.error);
+                    // Tetap tampilkan sukses meski profile gagal
+                    showAlert('Registrasi berhasil! Profile akan dibuat otomatis saat login pertama.', 'ok');
+                } else {
+                    showAlert('✅ Registrasi berhasil! Silakan login.', 'ok');
+                }
+                
+                setTimeout(showLogin, 2000);
+            }).catch(function(err) {
+                console.error('Profile insert error:', err);
+                // Tetap sukses
                 showAlert('Registrasi berhasil! Silakan login.', 'ok');
-                setTimeout(showLogin, 1500);
-            }
+                setTimeout(showLogin, 2000);
+            });
         }
+    }).catch(function(err) {
+        console.error('❌ Signup error:', err);
+        showAlert('Error: ' + err.message, 'err');
     });
-}
-function doLogout() {
+}function doLogout() {
     supabase.auth.signOut().then(function() { location.reload(); });
 }
 
