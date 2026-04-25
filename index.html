@@ -860,7 +860,10 @@ function renderDash() {
         html += '<td>' + (t.pt_cust || '-') + '</td>';
         html += '<td>' + (t.lokasi_asal || '?') + ' → ' + (t.lokasi_tujuan || '?') + '</td>';
         html += '<td><span class="badge ' + (t.status === 'ok' ? 'badge-success' : t.status === 'not-ok' ? 'badge-danger' : 'badge-warning') + '">' + (t.status || '-') + '</span></td>';
-        html += '<td><button class="btn btn-primary btn-sm" onclick="editTender(\'' + t.id + '\')"><i class="fas fa-edit"></i> Edit</button></td>';
+        html += '<td>';
+        html += '<button class="btn btn-primary btn-sm" onclick="editTender(\'' + t.id + '\')"><i class="fas fa-edit"></i> Edit</button> ';
+        html += '<button class="btn btn-danger btn-sm" onclick="deleteTender(\'' + t.id + '\')"><i class="fas fa-trash"></i> Hapus</button>';
+        html += '</td>';
         html += '</tr>';
     }
     html += '</tbody></table></div>';
@@ -925,7 +928,29 @@ function saveTender(e) {
         });
     }
 }
+// ============================================
+// FUNGSI HAPUS TENDER
+// ============================================
+async function deleteTender(id) {
+    // Konfirmasi sebelum hapus
+    if (!confirm('Apakah Anda yakin ingin membatalkan/menghapus tender ini?')) {
+        return;
+    }
 
+    const { error } = await supabase
+        .from('tenders')
+        .delete()
+        .eq('id', id);
+
+    if (error) {
+        alert('❌ Gagal membatalkan tender: ' + error.message);
+        console.error('Delete error:', error);
+    } else {
+        alert('✅ Tender berhasil dibatalkan!');
+        // Refresh data tanpa reload halaman penuh
+        loadData();
+    }
+}
 function editTender(id) {
     var t = null;
     for (var i = 0; i < tenders.length; i++) { 
