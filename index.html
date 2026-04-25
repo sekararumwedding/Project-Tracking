@@ -599,536 +599,185 @@
 // ============================================
 // KONFIGURASI SUPABASE
 // ============================================
-var SUPABASE_URL = 'https://ixgwxbehsmgmczzfvjse.supabase.co';
-var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml4Z3d4YmVoc21nbWN6emZ2anNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5Njk3OTksImV4cCI6MjA5MjU0NTc5OX0.rnZYdHiqLzRz5xAb9DR3YmeWY91LsfJJYYoeWa7s7WA';
+var SUPABASE_URL = 'https://ixgwxbehsmgmzzfvjse.supabase.co';
+var SUPABASE_KEY = 'GANTI_DENGAN_ANON_KEY_ANDA';
 var supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-var isAdmin = false;
 var tenders = [];
-var documents = [];
-var map = null;
 
 // ============================================
-// FUNGSI AUTH
+// FUNGSI ALERT
 // ============================================
 function showAlert(msg, type) {
     var el = document.getElementById('alertBox');
+    if (!el) return;
     el.textContent = msg;
-    el.className = 'alert mb-6 p-4 rounded-lg ' + (type === 'err' ? 'bg-red-900/30 border border-red-500 text-red-300' : 'bg-green-900/30 border border-green-500 text-green-300');
-    el.classList.remove('hidden');
-    setTimeout(function() { el.classList.add('hidden'); }, 4000);
+    el.className = 'alert ' + (type === 'err' ? 'bg-red-900/30 border border-red-500 text-red-300' : 'bg-green-900/30 border border-green-500 text-green-300');
+    el.style.display = 'block';
+    setTimeout(function() { el.style.display = 'none'; }, 4000);
 }
 
+// ============================================
+// FUNGSI NAVIGASI FORM
+// ============================================
 function showRegis() {
-    document.getElementById('formLogin').classList.add('hidden');
-    document.getElementById('formRegis').classList.remove('hidden');
-    document.getElementById('alertBox').classList.add('hidden');
+    var loginForm = document.getElementById('formLogin');
+    var regisForm = document.getElementById('formRegis');
+    var alertBox = document.getElementById('alertBox');
+    if (loginForm) loginForm.classList.add('hidden');
+    if (regisForm) regisForm.classList.remove('hidden');
+    if (alertBox) alertBox.style.display = 'none';
 }
 
 function showLogin() {
-    document.getElementById('formRegis').classList.add('hidden');
-    document.getElementById('formLogin').classList.remove('hidden');
-    document.getElementById('alertBox').classList.add('hidden');
+    var loginForm = document.getElementById('formLogin');
+    var regisForm = document.getElementById('formRegis');
+    var alertBox = document.getElementById('alertBox');
+    if (regisForm) regisForm.classList.add('hidden');
+    if (loginForm) loginForm.classList.remove('hidden');
+    if (alertBox) alertBox.style.display = 'none';
 }
 
+// ============================================
+// FUNGSI LOGIN
+// ============================================
 function doLogin() {
     var email = document.getElementById('l-email').value.trim();
     var pass = document.getElementById('l-pass').value;
     
-    if (!email || !pass) { 
-        showAlert('Isi email dan password!', 'err'); 
-        return; 
+    if (!email || !pass) {
+        showAlert('Isi email dan password!', 'err');
+        return;
     }
-    
-    console.log('🔑 Logging in:', email);
-    
-    supabase.auth.signInWithPassword({ 
-        email: email, 
-        password: pass 
-    }).then(function(r) {
-        console.log('Login response:', r);
-        
-        if (r.error) { 
-            console.error('❌ Login error:', r.error);
-            showAlert('Error: ' + r.error.message, 'err'); 
+
+    supabase.auth.signInWithPassword({
+        email: email,
+        password: pass
+    }).then(function(result) {
+        if (result.error) {
+            showAlert('Error: ' + result.error.message, 'err');
         } else {
-            console.log('✅ Login success');
-            initDash(r.data.session); 
+            showAlert('Login berhasil!', 'ok');
+            setTimeout(function() {
+                initDash(result.data.session);
+            }, 500);
         }
-    }).catch(function(err) {
-        console.error('❌ Login catch error:', err);
-        showAlert('Error: ' + err.message, 'err');
     });
 }
+
+// ============================================
+// FUNGSI REGISTER
+// ============================================
 function doRegis() {
     var name = document.getElementById('r-name').value.trim();
     var email = document.getElementById('r-email').value.trim();
     var pass = document.getElementById('r-pass').value;
     
-    if (!name || !email || !pass) { 
-        showAlert('Lengkapi semua data!', 'err'); 
-        return; 
+    if (!name || !email || !pass) {
+        showAlert('Lengkapi semua data!', 'err');
+        return;
     }
-    if (pass.length < 6) { 
-        showAlert('Password minimal 6 karakter!', 'err'); 
-        return; 
+    if (pass.length < 6) {
+        showAlert('Password minimal 6 karakter!', 'err');
+        return;
     }
-    
-    console.log('📝 Registering user:', email);
-    
-    // Daftar di Supabase Auth
+
+    // Daftar tanpa langsung insert ke profiles
     supabase.auth.signUp({
         email: email,
-        password: pass
-    }).then(function(r) {
-        console.log('Auth response:', r);
-        
-        if (r.error) { 
-            console.error('❌ Auth error:', r.error);
-            showAlert('Error: ' + r.error.message, 'err'); 
-        } else if (r.data && r.data.user) {
-            console.log('✅ User created, saving profile...');
-            
-            // Simpan ke tabel profiles
-            supabase.from('profiles').insert([{
-                id: r.data.user.id,
-                name: name,
-                email: email,
-                role: 'pengguna'
-            }]).then(function(profileResult) {
-                console.log('Profile result:', profileResult);
-                
-                if (profileResult.error) {
-                    console.error('❌ Profile error:', profileResult.error);
-                    // Tetap tampilkan sukses meski profile gagal
-                    showAlert('Registrasi berhasil! Profile akan dibuat otomatis saat login pertama.', 'ok');
-                } else {
-                    showAlert('✅ Registrasi berhasil! Silakan login.', 'ok');
-                }
-                
-                setTimeout(showLogin, 2000);
-            }).catch(function(err) {
-                console.error('Profile insert error:', err);
-                // Tetap sukses
-                showAlert('Registrasi berhasil! Silakan login.', 'ok');
-                setTimeout(showLogin, 2000);
-            });
+        password: pass,
+        options: {
+            data: {
+                name: name
+            }
         }
-    }).catch(function(err) {
-        console.error('❌ Signup error:', err);
-        showAlert('Error: ' + err.message, 'err');
+    }).then(function(result) {
+        if (result.error) {
+            showAlert('Error: ' + result.error.message, 'err');
+        } else {
+            showAlert('Registrasi berhasil! Silakan login.', 'ok');
+            setTimeout(showLogin, 2000);
+        }
     });
-}
-function doLogout() {
-    supabase.auth.signOut().then(function() { location.reload(); });
 }
 
 // ============================================
 // FUNGSI DASHBOARD
 // ============================================
 function initDash(session) {
-    document.getElementById('page-login').classList.add('hidden');
-    document.getElementById('page-dash').classList.remove('hidden');
+    var loginPage = document.getElementById('page-login');
+    var dashPage = document.getElementById('page-dash');
     
+    if (loginPage) loginPage.classList.add('hidden');
+    if (dashPage) dashPage.classList.remove('hidden');
+    
+    // Load profile
     supabase.from('profiles').select('role, name').eq('id', session.user.id).single().then(function(r) {
         var nm = session.user.email.split('@')[0];
         if (r.data) {
             nm = r.data.name;
-            isAdmin = r.data.role === 'admin';
-            document.getElementById('sb-nm').innerHTML = nm + (isAdmin ? ' <span class="admin-badge">ADMIN</span>' : '');
+            var sbNm = document.getElementById('sb-nm');
+            if (sbNm) sbNm.textContent = nm;
         }
-        document.getElementById('sb-av').textContent = nm.charAt(0).toUpperCase();
+        var sbAv = document.getElementById('sb-av');
+        if (sbAv) sbAv.textContent = nm.charAt(0).toUpperCase();
     });
     
-    tickClock();
-    setInterval(tickClock, 1000);
     loadData();
 }
 
-function tickClock() {
-    var now = new Date();
-    var days = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
-    var months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
-    var pad = function(n) { return n < 10 ? '0' + n : n; };
-    document.getElementById('dt-txt').textContent = days[now.getDay()] + ', ' + pad(now.getDate()) + ' ' + months[now.getMonth()] + ' ' + now.getFullYear() + ' • ' + pad(now.getHours()) + ':' + pad(now.getMinutes()) + ':' + pad(now.getSeconds());
-}
-
-function goTo(sec) {
-    var secs = document.querySelectorAll('[id^="sec-"]');
-    for (var i = 0; i < secs.length; i++) secs[i].classList.add('hidden');
-    document.getElementById('sec-' + sec).classList.remove('hidden');
-    
-    var items = document.querySelectorAll('.menu-item');
-    for (var i = 0; i < items.length; i++) items[i].classList.remove('active');
-    event.currentTarget.classList.add('active');
-    
-    var titles = {
-        'dashboard': ['Dashboard', 'Sistem Manajemen Logistik Terpadu'],
-        'calculator': ['Kalkulator Biaya', 'Hitung estimasi biaya pengiriman'],
-        'china-service': ['Jasa Beli China', 'Request order produk dari China'],
-        'tender': ['Rencana Tender', 'Input data tender baru'],
-        'tracking': ['Tracking', 'Pantau posisi pengiriman'],
-        'shipping': ['Pengiriman', 'Data pengiriman aktif'],
-        'payment': ['Pembayaran', 'Status pembayaran'],
-        'documents': ['Dokumen', 'Kelola dokumen']
-    };
-    document.getElementById('pg-title').textContent = titles[sec][0];
-    document.getElementById('pg-sub').textContent = titles[sec][1];
-    
-    if (sec === 'tender') resetForm();
-    if (sec === 'tracking') setTimeout(initMap, 100);
-}
-
-// ============================================
-// KALKULATOR BIAYA
-// ============================================
-function calculateCost() {
-    var p = parseFloat(document.getElementById('calc-p').value) || 0;
-    var l = parseFloat(document.getElementById('calc-l').value) || 0;
-    var t = parseFloat(document.getElementById('calc-t').value) || 0;
-    var weight = parseFloat(document.getElementById('calc-weight').value) || 0;
-    var type = document.getElementById('calc-type').value;
-    var routePrice = parseFloat(document.getElementById('calc-route').value) || 0;
-    
-    if (p === 0 || l === 0 || t === 0 || weight === 0 || routePrice === 0) {
-        alert('Mohon lengkapi semua data!');
-        return;
-    }
-    
-    var volume = p * l * t;
-    var divisor = type === 'udara' ? 6000 : 4000;
-    var volumeWeight = volume / divisor;
-    var chargeableWeight = Math.max(weight, volumeWeight);
-    var totalCost = chargeableWeight * routePrice;
-    
-    var resultHtml = `
-        <div class="calc-row"><span class="calc-label">Volume (P×L×T):</span><span class="calc-value">${volume.toLocaleString('id-ID')} cm³</span></div>
-        <div class="calc-row"><span class="calc-label">Berat Volume (÷${divisor}):</span><span class="calc-value">${volumeWeight.toFixed(2)} kg</span></div>
-        <div class="calc-row"><span class="calc-label">Berat Asli:</span><span class="calc-value">${weight} kg</span></div>
-        <div class="calc-row"><span class="calc-label">Berat yang Dihitung:</span><span class="calc-value" style="color: #fbbf24;">${chargeableWeight.toFixed(2)} kg</span></div>
-        <div class="calc-row calc-total"><span>Estimasi Biaya:</span><span>Rp ${totalCost.toLocaleString('id-ID')}</span></div>
-    `;
-    
-    document.getElementById('calc-result').innerHTML = resultHtml;
-    document.getElementById('calc-result').classList.remove('hidden');
-}
-
-// ============================================
-// JASA BELI CHINA
-// ============================================
-function submitChinaOrder(e) {
-    e.preventDefault();
-    
-    var order = {
-        link: document.getElementById('china-link').value,
-        name: document.getElementById('china-name').value,
-        qty: document.getElementById('china-qty').value,
-        route: document.getElementById('china-route').value,
-        description: document.getElementById('china-desc').value,
-        note: document.getElementById('china-note').value,
-        created_at: new Date().toISOString()
-    };
-    
-    supabase.from('china_orders').insert([order]).then(function(r) {
-        if (r.error) {
-            alert('Gagal kirim order: ' + r.error.message);
-        } else {
-            alert('✅ Request order berhasil dikirim! Tim kami akan segera menghubungi Anda.');
-            e.target.reset();
-        }
-    });
-}
-
-// ============================================
-// FUNGSI LOAD DATA
-// ============================================
 function loadData() {
     supabase.from('tenders').select('*').order('created_at', { ascending: false }).then(function(r) {
-        if (r.error) { console.error('Error loading data', r.error); return; }
+        if (r.error) {
+            console.error('Error loading data:', r.error);
+            return;
+        }
         tenders = r.data || [];
         renderDash();
-        renderTrack();
-        renderShip();
-        renderPay();
-    });
-    
-    supabase.from('documents').select('*').order('created_at', { ascending: false }).then(function(r) {
-        if (!r.error) {
-            documents = r.data || [];
-            renderDocs();
-        }
     });
 }
 
 function renderDash() {
-    document.getElementById('s-total').textContent = tenders.length;
-    document.getElementById('s-proses').textContent = tenders.filter(function(t) { return t.status === 'ok' && !t.shipping_method; }).length;
-    document.getElementById('s-kirim').textContent = tenders.filter(function(t) { return t.shipping_method; }).length;
-    document.getElementById('s-lunas').textContent = tenders.filter(function(t) { return t.payment_status === 'lunas'; }).length;
+    var sTotal = document.getElementById('s-total');
+    var sProses = document.getElementById('s-proses');
+    var sKirim = document.getElementById('s-kirim');
+    var sLunas = document.getElementById('s-lunas');
+    
+    if (sTotal) sTotal.textContent = tenders.length;
+    if (sProses) sProses.textContent = tenders.filter(function(t) { return t.status === 'ok'; }).length;
+    if (sKirim) sKirim.textContent = tenders.filter(function(t) { return t.shipping_method; }).length;
+    if (sLunas) sLunas.textContent = tenders.filter(function(t) { return t.payment_status === 'lunas'; }).length;
     
     var list = document.getElementById('tender-list');
+    if (!list) return;
+    
     if (tenders.length === 0) {
-        list.innerHTML = '<div class="text-center py-12 text-gray-400"><i class="fas fa-folder-open" style="font-size: 48px; margin-bottom: 12px; opacity: 0.5;"></i><p>Belum ada data tender</p></div>';
+        list.innerHTML = '<div class="text-center py-12 text-gray-400"><p>Belum ada data tender</p></div>';
         return;
     }
     
-    var html = '<div class="table-container"><table><thead><tr><th>Tender</th><th>Customer</th><th>Rute</th><th>Status</th><th>Aksi</th></tr></thead><tbody>';
+    var html = '<div class="table-container"><table><thead><tr><th>Tender</th><th>Customer</th><th>Status</th></tr></thead><tbody>';
     for (var i = 0; i < Math.min(tenders.length, 10); i++) {
         var t = tenders[i];
-        html += '<tr>';
-        html += '<td><strong>' + (t.nama_tender || '-') + '</strong></td>';
+        html += '<tr><td><strong>' + (t.nama_tender || '-') + '</strong></td>';
         html += '<td>' + (t.pt_cust || '-') + '</td>';
-        html += '<td>' + (t.lokasi_asal || '?') + ' → ' + (t.lokasi_tujuan || '?') + '</td>';
-        html += '<td><span class="badge ' + (t.status === 'ok' ? 'badge-success' : t.status === 'not-ok' ? 'badge-danger' : 'badge-warning') + '">' + (t.status || '-') + '</span></td>';
-        html += '<td><button class="btn btn-primary btn-sm" onclick="editTender(\'' + t.id + '\')"><i class="fas fa-edit"></i> Edit</button></td>';
-        html += '</tr>';
+        html += '<td>' + (t.status || '-') + '</td></tr>';
     }
     html += '</tbody></table></div>';
     list.innerHTML = html;
 }
 
-function renderTrack() {
-    var tb = document.getElementById('tb-track');
-    var shipped = tenders.filter(function(t) { return t.shipping_method; });
-    
-    if (shipped.length === 0) {
-        tb.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-gray-400">Belum ada pengiriman</td></tr>';
-        return;
-    }
-    
-    var html = '';
-    for (var i = 0; i < shipped.length; i++) {
-        var t = shipped[i];
-        html += '<tr>';
-        html += '<td><strong>' + (t.nama_tender || '-') + '</strong></td>';
-        html += '<td>' + (t.lokasi_asal || '?') + ' → ' + (t.lokasi_tujuan || '?') + '</td>';
-        html += '<td>' + (t.shipping_method || '-') + '</td>';
-        html += '<td>' + (t.shipping_resi || '-') + '</td>';
-        html += '<td><span class="badge ' + (t.shipping_delivered ? 'badge-success' : 'badge-warning') + '">' + (t.shipping_delivered ? 'Sampai' : 'Dalam Perjalanan') + '</span></td>';
-        html += '<td><button class="btn btn-primary btn-sm" onclick="editTender(\'' + t.id + '\')"><i class="fas fa-edit"></i></button></td>';
-        html += '</tr>';
-    }
-    tb.innerHTML = html;
-}
-
-function renderShip() {
-    var tb = document.querySelector('#tb-ship tbody');
-    var shipped = tenders.filter(function(t) { return t.shipping_method; });
-    
-    if (shipped.length === 0) {
-        tb.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-gray-400">Belum ada data</td></tr>';
-        return;
-    }
-    
-    var html = '';
-    for (var i = 0; i < shipped.length; i++) {
-        var t = shipped[i];
-        html += '<tr>';
-        html += '<td><strong>' + (t.nama_tender || '-') + '</strong></td>';
-        html += '<td>' + (t.lokasi_asal || '?') + ' → ' + (t.lokasi_tujuan || '?') + '</td>';
-        html += '<td>' + (t.shipping_method || '-') + '</td>';
-        html += '<td>' + (t.shipping_resi || '-') + '</td>';
-        html += '<td>' + (t.shipping_delivered ? '✅ Ya' : '⏳ Belum') + '</td>';
-        html += '<td><button class="btn btn-primary btn-sm" onclick="editTender(\'' + t.id + '\')"><i class="fas fa-edit"></i></button></td>';
-        html += '</tr>';
-    }
-    tb.innerHTML = html;
-}
-
-function renderPay() {
-    var tb = document.querySelector('#tb-pay tbody');
-    
-    if (tenders.length === 0) {
-        tb.innerHTML = '<tr><td colspan="5" class="text-center py-8 text-gray-400">Belum ada data</td></tr>';
-        return;
-    }
-    
-    var html = '';
-    for (var i = 0; i < tenders.length; i++) {
-        var t = tenders[i];
-        html += '<tr>';
-        html += '<td><strong>' + (t.nama_tender || '-') + '</strong></td>';
-        html += '<td>' + (t.pt_cust || '-') + '</td>';
-        html += '<td>-</td>';
-        html += '<td><span class="badge ' + (t.payment_status === 'lunas' ? 'badge-success' : t.payment_status === 'dp' ? 'badge-warning' : 'badge-danger') + '">' + (t.payment_status || 'pending') + '</span></td>';
-        html += '<td><button class="btn btn-primary btn-sm" onclick="editTender(\'' + t.id + '\')"><i class="fas fa-edit"></i></button></td>';
-        html += '</tr>';
-    }
-    tb.innerHTML = html;
-}
-
-function renderDocs() {
-    var tb = document.querySelector('#tb-docs tbody');
-    
-    if (documents.length === 0) {
-        tb.innerHTML = '<tr><td colspan="5" class="text-center py-8 text-gray-400">Belum ada dokumen</td></tr>';
-        return;
-    }
-    
-    var html = '';
-    for (var i = 0; i < documents.length; i++) {
-        var d = documents[i];
-        html += '<tr>';
-        html += '<td>' + (d.nama_dokumen || 'Dokumen ' + (i+1)) + '</td>';
-        html += '<td>' + (d.tender_name || '-') + '</td>';
-        html += '<td>' + new Date(d.created_at).toLocaleDateString('id-ID') + '</td>';
-        html += '<td>' + (d.tipe || '-') + '</td>';
-        html += '<td><button class="btn btn-primary btn-sm" onclick="viewDoc(' + i + ')"><i class="fas fa-eye"></i> Lihat</button></td>';
-        html += '</tr>';
-    }
-    tb.innerHTML = html;
-}
-
 // ============================================
-// CRUD TENDER
-// ============================================
-function resetForm() {
-    document.getElementById('frm-tender').reset();
-    document.getElementById('edit-id').value = '';
-    document.getElementById('btn-sub').innerHTML = '<i class="fas fa-save"></i> Simpan Tender';
-}
-
-function saveTender(e) {
-    e.preventDefault();
-    
-    var eid = document.getElementById('edit-id').value;
-    var data = {
-        karyawan: document.getElementById('f-kar').value.trim(),
-        nama_tender: document.getElementById('f-tender').value.trim(),
-        nama_cust: document.getElementById('f-cust').value.trim(),
-        pt_cust: document.getElementById('f-pt').value.trim(),
-        nama_barang: document.getElementById('f-brg').value.trim(),
-        jenis: document.getElementById('f-jenis').value,
-        lokasi_asal: document.getElementById('f-asal').value.trim(),
-        lokasi_tujuan: document.getElementById('f-tujuan').value.trim(),
-        status: document.getElementById('f-status').value,
-        shipping_method: document.getElementById('f-metode').value,
-        shipping_resi: document.getElementById('f-resi').value.trim(),
-        payment_status: document.getElementById('f-pay').value,
-        catatan: document.getElementById('f-cat').value.trim(),
-        updated_at: new Date().toISOString()
-    };
-
-    if (eid) {
-        supabase.from('tenders').update(data).eq('id', eid).then(function(response) {
-            if (response.error) { alert('❌ Gagal update: ' + response.error.message); }
-            else { alert('✅ Tender berhasil diupdate!'); resetForm(); loadData(); goTo('dashboard'); }
-        });
-    } else {
-        data.created_at = new Date().toISOString();
-        supabase.from('tenders').insert([data]).then(function(response) {
-            if (response.error) { alert('❌ Gagal simpan: ' + response.error.message); }
-            else { alert('✅ Tender berhasil disimpan!'); resetForm(); loadData(); goTo('dashboard'); }
-        });
-    }
-}
-
-function editTender(id) {
-    var t = null;
-    for (var i = 0; i < tenders.length; i++) { if (tenders[i].id === id) { t = tenders[i]; break; } }
-    if (!t) return;
-    
-    document.getElementById('edit-id').value = id;
-    document.getElementById('f-kar').value = t.karyawan || '';
-    document.getElementById('f-tender').value = t.nama_tender || '';
-    document.getElementById('f-cust').value = t.nama_cust || '';
-    document.getElementById('f-pt').value = t.pt_cust || '';
-    document.getElementById('f-brg').value = t.nama_barang || '';
-    document.getElementById('f-jenis').value = t.jenis || '';
-    document.getElementById('f-asal').value = t.lokasi_asal || '';
-    document.getElementById('f-tujuan').value = t.lokasi_tujuan || '';
-    document.getElementById('f-status').value = t.status || '';
-    document.getElementById('f-metode').value = t.shipping_method || '';
-    document.getElementById('f-resi').value = t.shipping_resi || '';
-    document.getElementById('f-pay').value = t.payment_status || 'pending';
-    document.getElementById('f-cat').value = t.catatan || '';
-    
-    document.getElementById('btn-sub').innerHTML = '<i class="fas fa-sync"></i> Update Tender';
-    goTo('tender');
-}
-
-// ============================================
-// MAP TRACKING
-// ============================================
-function initMap() {
-    if (map) { map.remove(); }
-    
-    map = L.map('map').setView([-6.125, 106.65], 6);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors'
-    }).addTo(map);
-    
-    // Add markers for shipped items
-    var shipped = tenders.filter(function(t) { return t.shipping_method; });
-    shipped.forEach(function(t) {
-        L.marker([-6.125, 106.65]).addTo(map)
-            .bindPopup('<b>' + (t.nama_tender || 'Tender') + '</b><br>' + (t.lokasi_asal || '?') + ' → ' + (t.lokasi_tujuan || '?'));
-    });
-}
-
-// ============================================
-// DOKUMEN
-// ============================================
-function uploadDocument(e) {
-    var file = e.target.files[0];
-    if (!file) return;
-    
-    var doc = {
-        nama_dokumen: file.name,
-        tipe: file.type,
-        size: file.size,
-        created_at: new Date().toISOString()
-    };
-    
-    supabase.from('documents').insert([doc]).then(function(r) {
-        if (r.error) { alert('Gagal upload: ' + r.error.message); }
-        else { alert('✅ Dokumen berhasil diupload!'); loadData(); }
-    });
-}
-
-function viewDoc(index) {
-    var d = documents[index];
-    var html = '<div class="space-y-4"><div><label class="text-gray-400">Nama Dokumen:</label><p class="text-white font-semibold">' + d.nama_dokumen + '</p></div><div><label class="text-gray-400">Tipe:</label><p class="text-white">' + d.tipe + '</p></div><div><label class="text-gray-400">Ukuran:</label><p class="text-white">' + (d.size / 1024).toFixed(2) + ' KB</p></div><div><label class="text-gray-400">Tanggal Upload:</label><p class="text-white">' + new Date(d.created_at).toLocaleString('id-ID') + '</p></div></div>';
-    document.getElementById('doc-modal-content').innerHTML = html;
-    document.getElementById('docModal').classList.remove('hidden');
-}
-
-function closeDocModal() {
-    document.getElementById('docModal').classList.add('hidden');
-}
-
-// ============================================
-// EXPORT TO EXCEL
-// ============================================
-function exportToExcel(tableId, filename) {
-    var table = document.getElementById(tableId);
-    var wb = XLSX.utils.table_to_book(table, { sheet: "Sheet1" });
-    XLSX.writeFile(wb, filename + '_' + new Date().toISOString().slice(0,10) + '.xlsx');
-}
-
-// ============================================
-// INIT
+// INIT APP
 // ============================================
 window.onload = function() {
-    console.log('🚀 App started');
-    console.log('Supabase URL:', SUPABASE_URL);
-    console.log('Supabase Key:', SUPABASE_KEY.substring(0, 20) + '...');
-    
-    // Test koneksi
-    supabase.from('profiles').select('count').then(function(r) {
-        if (r.error) {
-            console.error('❌ Database connection error:', r.error);
-        } else {
-            console.log('✅ Database connected!');
-        }
-    });
-    
+    console.log('App started');
     supabase.auth.getSession().then(function(r) {
-        if (r.data && r.data.session) { 
-            initDash(r.data.session); 
+        if (r.data && r.data.session) {
+            initDash(r.data.session);
         }
     });
-};</script>
-
+};
+</script>
 </body>
 </html>
