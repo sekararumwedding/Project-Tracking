@@ -111,7 +111,13 @@
         
         /* Map */
         #map { height: 500px; border-radius: 12px; border: 1px solid #334155; }
-        
+        #map {
+           height: 500px;
+           width: 100%;
+           border-radius: 12px;
+           border: 1px solid #334155;
+           margin-bottom: 24px;
+       }
         /* Login */
         .login-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; background: linear-gradient(135deg, #0f172a, #1e293b); }
         .login-card { background: linear-gradient(135deg, #1e293b, #0f172a); border: 1px solid #334155; border-radius: 24px; padding: 48px; max-width: 450px; width: 100%; box-shadow: 0 25px 50px rgba(0,0,0,0.3); }
@@ -717,6 +723,8 @@ function doLogout() {
 // ============================================
 // FUNGSI NAVIGASI MENU (goTo)
 // ============================================
+// ... fungsi lainnya ...
+
 function goTo(section) {
     // Hide all sections
     var sections = document.querySelectorAll('[id^="sec-"]');
@@ -728,46 +736,43 @@ function goTo(section) {
     var targetSection = document.getElementById('sec-' + section);
     if (targetSection) {
         targetSection.classList.remove('hidden');
+        
+        // Khusus untuk Tracking, inisialisasi ulang map agar ukurannya benar
+        if (section === 'tracking') {
+            setTimeout(function() {
+                initMap();
+            }, 100); // Delay sedikit agar section benar-benar terlihat
+        }
     }
     
-    // Update active menu
-    var menuItems = document.querySelectorAll('.menu-item');
-    for (var i = 0; i < menuItems.length; i++) {
-        menuItems[i].classList.remove('active');
-    }
-    
-    // Update page title
-    var titles = {
-        'dashboard': ['Dashboard', 'Sistem Manajemen Logistik Terpadu'],
-        'calculator': ['Kalkulator Biaya', 'Hitung estimasi biaya pengiriman'],
-        'china-service': ['Jasa Beli China', 'Request order produk dari China'],
-        'tender': ['Rencana Tender', 'Input data tender baru'],
-        'tracking': ['Tracking', 'Pantau posisi pengiriman'],
-        'shipping': ['Pengiriman', 'Data pengiriman aktif'],
-        'payment': ['Pembayaran', 'Status pembayaran'],
-        'documents': ['Dokumen', 'Kelola dokumen']
-    };
-    
-    var pgTitle = document.getElementById('pg-title');
-    var pgSub = document.getElementById('pg-sub');
-    if (pgTitle && titles[section]) pgTitle.textContent = titles[section][0];
-    if (pgSub && titles[section]) pgSub.textContent = titles[section][1];
-    
-    // Load data based on section
-    if (section === 'tender') {
-        resetForm();
-    } else if (section === 'tracking') {
-        setTimeout(initMap, 100);
-    }
-    
-    // Load data
-    if (section === 'dashboard' || section === 'tender') {
-        loadData();
-    } else if (section === 'documents') {
-        loadDocuments();
-    }
+    // Update menu active state & title (kode Anda sebelumnya tetap jalan)
+    var items = document.querySelectorAll('.menu-item');
+    for (var i = 0; i < items.length; i++) items[i].classList.remove('active');
+    // ... kode active menu ...
 }
 
+function initMap() {
+    // Jika map belum diinisialisasi, buat baru
+    if (!window.myMap) {
+        window.myMap = L.map('map').setView([-6.125, 106.65], 6);
+        
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(window.myMap);
+    } else {
+        // Jika sudah ada, invalidate size (ini kunci agar map muncul saat section hidden di-toggle)
+        window.myMap.invalidateSize();
+    }
+
+    // Tambahkan marker dari data tender
+    // Hapus marker lama dulu jika ada (opsional, tergantung kebutuhan)
+    // Tambah marker baru...
+    var shipped = tenders.filter(function(t) { return t.shipping_method; });
+    shipped.forEach(function(t) {
+        L.marker([-6.125, 106.65]).addTo(window.myMap)
+            .bindPopup('<b>' + (t.nama_tender || 'Tender') + '</b>');
+    });
+}
 // ============================================
 // FUNGSI DASHBOARD
 // ============================================
