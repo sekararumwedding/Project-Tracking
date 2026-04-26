@@ -726,52 +726,42 @@ function doLogout() {
 // ... fungsi lainnya ...
 
 function goTo(section) {
-    // Hide all sections
-    var sections = document.querySelectorAll('[id^="sec-"]');
-    for (var i = 0; i < sections.length; i++) {
-        sections[i].classList.add('hidden');
-    }
+    document.querySelectorAll('[id^="sec-"]').forEach(function(el) {
+        el.classList.add('hidden');
+    });
     
-    // Show target section
-    var targetSection = document.getElementById('sec-' + section);
-    if (targetSection) {
-        targetSection.classList.remove('hidden');
+    var target = document.getElementById('sec-' + section);
+    if (target) {
+        target.classList.remove('hidden');
         
-        // Khusus untuk Tracking, inisialisasi ulang map agar ukurannya benar
         if (section === 'tracking') {
             setTimeout(function() {
                 initMap();
-            }, 100); // Delay sedikit agar section benar-benar terlihat
+            }, 200);
         }
     }
-    
-    // Update menu active state & title (kode Anda sebelumnya tetap jalan)
-    var items = document.querySelectorAll('.menu-item');
-    for (var i = 0; i < items.length; i++) items[i].classList.remove('active');
-    // ... kode active menu ...
 }
-
 function initMap() {
-    // Jika map belum diinisialisasi, buat baru
+    var mapElement = document.getElementById('map');
+    if (!mapElement || mapElement.offsetParent === null) {
+        console.log('Map not visible yet');
+        return;
+    }
+    
     if (!window.myMap) {
         window.myMap = L.map('map').setView([-6.125, 106.65], 6);
         
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap contributors'
+            attribution: '© OpenStreetMap'
         }).addTo(window.myMap);
-    } else {
-        // Jika sudah ada, invalidate size (ini kunci agar map muncul saat section hidden di-toggle)
-        window.myMap.invalidateSize();
     }
-
-    // Tambahkan marker dari data tender
-    // Hapus marker lama dulu jika ada (opsional, tergantung kebutuhan)
-    // Tambah marker baru...
-    var shipped = tenders.filter(function(t) { return t.shipping_method; });
-    shipped.forEach(function(t) {
-        L.marker([-6.125, 106.65]).addTo(window.myMap)
-            .bindPopup('<b>' + (t.nama_tender || 'Tender') + '</b>');
-    });
+    
+    // PENTING: Invalidate size setelah map visible
+    setTimeout(function() {
+        if (window.myMap) {
+            window.myMap.invalidateSize();
+        }
+    }, 100);
 }
 // ============================================
 // FUNGSI DASHBOARD
